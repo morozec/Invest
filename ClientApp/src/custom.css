@@ -12,3 +12,60 @@ code {
   background-color: #1b6ec2;
   border-color: #1861ac;
 }
+
+th.date{
+  text-align: center;
+}
+
+td.dl-0{
+  padding-left: 0.75rem;
+}
+
+td.dl-1{
+  padding-left: 2.75rem;
+}
+
+td.dl-2{
+  padding-left: 4.75rem;
+}
+
+td.dl-3{
+  padding-left: 6.75rem;
+}
+
+td.dl-4{
+  padding-left: 8.75rem;
+}
+
+td.dl-5{
+  padding-left: 10.75rem;
+}
+
+td.dl-6{
+  padding-left: 12.75rem;
+}
+
+td.dl-7{
+  padding-left: 14.75rem;
+}
+
+td.dl-8{
+  padding-left: 16.75rem;
+}
+
+td.dl-9{
+  padding-left: 18.75rem;
+}
+
+td.dl-10{
+  padding-left: 20.75rem;
+}
+
+td.valueChosen{
+  text-align: right;
+}
+
+tr.container{
+  cursor: pointer;
+}
+
