@@ -6,6 +6,7 @@ import { Stock } from './components/Stock';
 import { Counter } from './components/Counter';
 
 import './custom.css'
+import { StockSimfin } from './components/StockSimfin';
 
 export default class App extends Component {
   static displayName = App.name;
@@ -16,6 +17,7 @@ export default class App extends Component {
         <Route exact path='/' component={Home} />
         <Route path='/counter' component={Counter} />
         <Route path='/stock' component={Stock} />
+        <Route path='/stocksimfin' component={StockSimfin} />
       </Layout>
     );
   }

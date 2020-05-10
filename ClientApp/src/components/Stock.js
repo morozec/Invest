@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'react-bootstrap';
+import { Bar } from 'react-chartjs-2';
 
 export function Stock() {
   const [balanceSheet, setBalanceSheet] = useState(null);
@@ -16,9 +17,10 @@ export function Stock() {
 
 
 
-  let content;
+  let content, data;
   if (isLoading) {
-    content = <p><em>Loading...</em></p>
+    content = <p><em>Loading...</em></p>;
+    data = {};
   } else {
     const balanceSheetStatements = balanceSheet.balanceSheetHistory.balanceSheetStatements;
     if (!balanceSheetStatements || balanceSheetStatements.length === 0) {
@@ -46,14 +48,46 @@ export function Stock() {
             })}
           </tbody>
         </Table>
-      )
+      );
+
+      const dates = balanceSheetStatements.map(bss => bss.endDate.fmt).reverse();
+      const longTermDebts = balanceSheetStatements.map(bss => bss.longTermDebt.raw).reverse();
+      const cashs = balanceSheetStatements.map(bss => bss.cash.raw).reverse();
+
+      data = {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Long Term Debt',
+            backgroundColor: 'rgba(255,99,132,0.2)',
+            borderColor: 'rgba(255,99,132,1)',
+            borderWidth: 1,
+            hoverBackgroundColor: 'rgba(255,99,132,0.4)',
+            hoverBorderColor: 'rgba(255,99,132,1)',
+            data: longTermDebts
+          },
+
+          {
+            label: 'Cash',
+            backgroundColor: 'rgba(99,255,132,0.2)',
+            borderColor: 'rgba(99,255,132,1)',
+            borderWidth: 1,
+            hoverBackgroundColor: 'rgba(99,255,132,0.4)',
+            hoverBorderColor: 'rgba(99,255,132,1)',
+            data: cashs
+          },
+        ]
+      };
     }
   }
+
+
 
   return (
     <div>
       <h1>Balance sheet</h1>
       {content}
+      <Bar data={data} />
     </div>
   )
 }

@@ -33,6 +33,7 @@ export class NavMenu extends Component {
                 <Nav.Link as={Link} to="/">Home</Nav.Link>
                 <Nav.Link as={Link} to="/counter">Counter</Nav.Link>
                 <Nav.Link as={Link} to="/stock">Stock</Nav.Link>
+                <Nav.Link as={Link} to="/stocksimfin">Stock SimFin</Nav.Link>
               </Nav>            
             </Navbar.Collapse>
           </Container>
