@@ -120,3 +120,8 @@ tr.container{
   grid-column: 2/-1;
   grid-row: 1/-1;
 }
+
+.companyContent{
+  display: flex;
+}
+

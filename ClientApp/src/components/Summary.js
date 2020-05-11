@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Table } from 'react-bootstrap';
 import { getBillions } from '../helpers';
+import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 
 export function Summary(props) {
     const [profile, setProfile] = useState(null);
@@ -78,56 +79,56 @@ export function Summary(props) {
                     </div>
                 </div>
 
-                <Table bordered hover striped variant='light'>
-                    <tbody>
-                        <tr>
-                            <td>Market Capitalisation</td>
-                            <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/E</td>
-                            <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/S</td>
-                            <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/B</td>
-                            <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Revenue</td>
-                            <td>{`${getRatioValue('Revenues', true)}`} B</td>
-                        </tr>
-                        <tr>
-                            <td>EPS</td>
-                            <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Dividends per Share (Yield %)</td>
-                            <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
-                        </tr>
+                <div className='companyContent'>
+
+                    <Table bordered hover striped variant='light' className='mr-2'>
+                        <tbody>
+                            <tr>
+                                <td>Market Capitalisation</td>
+                                <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/E</td>
+                                <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/S</td>
+                                <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/B</td>
+                                <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>Revenue</td>
+                                <td>{`${getRatioValue('Revenues', true)}`} B</td>
+                            </tr>
+                            <tr>
+                                <td>EPS</td>
+                                <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>Dividends per Share (Yield %)</td>
+                                <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
+                            </tr>
 
 
 
-                    </tbody>
-                </Table>
+                        </tbody>
+                    </Table>
+
+
+                    <TradingViewWidget
+                        symbol="NASDAQ:FB"
+                        theme={Themes.LIGHT}
+                        locale="en"
+                    />
+
+                </div>
+
+
             </Fragment>
         )
-        // let tableRows = ratios.filter(r => r.value !== null).map(r =>
-        //     <tr key={r.indicatorId}>
-        //         <td>{r.indicatorName}</td>
-        //         <td>{r.value}</td>
-        //     </tr>)
-
-        // content = (
-        //     <Table className='content-table' bordered hover variant='light'>
-        //         <tbody>
-        //             {tableRows}
-        //         </tbody>
-        //     </Table>
-        // )
     }
 
     return (
