@@ -99,3 +99,24 @@ tr.container{
     grid-template-columns: 1fr;
   }
 }
+
+.companyHeader{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: 1fr 1fr;
+}
+
+.companyName{
+  grid-column: 1/2;
+  grid-row: 1/2;
+}
+
+.companyUrl{
+  grid-column: 1/2;
+  grid-row: 2/-1;
+}
+
+.companyLogo{
+  grid-column: 2/-1;
+  grid-row: 1/-1;
+}

@@ -21,6 +21,7 @@ export function Ratios(props) {
         }
 
         getData(ibmId).then(result => {
+            console.log(result);
             setRatios(result);
             setIsLoading(false);
         })
@@ -41,7 +42,7 @@ export function Ratios(props) {
             </tr>)
 
         content = (
-            <Table className='content-table' bordered hover variant='light'>
+            <Table bordered hover striped variant='light'>
                 <tbody>
                     {tableRows}
                 </tbody>

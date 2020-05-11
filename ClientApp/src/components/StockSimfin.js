@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
 import { StatementData } from './StatementData';
 import { Ratios } from './Ratios';
+import { Summary } from './Summary';
 
 export function StockSimfin() {
 
-  const [key, setKey] = useState('income');
+  const [key, setKey] = useState('summary');
 
   return (
     <div>
-      <Tabs activeKey={key} onSelect={(k) => setKey(k)}>
+      <Tabs activeKey={key} onSelect={(k) => setKey(k)} className='mb-2'>
+        <Tab eventKey="summary" title="Summary">
+          <Summary
+            isActive={key === 'summary'}
+          />
+        </Tab>
+
         <Tab eventKey="income" title="Income" >
           <StatementData
             statementType='income'

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
+import { getMillions } from '../helpers';
 
 export function StatementData(props) {
     const [ttmData, setTtmData] = useState(null);
@@ -54,8 +55,6 @@ export function StatementData(props) {
 
     }, [isActive, yearsData, quartersData, ttmData, statementType, periodType])
 
-    const getBillions = (v) => Math.floor(+v / 1e6);
-
     let content;
     let data = periodType === 'year' ? yearsData : quartersData;
 
@@ -108,7 +107,7 @@ export function StatementData(props) {
                 let fullData = [ttmData, ...data];
                 for (let i = 0; i < fullData.length; ++i) {
                     let value = fullData[i].values[index];
-                    cells.push(<td key={i + 1} className='valueChosen'>{getBillions(value.valueChosen)}</td>)
+                    cells.push(<td key={i + 1} className='valueChosen'>{getMillions(value.valueChosen)}</td>)
                 }
 
 
@@ -136,7 +135,7 @@ export function StatementData(props) {
                         borderWidth: 1,
                         hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 1)`,
                         hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 1)`,
-                        data: data.map(d => getBillions(d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen)).reverse(),
+                        data: data.map(d => getMillions(d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen)).reverse(),
                         stack: ci.stack
                     }
                 ))
