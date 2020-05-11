@@ -1,35 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'react-bootstrap';
+import { Table, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 
 export function StatementData(props) {
-    const [yearData, setYearsData] = useState(null);
+    const [ttmData, setTtmData] = useState(null);
+    const [yearsData, setYearsData] = useState(null);
+    const [quartersData, setQuartersData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const { statementType, statementTitle, isActive } = props;
     const [visibleTids, setVisibleTids] = useState(new Map());
+    const [periodType, setPeriodType] = useState('year');
 
 
     useEffect(() => {
         if (!isActive) return;
-        if (yearData) return;
+        if (periodType === 'year' && yearsData) return;
+        if (periodType === 'quarter' && quartersData) return;
 
-        const years = [2019, 2018, 2017, 2016, 2015];
+        setIsLoading(true);
+        let periods = periodType === 'year' 
+            ? [[2019, 'fy'], [2018, 'fy'], [2017, 'fy'], [2016, 'fy'], [2015, 'fy']]
+            : [[2020, 'q1'], [2019, 'q4'], [2019, 'q3'], [2019, 'q2'], [2019, 'q1']]
         const ibmId = 69543;
 
-        const getData = async (companyId, year) => {
-            const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}`);
+        const getData = async (companyId, year, pType) => {
+            const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}/${pType}`);
             const data = await response.json();
             return data;
         }
-
-        let promises = years.map(year => getData(ibmId, year))
+        let promises = !ttmData ? [getData(ibmId, 0, 'ttm')] : [];
+        promises = [...promises, ...periods.map(period => getData(ibmId, period[0], period[1]))]
 
         Promise.all(promises).then((results) => {
             console.log(results);
-            setYearsData(results);
+            if (!ttmData){
+                if (periodType === 'year') setYearsData(results.slice(1));
+                else setQuartersData(results.slice(1));
+                setTtmData(results[0]);
+            }else{
+                if (periodType === 'year') setYearsData(results);
+                else setQuartersData(results);
+            }
 
-            let values0 = results[0].values;
             let visibleTids = new Map();
-            for (let value of values0) {
+            for (let value of results[0].values) {
                 visibleTids.set(value.tid, true);
             }
             setVisibleTids(visibleTids);
@@ -37,19 +50,20 @@ export function StatementData(props) {
             setIsLoading(false);
         });
 
-    }, [isActive, yearData, statementType])
+    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType])
 
 
 
     let content;
-    if (isLoading) {
+    let data = periodType === 'year' ? yearsData : quartersData;
+    if (isLoading || !data) {
         content = <p><em>Loading...</em></p>;
     } else {
         let children = new Map();
         let baseIndexes = [];
 
-        for (let index = 0; index < yearData[0].values.length; ++index) {
-            let value = yearData[0].values[index];
+        for (let index = 0; index < ttmData.values.length; ++index) {
+            let value = ttmData.values[index];
             if (value.valueChosen === null) continue;
             if (value['parent_tid'] === "0") {
                 baseIndexes.push(index);
@@ -78,9 +92,9 @@ export function StatementData(props) {
             if (!indexes) return;
             for (let index of indexes) {
                 let cells = [];
-                let value0 = yearData[0].values[index];
-                let tid = value0['tid'];
-                let standardisedName = value0['standardisedName'];
+                let ttmValue = ttmData.values[index];
+                let tid = ttmValue['tid'];
+                let standardisedName = ttmValue['standardisedName'];
 
                 cells.push(
                     children.has(tid)
@@ -88,12 +102,13 @@ export function StatementData(props) {
                         : <td key={0} className={`dl-${level}`}>{standardisedName}</td>
                 )
 
-                for (let i = 0; i < yearData.length; ++i) {
-                    let value = yearData[i].values[index];
+                let fullData = [ttmData, ...data];
+                for (let i = 0; i < fullData.length; ++i) {
+                    let value = fullData[i].values[index];
                     const valueChosenB = Math.floor(+value.valueChosen / 1e6);
                     cells.push(<td key={i + 1} className='valueChosen'>{valueChosenB}</td>)
                 }
-             
+
 
                 tableRows.push(
                     <tr className={children.has(tid) ? 'container' : ''} key={index} onClick={() => handleClickRow(tid)}>
@@ -110,13 +125,12 @@ export function StatementData(props) {
 
 
 
-        //const propNames = yearData[0].values.map(v => v.standardisedName);
         content = (
             <Table bordered hover variant='light'>
                 <thead>
                     <tr>
                         <th>Breakdown</th>
-                        {yearData.map((data, i) => <th className='date' key={i}>{data.periodEndDate}</th>)}
+                        {[ttmData, ...data].map((data, i) => <th className='date' key={i}>{i === 0 ? 'TTM' : data.periodEndDate}</th>)}
                     </tr>
                 </thead>
                 <tbody>
@@ -126,11 +140,22 @@ export function StatementData(props) {
         )
     }
 
+    const handlePeriodTypeChanged = (v) => {
+        setPeriodType(v);
+    }
 
 
     return (
         <div>
-            <h1>IBM {statementTitle}</h1>
+            <div className='statementHeader'>
+                <h1>IBM {statementTitle}</h1>
+
+                <ToggleButtonGroup className='periodType' type='radio' value={periodType} name='periodType' onChange={handlePeriodTypeChanged}>
+                    <ToggleButton value='year' variant='outline-secondary'>Year</ToggleButton>
+                    <ToggleButton value='quarter' variant='outline-secondary'>Quarter</ToggleButton>
+                </ToggleButtonGroup>
+            </div>
+
             {content}
         </div>
     )

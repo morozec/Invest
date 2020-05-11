@@ -69,3 +69,12 @@ tr.container{
   cursor: pointer;
 }
 
+
+.statementHeader{
+  display: flex;
+  align-items: center;
+}
+
+.periodType{
+  margin-left: auto;
+}

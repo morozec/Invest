@@ -14,33 +14,33 @@ namespace Invest.Controllers
     [ApiController]
     public class SimfinController : ControllerBase
     {
-        [HttpGet("income/{companyId}/{year}")]
-        public IActionResult GetIncome(int companyId, int year)
+        [HttpGet("income/{companyId}/{year}/{pType}")]
+        public IActionResult GetIncome(int companyId, int year, string pType)
         {
             var url =
-                $"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?stype=pl&ptype=fy&fyear={year}&api-key={Constants.SIMFIN_API}";
+                $"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?stype=pl&ptype={pType}&fyear={year}&api-key={Constants.SIMFIN_API}";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
             return Ok(response.Content);
         }
 
-        [HttpGet("balanceSheet/{companyId}/{year}")]
-        public IActionResult GetBalanceSheet(int companyId, int year)
+        [HttpGet("balanceSheet/{companyId}/{year}/{pType}")]
+        public IActionResult GetBalanceSheet(int companyId, int year, string pType)
         {
             var url =
-                $"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?stype=bs&ptype=fy&fyear={year}&api-key={Constants.SIMFIN_API}";
+                $"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?stype=bs&ptype={pType}&fyear={year}&api-key={Constants.SIMFIN_API}";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
             return Ok(response.Content);
         }
 
-        [HttpGet("cashFlow/{companyId}/{year}")]
-        public IActionResult GetCashFlow(int companyId, int year)
+        [HttpGet("cashFlow/{companyId}/{year}/{pType}")]
+        public IActionResult GetCashFlow(int companyId, int year, string pType)
         {
             var url =
-                $"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?stype=cf&ptype=fy&fyear={year}&api-key={Constants.SIMFIN_API}";
+                $"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?stype=cf&ptype={pType}&fyear={year}&api-key={Constants.SIMFIN_API}";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
