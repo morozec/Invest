@@ -13,6 +13,11 @@ code {
   border-color: #1861ac;
 }
 
+.layout-container{
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
 th.date{
   text-align: center;
 }
@@ -77,4 +82,20 @@ tr.container{
 
 .periodType{
   margin-left: auto;
+}
+
+.content{
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  overflow-x: scroll;
+}
+
+.content-charts canvas{
+  max-width: 100%;
+}
+
+@media screen and (max-width: 1500px){
+  .content{
+    grid-template-columns: 1fr;
+  }
 }

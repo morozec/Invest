@@ -145,20 +145,8 @@ export function StatementData(props) {
         }));
 
         content = (
-            <Fragment>
-                {chartDatas.map((chartData, i) =>
-                    <Bar key={i} data={chartData} options={{
-                        scales: {
-                            xAxes: [{
-                                stacked: true
-                            }],
-                            yAxes: [{
-                                stacked: true
-                            }]
-                        }
-                    }} />
-                )}
-                <Table bordered hover variant='light'>
+            <div className='content'>
+                <Table className='content-table' bordered hover variant='light'>
                     <thead>
                         <tr>
                             <th>Breakdown</th>
@@ -169,7 +157,27 @@ export function StatementData(props) {
                         {tableRows}
                     </tbody>
                 </Table>
-            </Fragment>
+
+
+                <div className='content-charts'>
+                    {chartDatas.map((chartData, i) =>
+                        <Bar key={i}
+                            data={chartData}
+                            options={{
+                                responsive: true,
+                                scales: {
+                                    xAxes: [{
+                                        stacked: true
+                                    }],
+                                    yAxes: [{
+                                        stacked: true
+                                    }]
+                                }
+                            }} />
+                    )}
+                </div>
+
+            </div>
         )
 
 
