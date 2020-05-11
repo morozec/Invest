@@ -87,7 +87,7 @@ tr.container{
 .content{
   display: grid;
   grid-template-columns: 2fr 1fr;
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 
 .content-charts canvas{

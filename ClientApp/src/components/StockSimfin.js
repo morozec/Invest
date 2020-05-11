@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
 import { StatementData } from './StatementData';
+import { Ratios } from './Ratios';
 
 export function StockSimfin() {
 
@@ -105,6 +106,12 @@ export function StockSimfin() {
                 ]
               },
             ]}
+          />
+        </Tab>
+
+        <Tab eventKey="ratios" title="Ratios">
+          <Ratios
+            isActive={key === 'ratios'}
           />
         </Tab>
       </Tabs>

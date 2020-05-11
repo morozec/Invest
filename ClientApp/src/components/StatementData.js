@@ -1,5 +1,5 @@
-import React, { useState, useEffect, Fragment } from 'react';
-import { Table, ToggleButton, ToggleButtonGroup, ButtonGroup } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Table, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
 
 export function StatementData(props) {
@@ -58,11 +58,9 @@ export function StatementData(props) {
 
     let content;
     let data = periodType === 'year' ? yearsData : quartersData;
-    let chartData;
 
     if (isLoading || !data) {
         content = <p><em>Loading...</em></p>;
-        chartData = {};
     } else {
         let children = new Map();
         let baseIndexes = [];
