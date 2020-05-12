@@ -69,7 +69,7 @@ export function Summary(props) {
             setRatios(result[1]);
             setRecommendations(result[2].reverse());
             setPriceTargets(result[3]);
-            setUpgradeDowngrade(result[4]);
+            setUpgradeDowngrade(result[4].slice(0, 10));
 
             setIsLoading(false);
             console.log(result);
@@ -113,196 +113,215 @@ export function Summary(props) {
                 </div>
 
 
-                <Table bordered hover striped variant='light' className='mr-2'>
-                    <tbody>
-                        <tr>
-                            <td>Market Capitalisation</td>
-                            <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/E</td>
-                            <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/S</td>
-                            <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/B</td>
-                            <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/FCF</td>
-                            <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Revenue</td>
-                            <td>{`${getRatioValue('Revenues', true)}`} B</td>
-                        </tr>
-                        <tr>
-                            <td>EPS</td>
-                            <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Dividends per Share (Yield %)</td>
-                            <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
-                        </tr>
-                    </tbody>
-                </Table>
 
-
-                <TradingViewWidget
-                    symbol="NASDAQ:FB"
-                    theme={Themes.LIGHT}
-                    locale="en"
-                />
-
-
-                <Bar
-                    data={{
-                        labels: recommendations.map(r => r.period),
-                        datasets: [
-                            {
-                                label: 'Strong Sell',
-                                backgroundColor: `rgba(127, 0, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(127, 0, 0, 1)`,
-                                hoverBorderColor: `rgba(127, 0, 0, 1)`,
-                                data: recommendations.map(rec => rec.strongSell),
-                                stack: 'recommendations'
-                            },
-
-                            {
-                                label: 'Sell',
-                                backgroundColor: `rgba(255, 0, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
-                                hoverBorderColor: `rgba(255, 0, 0, 1)`,
-                                data: recommendations.map(rec => rec.sell),
-                                stack: 'recommendations'
-                            },
-
-                            {
-                                label: 'Hold',
-                                backgroundColor: `rgba(255, 255, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
-                                hoverBorderColor: `rgba(255, 255, 0, 1)`,
-                                data: recommendations.map(rec => rec.hold),
-                                stack: 'recommendations'
-                            },
-
-                            {
-                                label: 'Buy',
-                                backgroundColor: `rgba(0, 255, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
-                                hoverBorderColor: `rgba(0, 255, 0, 1)`,
-                                data: recommendations.map(rec => rec.buy),
-                                stack: 'recommendations'
-                            },
-
-                            {
-                                label: 'Strong Buy',
-                                backgroundColor: `rgba(0, 127, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(0, 127, 0, 1)`,
-                                hoverBorderColor: `rgba(0, 127, 0, 1)`,
-                                data: recommendations.map(rec => rec.strongBuy),
-                                stack: 'recommendations'
-                            }
-                        ]
-                    }}
-                    options={{
-                        responsive: true,
-                        scales: {
-                            xAxes: [{
-                                stacked: true
-                            }],
-                            yAxes: [{
-                                stacked: true
-                            }]
-                        }
-                    }} />
-
-                <Line
-                    legend={{ display: false }}
-                    data={{
-                        labels: ['Current Price', 'Price Targets'],
-                        datasets: [
-                            {
-                                label: 'Current',
-                                backgroundColor: `rgba(0, 0, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(0, 0, 0, 1)`,
-                                hoverBorderColor: `rgba(0, 0, 0, 1)`,
-                                data: [100, null],
-                                pointRadius: 15,
-                                pointHoverRadius: 15,
-                                borderDash: [10, 5],
-                                fill: false,
-
-                            },
-                            {
-                                label: 'Low',
-                                backgroundColor: `rgba(255, 0, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
-                                hoverBorderColor: `rgba(255, 0, 0, 1)`,
-                                data: [null, priceTargets.targetLow],
-                                pointRadius: 15,
-                                pointHoverRadius: 15,
-                                borderDash: [10, 5],
-                                fill: false,
-
-                            },
-                            {
-                                label: 'Mean',
-                                backgroundColor: `rgba(255, 255, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
-                                hoverBorderColor: `rgba(255, 255, 0, 1)`,
-                                data: [null, priceTargets.targetMean],
-                                pointRadius: 15,
-                                pointHoverRadius: 15,
-                                borderDash: [10, 5],
-                                fill: false,
-                            },
-                            {
-                                label: 'High',
-                                backgroundColor: `rgba(0, 255, 0, 0.6)`,
-                                borderWidth: 1,
-                                hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
-                                hoverBorderColor: `rgba(0, 255, 0, 1)`,
-                                data: [null, priceTargets.targetHigh],
-                                pointRadius: 15,
-                                pointHoverRadius: 15,
-                                borderDash: [10, 5],
-                                fill: false,
-                            }
-                        ]
-                    }}
-                />
-
-                <Table bordered hover variant='dark'>
-                    <thead>
-                        <tr>
-                            <th>Grade</th>
-                            <th>Company</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {upgradeDowngrade.map((ud, i) =>
-                            <tr className={ud.action} key={i}>
-                                <td>{ud.fromGrade ? `${ud.fromGrade} → ${ud.toGrade}` : ud.toGrade}</td>
-                                <td>{ud.company}</td>
-                                <td>{getDateStringFromUnixTime(ud.gradeTime)}</td>
+                <div className='companyInfo'>
+                    <Table bordered hover striped variant='dark' className='mainRatiosContainer'>
+                        <tbody>
+                            <tr>
+                                <td>Market Capitalisation</td>
+                                <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
                             </tr>
-                        )}
-                    </tbody>
-                </Table>
+                            <tr>
+                                <td>P/E</td>
+                                <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/S</td>
+                                <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/B</td>
+                                <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/FCF</td>
+                                <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>Revenue</td>
+                                <td>{`${getRatioValue('Revenues', true)}`} B</td>
+                            </tr>
+                            <tr>
+                                <td>EPS</td>
+                                <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>Dividends per Share (Yield %)</td>
+                                <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
+                            </tr>
+                        </tbody>
+                    </Table>
 
+                    <div className='tradingViewContainer'>
+                        <TradingViewWidget
+                            symbol="NASDAQ:FB"
+                            theme={Themes.LIGHT}
+                            locale="en"
+                        />
+                    </div>
+
+                    <Table bordered hover variant='dark' className='table-sm upgradeDowngradeContainer'>
+                        <caption className='udCaption'>Upgrade/Downgrade</caption>
+                        <thead>
+                            <tr>
+                                <th>Grade</th>
+                                <th>Company</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {upgradeDowngrade.map((ud, i) =>
+                                <tr className={ud.action} key={i}>
+                                    <td>{ud.fromGrade ? `${ud.fromGrade} → ${ud.toGrade}` : ud.toGrade}</td>
+                                    <td>{ud.company}</td>
+                                    <td>{getDateStringFromUnixTime(ud.gradeTime)}</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
+
+                    <div className='recommendationsContainer'>
+                        <Bar
+                            data={{
+                                labels: recommendations.map(r => r.period),
+                                datasets: [
+                                    {
+                                        label: 'Strong Sell',
+                                        backgroundColor: `rgba(127, 0, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(127, 0, 0, 1)`,
+                                        hoverBorderColor: `rgba(127, 0, 0, 1)`,
+                                        data: recommendations.map(rec => rec.strongSell),
+                                        stack: 'recommendations'
+                                    },
+
+                                    {
+                                        label: 'Sell',
+                                        backgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
+                                        hoverBorderColor: `rgba(255, 0, 0, 1)`,
+                                        data: recommendations.map(rec => rec.sell),
+                                        stack: 'recommendations'
+                                    },
+
+                                    {
+                                        label: 'Hold',
+                                        backgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
+                                        hoverBorderColor: `rgba(255, 255, 0, 1)`,
+                                        data: recommendations.map(rec => rec.hold),
+                                        stack: 'recommendations'
+                                    },
+
+                                    {
+                                        label: 'Buy',
+                                        backgroundColor: `rgba(0, 255, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
+                                        hoverBorderColor: `rgba(0, 255, 0, 1)`,
+                                        data: recommendations.map(rec => rec.buy),
+                                        stack: 'recommendations'
+                                    },
+
+                                    {
+                                        label: 'Strong Buy',
+                                        backgroundColor: `rgba(0, 127, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(0, 127, 0, 1)`,
+                                        hoverBorderColor: `rgba(0, 127, 0, 1)`,
+                                        data: recommendations.map(rec => rec.strongBuy),
+                                        stack: 'recommendations'
+                                    }
+                                ]
+                            }}
+                            options={{
+                                responsive: true,
+                                title: {
+                                    display: true,
+                                    text: 'Recommendation Trends'
+                                },
+                                scales: {
+                                    xAxes: [{
+                                        stacked: true
+                                    }],
+                                    yAxes: [{
+                                        stacked: true
+                                    }]
+                                }
+                            }} />
+                    </div>
+                    <div className='priceTragetsContainer'>
+                        <Line
+                            legend={{ display: false }}
+                            data={{
+                                labels: ['Current Price', 'Price Targets'],
+                                datasets: [
+                                    {
+                                        label: 'Current',
+                                        backgroundColor: `rgba(0, 0, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(0, 0, 0, 1)`,
+                                        hoverBorderColor: `rgba(0, 0, 0, 1)`,
+                                        data: [100, null],
+                                        pointRadius: 15,
+                                        pointHoverRadius: 15,
+                                        borderDash: [10, 5],
+                                        fill: false,
+
+                                    },
+                                    {
+                                        label: 'Low',
+                                        backgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
+                                        hoverBorderColor: `rgba(255, 0, 0, 1)`,
+                                        data: [null, priceTargets.targetLow],
+                                        pointRadius: 15,
+                                        pointHoverRadius: 15,
+                                        borderDash: [10, 5],
+                                        fill: false,
+
+                                    },
+                                    {
+                                        label: 'Mean',
+                                        backgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
+                                        hoverBorderColor: `rgba(255, 255, 0, 1)`,
+                                        data: [null, priceTargets.targetMean],
+                                        pointRadius: 15,
+                                        pointHoverRadius: 15,
+                                        borderDash: [10, 5],
+                                        fill: false,
+                                    },
+                                    {
+                                        label: 'High',
+                                        backgroundColor: `rgba(0, 255, 0, 0.6)`,
+                                        borderWidth: 1,
+                                        hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
+                                        hoverBorderColor: `rgba(0, 255, 0, 1)`,
+                                        data: [null, priceTargets.targetHigh],
+                                        pointRadius: 15,
+                                        pointHoverRadius: 15,
+                                        borderDash: [10, 5],
+                                        fill: false,
+                                    }
+                                ]
+                            }}
+                            options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                title: {
+                                    display: true,
+                                    text: 'Price Target'
+                                },
+                            }}
+                        />
+                    </div>
+
+                </div>
 
             </Fragment>
         )

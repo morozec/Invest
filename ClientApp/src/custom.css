@@ -139,3 +139,44 @@ tr.up{
 tr.down{
   background-color: rgb(100, 0, 0);
 }
+
+.companyInfo{
+  display: grid;
+  grid-template-columns: 1fr 1fr 200px;
+  gap: 1rem;
+}
+
+.companyInfo canvas{
+  max-width: 100%;
+  max-height: 100%;
+}
+
+
+.mainRatiosContainer{
+  grid-row: 1/2;
+  grid-column: 1/2;
+}
+
+.tradingViewContainer{
+  grid-row: 1/2;
+  grid-column: 2/-1;
+}
+
+.upgradeDowngradeContainer{
+  grid-row:2/3;
+  grid-column: 1/2;
+}
+
+.recommendationsContainer{
+  grid-row:2/3;
+  grid-column: 2/3;
+}
+
+.priceTragetsContainer{
+  grid-row:2/3;
+  grid-column: 3/-1;
+}
+
+.udCaption{
+  caption-side: top;
+}
