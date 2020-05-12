@@ -44,6 +44,10 @@ export function Summary(props) {
                 <Table bordered hover striped variant='dark' className='mainRatiosContainer'>
                     <tbody>
                         <tr>
+                            <td>Last Closing Price</td>
+                            <td>{`${getRatioValue('Last Closing Price', false)}`}</td>
+                        </tr>
+                        <tr>
                             <td>Market Capitalisation</td>
                             <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
                         </tr>
@@ -165,6 +169,7 @@ export function Summary(props) {
                         }}
                         options={{
                             responsive: true,
+                            maintainAspectRatio: false,
                             title: {
                                 display: true,
                                 text: 'Recommendation Trends'
@@ -191,7 +196,7 @@ export function Summary(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(0, 0, 0, 1)`,
                                     hoverBorderColor: `rgba(0, 0, 0, 1)`,
-                                    data: [100, null],
+                                    data: [getRatioValue('Last Closing Price', false), null],
                                     pointRadius: 15,
                                     pointHoverRadius: 15,
                                     borderDash: [10, 5],
