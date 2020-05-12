@@ -10,14 +10,17 @@ export function Summary(props) {
     const [recommendations, setRecommendations] = useState(null);
     const [priceTargets, setPriceTargets] = useState(null);
     const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
-    const [currentTicker, setCurrentTicker] = useState(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const { isActive, ticker } = props;
 
+    useEffect(() =>
+        setProfile(null),
+        [ticker])
+
     useEffect(() => {
         if (!isActive) return;
-        if (profile && ticker === currentTicker) return;
+        if (profile) return;
 
         // const ibmId = 69543;
         // const fbId = 121021;
@@ -70,7 +73,6 @@ export function Summary(props) {
 
         Promise.all(promises).then(result => {
             console.log(result);
-            setCurrentTicker(ticker);
             setProfile(result[1]);
             setRecommendations(result[2].reverse());
             setPriceTargets(result[3]);
