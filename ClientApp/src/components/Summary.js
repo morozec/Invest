@@ -34,6 +34,7 @@ export function Summary(props) {
             return ratios;
         }
 
+      
         let promises = [getProfile(fbSymbol), getRatios(fbId)];
         Promise.all(promises).then(result => {
             setProfile(result[0]);
@@ -98,6 +99,10 @@ export function Summary(props) {
                             <tr>
                                 <td>P/B</td>
                                 <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
+                            </tr>
+                            <tr>
+                                <td>P/FCF</td>
+                                <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
                             </tr>
                             <tr>
                                 <td>Revenue</td>

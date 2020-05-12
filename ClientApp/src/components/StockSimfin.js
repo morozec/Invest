@@ -3,6 +3,7 @@ import { Tabs, Tab } from 'react-bootstrap';
 import { StatementData } from './StatementData';
 import { Ratios } from './Ratios';
 import { Summary } from './Summary';
+import { News } from './News';
 
 export function StockSimfin() {
 
@@ -119,6 +120,12 @@ export function StockSimfin() {
         <Tab eventKey="ratios" title="Ratios">
           <Ratios
             isActive={key === 'ratios'}
+          />
+        </Tab>
+
+        <Tab eventKey="news" title="News">
+          <News
+            isActive={key === 'news'}
           />
         </Tab>
       </Tabs>

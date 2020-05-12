@@ -125,3 +125,9 @@ tr.container{
   display: flex;
 }
 
+.newsImage{
+  margin-right: 1rem;
+  max-width: 128px;
+  max-height: 128px;
+  margin-bottom: 1rem;
+}
