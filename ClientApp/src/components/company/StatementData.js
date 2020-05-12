@@ -103,7 +103,7 @@ export function StatementData(props) {
                 let fullData = [ttmData, ...data];
                 for (let i = 0; i < fullData.length; ++i) {
                     let value = fullData[i].values[index];
-                    cells.push(<td key={i + 1} className='valueChosen'>{getMillions(value.valueChosen)}</td>)
+                    cells.push(<td key={i + 1} className='value'>{getMillions(value.valueChosen)}</td>)
                 }
 
 

@@ -66,7 +66,7 @@ td.dl-10{
   padding-left: 20.75rem;
 }
 
-td.valueChosen{
+td.value{
   text-align: right;
 }
 
@@ -177,6 +177,8 @@ tr.down{
   grid-column: 3/-1;
 }
 
-.udCaption{
+table > caption{
   caption-side: top;
 }
+
+

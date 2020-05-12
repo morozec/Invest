@@ -49,7 +49,7 @@ export function Summary(props) {
                         </tr>
                         <tr>
                             <td>Market Capitalisation</td>
-                            <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
+                            <td>{`${getRatioValue('Market Capitalisation', true)}B`}</td>
                         </tr>
                         <tr>
                             <td>P/E</td>
@@ -69,7 +69,7 @@ export function Summary(props) {
                         </tr>
                         <tr>
                             <td>Revenue</td>
-                            <td>{`${getRatioValue('Revenues', true)}`} B</td>
+                            <td>{`${getRatioValue('Revenues', true)}B`}</td>
                         </tr>
                         <tr>
                             <td>EPS</td>
@@ -92,7 +92,7 @@ export function Summary(props) {
                 </div>
 
                 <Table bordered hover variant='dark' className='table-sm upgradeDowngradeContainer'>
-                    <caption className='udCaption'>Upgrade/Downgrade</caption>
+                    <caption>Upgrade/Downgrade</caption>
                     <thead>
                         <tr>
                             <th>Grade</th>
