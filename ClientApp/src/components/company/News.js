@@ -5,15 +5,13 @@ import {getDateStringFromUnixTime} from '../../helpers'
 export function News(props) {
     const [news, setNews] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const { isActive } = props;
+    const { isActive, ticker } = props;
 
 
     useEffect(() => {
         if (!isActive) return;
         if (news) return;
 
-        const ibmSymbol = 'ibm';
-        // const ibmId = 69543;
         setIsLoading(true);
 
         const getNews = async (companySymbol) => {
@@ -22,14 +20,12 @@ export function News(props) {
             return news;
         }
 
-
-        getNews(ibmSymbol).then(result => {
+        getNews(ticker).then(result => {
             setNews(result);
             setIsLoading(false);
-            console.log(result)
         })
 
-    }, [isActive, news])
+    }, [isActive, news, ticker])
 
 
     let content;
@@ -60,7 +56,7 @@ export function News(props) {
     return (
         <div>
             <div className='statementHeader'>
-                <h1>IBM News</h1>
+                <h1>{ticker} News</h1>
             </div>
             {content}
         </div>

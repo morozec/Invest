@@ -11,7 +11,7 @@ export function StatementData(props) {
     const [visibleTids, setVisibleTids] = useState(new Map());
     const [periodType, setPeriodType] = useState('year');
 
-    const { statementType, statementTitle, isActive, chartInfos } = props;
+    const { statementType, statementTitle, isActive, chartInfos, ticker, simfinId } = props;
 
 
     useEffect(() => {
@@ -23,15 +23,14 @@ export function StatementData(props) {
         let periods = periodType === 'year'
             ? [[2019, 'fy'], [2018, 'fy'], [2017, 'fy'], [2016, 'fy'], [2015, 'fy']]
             : [[2020, 'q1'], [2019, 'q4'], [2019, 'q3'], [2019, 'q2'], [2019, 'q1']]
-        const ibmId = 69543;
 
         const getData = async (companyId, year, pType) => {
             const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}/${pType}`);
             const data = await response.json();
             return data;
         }
-        let promises = !ttmData ? [getData(ibmId, 0, 'ttm')] : [];
-        promises = [...promises, ...periods.map(period => getData(ibmId, period[0], period[1]))]
+        let promises = !ttmData ? [getData(simfinId, 0, 'ttm')] : [];
+        promises = [...promises, ...periods.map(period => getData(simfinId, period[0], period[1]))]
 
         Promise.all(promises).then((results) => {
             console.log(results);
@@ -53,7 +52,7 @@ export function StatementData(props) {
             setIsLoading(false);
         });
 
-    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType])
+    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType, simfinId])
 
     let content;
     let data = periodType === 'year' ? yearsData : quartersData;
@@ -78,9 +77,6 @@ export function StatementData(props) {
                 children.get(parentId).push(index);
             }
         }
-
-        // console.log(baseIndexes);
-        // console.log(children);
 
         const handleClickRow = (tid) => {
             if (!children.has(tid)) return;
@@ -116,7 +112,6 @@ export function StatementData(props) {
                         {cells}
                     </tr>)
 
-                //console.log(visibleTids);
                 if (visibleTids.get(tid)) {
                     fillTableRec(children.get(tid), level + 1);
                 }
@@ -188,7 +183,7 @@ export function StatementData(props) {
     return (
         <div>
             <div className='statementHeader'>
-                <h1>IBM {statementTitle}</h1>
+                <h1>{ticker} {statementTitle}</h1>
 
                 {/* <ButtonGroup toggle className='showTtm'> 
                     <ToggleButton type="checkbox" defaultChecked value="1" variant='outline-secondary'>

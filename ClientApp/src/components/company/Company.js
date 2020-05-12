@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
 import { StatementData } from './StatementData';
 import { Ratios } from './Ratios';
@@ -10,23 +10,104 @@ export function StockSimfin(props) {
 
   const [key, setKey] = useState('summary');
 
+  const [simfinId, setSimfinId] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [ratios, setRatios] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
+  const [priceTargets, setPriceTargets] = useState(null);
+  const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+
   const useQuery = () => new URLSearchParams(useLocation().search);
   const query = useQuery();
   const ticker = query.get('t');
 
-  return (
-    <div>
+  useEffect(() => {
+    setIsLoading(true);
+
+    const getSimfinId = async (companySymbol) => {
+      const response = await fetch(`api/simfin/id/${companySymbol}`);
+      const json = await response.json();
+      return json[0].simId;
+    }
+
+    const getProfile = async (companySymbol) => {
+      const response = await fetch(`api/finnhub/profile/${companySymbol}`);
+      const profile = await response.json();
+      return profile;
+    }
+
+    const getRatios = async (companyId) => {
+      const response = await fetch(`api/simfin/ratios/${companyId}`);
+      const ratios = await response.json();
+      return ratios;
+    }
+
+    const getRecommendations = async (companySymbol) => {
+      const response = await fetch(`api/finnhub/recommendations/${companySymbol}`);
+      const recommendations = await response.json();
+      return recommendations;
+    }
+
+    const getPriceTargets = async (companySymbol) => {
+      const response = await fetch(`api/finnhub/priceTargets/${companySymbol}`);
+      const data = await response.json();
+      return data;
+    }
+
+    const getUpgradeDowngrade = async (companySymbol) => {
+      const response = await fetch(`api/finnhub/upgradeDowngrade/${companySymbol}`);
+      const data = await response.json();
+      return data;
+    }
+
+    let promises = [
+      getSimfinId(ticker),
+      getProfile(ticker),
+      getRecommendations(ticker),
+      getPriceTargets(ticker),
+      getUpgradeDowngrade(ticker)
+    ];
+
+    Promise.all(promises).then(result => {
+      console.log(result);
+      setSimfinId(result[0]);
+      setProfile(result[1]);
+      setRecommendations(result[2].reverse());
+      setPriceTargets(result[3]);
+      setUpgradeDowngrade(result[4].slice(0, 10));
+      return result[0];//simfin id
+    })
+      .then(simfinId => getRatios(simfinId))
+      .then(ratios => {
+        setRatios(ratios);
+        setIsLoading(false);
+      })
+
+
+  }, [ticker])
+
+  let content;
+  if (isLoading) {
+    content = <p><em>Loading...</em></p>;
+  } else {
+    content =
       <Tabs activeKey={key} onSelect={(k) => setKey(k)} className='mb-2'>
         <Tab eventKey="summary" title="Summary">
           <Summary
-            ticker = {ticker}
-            isActive={key === 'summary'}
+            profile={profile}
+            ratios={ratios}
+            recommendations={recommendations}
+            priceTargets={priceTargets}
+            upgradeDowngrade={upgradeDowngrade}
           />
         </Tab>
 
         <Tab eventKey="income" title="Income" >
           <StatementData
-            ticker = {ticker}
+            ticker={profile.ticker}
+            simfinId={simfinId}
             statementType='income'
             statementTitle='Income'
             isActive={key === 'income'}
@@ -52,7 +133,8 @@ export function StockSimfin(props) {
         </Tab>
         <Tab eventKey="balanceSheet" title="Balance Sheet">
           <StatementData
-            ticker = {ticker}
+            ticker={profile.ticker}
+            simfinId={simfinId}
             statementType='balanceSheet'
             statementTitle='Balance Sheet'
             isActive={key === 'balanceSheet'}
@@ -98,7 +180,8 @@ export function StockSimfin(props) {
         </Tab>
         <Tab eventKey="cashFlow" title="Cash Flow">
           <StatementData
-            ticker = {ticker}
+            ticker={profile.ticker}
+            simfinId={simfinId}
             statementType='cashFlow'
             statementTitle='Cash Flow'
             isActive={key === 'cashFlow'}
@@ -128,18 +211,23 @@ export function StockSimfin(props) {
 
         <Tab eventKey="ratios" title="Ratios">
           <Ratios
-            ticker = {ticker}
-            isActive={key === 'ratios'}
+            ticker={profile.ticker}
+            ratios={ratios}
           />
         </Tab>
 
         <Tab eventKey="news" title="News">
           <News
-            ticker = {ticker}
+            ticker={profile.ticker}
             isActive={key === 'news'}
           />
         </Tab>
       </Tabs>
+  }
+
+  return (
+    <div>
+      {content}
     </div>
   )
 }
