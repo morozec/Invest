@@ -50,6 +50,27 @@ namespace Invest.Controllers
             return Ok(response.Content);
         }
 
-        
+        [HttpGet("priceTargets/{companySymbol}")]
+        public IActionResult GetPriceTargets(string companySymbol)
+        {
+            var url =
+                $"https://finnhub.io/api/v1/stock/price-target?symbol={companySymbol}&token={Constants.FINNHUB_API}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
+        [HttpGet("upgradeDowngrade/{companySymbol}")]
+        public IActionResult GetUpgradeDowngrade(string companySymbol)
+        {
+            var url =
+                $"https://finnhub.io/api/v1/stock/upgrade-downgrade?symbol={companySymbol}&token={Constants.FINNHUB_API}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
     }
 }

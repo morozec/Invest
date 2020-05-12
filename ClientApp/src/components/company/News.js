@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Media } from 'react-bootstrap';
+import {getDateStringFromUnixTime} from '../../helpers'
 
 export function News(props) {
     const [news, setNews] = useState(null);
@@ -48,7 +49,7 @@ export function News(props) {
                         </a>
                         <Media.Body>
                             <h5><a href={newsItem.url} target='_blank'>{newsItem.headline}</a></h5>
-                            <h6>By {newsItem.source} - {new Date(+newsItem.datetime * 1000).toISOString().substring(0, 10)}</h6>
+                            <h6>By {newsItem.source} - {getDateStringFromUnixTime(newsItem.datetime)}</h6>
                             <p>{newsItem.summary}</p>
                         </Media.Body>
                     </Media>
