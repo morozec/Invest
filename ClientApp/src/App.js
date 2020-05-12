@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Route } from 'react-router';
 import { Layout } from './components/Layout';
 import { Home } from './components/Home';
-import { Stock } from './components/Stock';
+import { YahooFinance } from './components/Stock';
 import { Counter } from './components/Counter';
 
 import './custom.css'
@@ -16,8 +16,8 @@ export default class App extends Component {
       <Layout>
         <Route exact path='/' component={Home} />
         <Route path='/counter' component={Counter} />
-        <Route path='/stock' component={Stock} />
-        <Route path='/stocksimfin' component={StockSimfin} />
+        <Route path='/yahoo' component={YahooFinance} />
+        <Route path='/stock' component={StockSimfin} />
       </Layout>
     );
   }

@@ -10,21 +10,25 @@ export function Summary(props) {
     const [recommendations, setRecommendations] = useState(null);
     const [priceTargets, setPriceTargets] = useState(null);
     const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
+    const [currentTicker, setCurrentTicker] = useState(null);
 
     const [isLoading, setIsLoading] = useState(true);
-    const { isActive } = props;
-
+    const { isActive, ticker } = props;
 
     useEffect(() => {
         if (!isActive) return;
-        if (profile) return;
+        if (profile && ticker === currentTicker) return;
 
-        const ibmSymbol = 'ibm';
-        const ibmId = 69543;
+        // const ibmId = 69543;
+        // const fbId = 121021;
 
-        const fbSymbol = 'fb';
-        const fbId = 121021;
         setIsLoading(true);
+
+        const getSimfinId = async (companySymbol) => {
+            const response = await fetch(`api/simfin/id/${companySymbol}`);
+            const json = await response.json();
+            return json[0].simId;
+        }
 
         const getProfile = async (companySymbol) => {
             const response = await fetch(`api/finnhub/profile/${companySymbol}`);
@@ -57,25 +61,30 @@ export function Summary(props) {
         }
 
         let promises = [
-            getProfile(fbSymbol),
-            getRatios(fbId),
-            getRecommendations(fbSymbol),
-            getPriceTargets(fbSymbol),
-            getUpgradeDowngrade(fbSymbol)
+            getSimfinId(ticker),
+            getProfile(ticker),
+            getRecommendations(ticker),
+            getPriceTargets(ticker),
+            getUpgradeDowngrade(ticker)
         ];
 
         Promise.all(promises).then(result => {
-            setProfile(result[0]);
-            setRatios(result[1]);
+            console.log(result);
+            setCurrentTicker(ticker);
+            setProfile(result[1]);
             setRecommendations(result[2].reverse());
             setPriceTargets(result[3]);
             setUpgradeDowngrade(result[4].slice(0, 10));
-
-            setIsLoading(false);
-            console.log(result);
+            return result[0];//simfin id
         })
+            .then(simfinId => getRatios(simfinId))
+            .then(ratios => {
+                setRatios(ratios);
+                setIsLoading(false);
+            })
 
-    }, [isActive, profile])
+
+    }, [isActive, profile, ticker])
 
     const getRatioValue = (ratioName, isAbsolute) => {
         let ratio = ratios.filter(r => r.indicatorName === ratioName)[0];
@@ -104,7 +113,7 @@ export function Summary(props) {
                     </div>
 
                     <div className='companyUrl'>
-                        <a href={profile.weburl} target="_blank">{profile.weburl}</a>
+                        <a href={profile.weburl} target="_blank" rel="noopener noreferrer">{profile.weburl}</a>
                     </div>
 
                     <div className='companyLogo'>
@@ -154,9 +163,10 @@ export function Summary(props) {
 
                     <div className='tradingViewContainer'>
                         <TradingViewWidget
-                            symbol="NASDAQ:FB"
+                            symbol={`${ticker}`}
                             theme={Themes.LIGHT}
                             locale="en"
+                            autosize
                         />
                     </div>
 

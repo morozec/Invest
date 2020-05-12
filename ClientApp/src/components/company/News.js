@@ -13,7 +13,7 @@ export function News(props) {
         if (news) return;
 
         const ibmSymbol = 'ibm';
-        const ibmId = 69543;
+        // const ibmId = 69543;
         setIsLoading(true);
 
         const getNews = async (companySymbol) => {
@@ -29,7 +29,7 @@ export function News(props) {
             console.log(result)
         })
 
-    }, [isActive, setNews])
+    }, [isActive, news])
 
 
     let content;
@@ -41,14 +41,14 @@ export function News(props) {
             <ul>
                 {news.map((newsItem) =>
                     <Media key={newsItem.id} as='li'>
-                        <a href={newsItem.url} target='_blank'>
+                        <a href={newsItem.url} target='_blank' rel="noopener noreferrer">
                             <img className='newsImage'
                                 src={newsItem.image}
                                 alt={newsItem.headline}
                             />
                         </a>
                         <Media.Body>
-                            <h5><a href={newsItem.url} target='_blank'>{newsItem.headline}</a></h5>
+                            <h5><a href={newsItem.url} target='_blank' rel="noopener noreferrer">{newsItem.headline}</a></h5>
                             <h6>By {newsItem.source} - {getDateStringFromUnixTime(newsItem.datetime)}</h6>
                             <p>{newsItem.summary}</p>
                         </Media.Body>

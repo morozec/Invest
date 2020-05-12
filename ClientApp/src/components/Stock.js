@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
 
-export function Stock() {
+export function YahooFinance() {
   const [balanceSheet, setBalanceSheet] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 

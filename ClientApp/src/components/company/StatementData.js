@@ -141,8 +141,6 @@ export function StatementData(props) {
                 ))
         }));
 
-        console.log('sd datasets', chartDatas[0].datasets)
-
         content = (
             <div className='content'>
                 <Table className='content-table' bordered hover variant='light'>

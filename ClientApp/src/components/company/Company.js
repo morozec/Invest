@@ -4,22 +4,29 @@ import { StatementData } from './StatementData';
 import { Ratios } from './Ratios';
 import { Summary } from './Summary';
 import { News } from './News';
+import { useLocation } from 'react-router-dom';
 
-export function StockSimfin() {
+export function StockSimfin(props) {
 
   const [key, setKey] = useState('summary');
+
+  const useQuery = () => new URLSearchParams(useLocation().search);
+  const query = useQuery();
+  const ticker = query.get('t');
 
   return (
     <div>
       <Tabs activeKey={key} onSelect={(k) => setKey(k)} className='mb-2'>
         <Tab eventKey="summary" title="Summary">
           <Summary
+            ticker = {ticker}
             isActive={key === 'summary'}
           />
         </Tab>
 
         <Tab eventKey="income" title="Income" >
           <StatementData
+            ticker = {ticker}
             statementType='income'
             statementTitle='Income'
             isActive={key === 'income'}
@@ -45,6 +52,7 @@ export function StockSimfin() {
         </Tab>
         <Tab eventKey="balanceSheet" title="Balance Sheet">
           <StatementData
+            ticker = {ticker}
             statementType='balanceSheet'
             statementTitle='Balance Sheet'
             isActive={key === 'balanceSheet'}
@@ -90,6 +98,7 @@ export function StockSimfin() {
         </Tab>
         <Tab eventKey="cashFlow" title="Cash Flow">
           <StatementData
+            ticker = {ticker}
             statementType='cashFlow'
             statementTitle='Cash Flow'
             isActive={key === 'cashFlow'}
@@ -119,12 +128,14 @@ export function StockSimfin() {
 
         <Tab eventKey="ratios" title="Ratios">
           <Ratios
+            ticker = {ticker}
             isActive={key === 'ratios'}
           />
         </Tab>
 
         <Tab eventKey="news" title="News">
           <News
+            ticker = {ticker}
             isActive={key === 'news'}
           />
         </Tab>
