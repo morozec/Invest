@@ -2,10 +2,12 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { Table } from 'react-bootstrap';
 import { getBillions } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
+import { Bar } from 'react-chartjs-2';
 
 export function Summary(props) {
     const [profile, setProfile] = useState(null);
     const [ratios, setRatios] = useState(null);
+    const [recommendations, setRecommendations] = useState(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const { isActive } = props;
@@ -34,11 +36,18 @@ export function Summary(props) {
             return ratios;
         }
 
-      
-        let promises = [getProfile(fbSymbol), getRatios(fbId)];
+        const getRecommendations = async (companySymbol) => {
+            const response = await fetch(`api/finnhub/recommendations/${companySymbol}`);
+            const recommendations = await response.json();
+            return recommendations;
+        }
+
+
+        let promises = [getProfile(fbSymbol), getRatios(fbId), getRecommendations(fbSymbol)];
         Promise.all(promises).then(result => {
             setProfile(result[0]);
             setRatios(result[1]);
+            setRecommendations(result[2].reverse());
             setIsLoading(false);
             console.log(result);
         })
@@ -64,6 +73,64 @@ export function Summary(props) {
             dividendYield = +((dividend / price) * 100).toFixed(2);
         }
 
+
+        let dataSet = [];
+        dataSet.push({
+            label: 'Strong Sell',
+            backgroundColor: `rgba(127, 0, 0, 0.6)`,
+            borderWidth: 1,
+            hoverBackgroundColor: `rgba(127, 0, 0, 1)`,
+            hoverBorderColor: `rgba(127, 0, 0, 1)`,
+            data: recommendations.map(rec => rec.strongSell),
+            stack: 'recommendations'
+        });
+
+        dataSet.push({
+            label: 'Sell',
+            backgroundColor: `rgba(255, 0, 0, 0.6)`,
+            borderWidth: 1,
+            hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
+            hoverBorderColor: `rgba(255, 0, 0, 1)`,
+            data: recommendations.map(rec => rec.sell),
+            stack: 'recommendations'
+        });
+
+        dataSet.push({
+            label: 'Hold',
+            backgroundColor: `rgba(255, 255, 0, 0.6)`,
+            borderWidth: 1,
+            hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
+            hoverBorderColor: `rgba(255, 255, 0, 1)`,
+            data: recommendations.map(rec => rec.hold),
+            stack: 'recommendations'
+        });
+
+        dataSet.push({
+            label: 'Buy',
+            backgroundColor: `rgba(0, 255, 0, 0.6)`,
+            borderWidth: 1,
+            hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
+            hoverBorderColor: `rgba(0, 255, 0, 1)`,
+            data: recommendations.map(rec => rec.buy),
+            stack: 'recommendations'
+        });
+        
+        dataSet.push({
+            label: 'Strong Buy',
+            backgroundColor: `rgba(0, 127, 0, 0.6)`,
+            borderWidth: 1,
+            hoverBackgroundColor: `rgba(0, 127, 0, 1)`,
+            hoverBorderColor: `rgba(0, 127, 0, 1)`,
+            data: recommendations.map(rec => rec.strongBuy),
+            stack: 'recommendations'
+        });
+
+        let recommendationsData = {
+            labels: recommendations.map(r => r.period),
+            datasets: dataSet
+        };
+
+
         content = (
             <Fragment>
                 <div className='companyHeader mb-2'>
@@ -80,56 +147,66 @@ export function Summary(props) {
                     </div>
                 </div>
 
-                <div className='companyContent'>
 
-                    <Table bordered hover striped variant='light' className='mr-2'>
-                        <tbody>
-                            <tr>
-                                <td>Market Capitalisation</td>
-                                <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
-                            </tr>
-                            <tr>
-                                <td>P/E</td>
-                                <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
-                            </tr>
-                            <tr>
-                                <td>P/S</td>
-                                <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
-                            </tr>
-                            <tr>
-                                <td>P/B</td>
-                                <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
-                            </tr>
-                            <tr>
-                                <td>P/FCF</td>
-                                <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
-                            </tr>
-                            <tr>
-                                <td>Revenue</td>
-                                <td>{`${getRatioValue('Revenues', true)}`} B</td>
-                            </tr>
-                            <tr>
-                                <td>EPS</td>
-                                <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
-                            </tr>
-                            <tr>
-                                <td>Dividends per Share (Yield %)</td>
-                                <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
-                            </tr>
-
-
-
-                        </tbody>
-                    </Table>
+                <Table bordered hover striped variant='light' className='mr-2'>
+                    <tbody>
+                        <tr>
+                            <td>Market Capitalisation</td>
+                            <td>{`${getRatioValue('Market Capitalisation', true)} B`}</td>
+                        </tr>
+                        <tr>
+                            <td>P/E</td>
+                            <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
+                        </tr>
+                        <tr>
+                            <td>P/S</td>
+                            <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
+                        </tr>
+                        <tr>
+                            <td>P/B</td>
+                            <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
+                        </tr>
+                        <tr>
+                            <td>P/FCF</td>
+                            <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
+                        </tr>
+                        <tr>
+                            <td>Revenue</td>
+                            <td>{`${getRatioValue('Revenues', true)}`} B</td>
+                        </tr>
+                        <tr>
+                            <td>EPS</td>
+                            <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
+                        </tr>
+                        <tr>
+                            <td>Dividends per Share (Yield %)</td>
+                            <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
+                        </tr>
+                    </tbody>
+                </Table>
 
 
-                    <TradingViewWidget
-                        symbol="NASDAQ:FB"
-                        theme={Themes.LIGHT}
-                        locale="en"
-                    />
+                <TradingViewWidget
+                    symbol="NASDAQ:FB"
+                    theme={Themes.LIGHT}
+                    locale="en"
+                />
 
-                </div>
+
+                <Bar
+                    data={recommendationsData}
+                    options={{
+                        responsive: true,
+                        scales: {
+                            xAxes: [{
+                                stacked: true
+                            }],
+                            yAxes: [{
+                                stacked: true
+                            }]
+                        }
+                    }} />
+
 
 
             </Fragment>
