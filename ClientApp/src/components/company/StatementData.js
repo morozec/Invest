@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
-import { getMillions } from '../helpers';
+import { getMillions } from '../../helpers';
 
 export function StatementData(props) {
     const [ttmData, setTtmData] = useState(null);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Table } from 'react-bootstrap';
-import { getBillions } from '../helpers';
+import { getBillions } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 
 export function Summary(props) {

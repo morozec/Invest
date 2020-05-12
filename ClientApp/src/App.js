@@ -6,7 +6,7 @@ import { Stock } from './components/Stock';
 import { Counter } from './components/Counter';
 
 import './custom.css'
-import { StockSimfin } from './components/StockSimfin';
+import { StockSimfin } from './components/company/Company';
 
 export default class App extends Component {
   static displayName = App.name;
