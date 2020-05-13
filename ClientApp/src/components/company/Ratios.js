@@ -1,6 +1,5 @@
 import React from 'react';
 import { Table } from 'react-bootstrap';
-import { getBillions } from '../../helpers';
 
 export function Ratios(props) {
     const { ticker, ratios } = props;

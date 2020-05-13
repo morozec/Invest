@@ -4,6 +4,7 @@ import { StatementData } from './StatementData';
 import { Ratios } from './Ratios';
 import { Summary } from './Summary';
 import { News } from './News';
+import {SharesAggregated} from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
 
 export function StockSimfin(props) {
@@ -220,6 +221,14 @@ export function StockSimfin(props) {
           <News
             ticker={profile.ticker}
             isActive={key === 'news'}
+          />
+        </Tab>
+
+        <Tab eventKey="sharesAggregated" title="Shares Outstanding">
+          <SharesAggregated
+            ticker={profile.ticker}
+            simfinId={simfinId}
+            isActive={key === 'sharesAggregated'}
           />
         </Tab>
       </Tabs>
