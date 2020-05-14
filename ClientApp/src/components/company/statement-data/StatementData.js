@@ -68,7 +68,6 @@ export function StatementData(props) {
     if (isLoading || !data) {
         content = <p><em>Loading...</em></p>;
     } else {
-        console.log('data', data)
         const dates = data.map(d => d.periodEndDate).reverse();
         let chartDatas = chartInfos.map(chartInfo => ({
             labels: dates,

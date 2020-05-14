@@ -118,50 +118,50 @@ export function Summary(props) {
                             datasets: [
                                 {
                                     label: 'Strong Sell',
-                                    backgroundColor: `rgba(127, 0, 0, 0.6)`,
+                                    backgroundColor: `rgba(255, 0, 0, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(127, 0, 0, 1)`,
-                                    hoverBorderColor: `rgba(127, 0, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                    hoverBorderColor: `rgba(255, 150, 150, 0.6)`,
                                     data: recommendations.map(rec => rec.strongSell),
                                     stack: 'recommendations'
                                 },
 
                                 {
                                     label: 'Sell',
-                                    backgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                    backgroundColor: `rgba(255, 150, 150, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
-                                    hoverBorderColor: `rgba(255, 0, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(255, 150, 150, 0.6)`,
+                                    hoverBorderColor: `rgba(255, 150, 150, 0.6)`,
                                     data: recommendations.map(rec => rec.sell),
                                     stack: 'recommendations'
                                 },
 
                                 {
                                     label: 'Hold',
-                                    backgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                    backgroundColor: `rgba(255, 255, 0, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
-                                    hoverBorderColor: `rgba(255, 255, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                    hoverBorderColor: `rgba(255, 255, 0, 0.6)`,
                                     data: recommendations.map(rec => rec.hold),
                                     stack: 'recommendations'
                                 },
 
                                 {
                                     label: 'Buy',
-                                    backgroundColor: `rgba(0, 255, 0, 0.6)`,
+                                    backgroundColor: `rgba(0, 222, 41, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
-                                    hoverBorderColor: `rgba(0, 255, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(0, 222, 41, 0.6)`,
+                                    hoverBorderColor: `rgba(0, 222, 41, 0.6)`,
                                     data: recommendations.map(rec => rec.buy),
                                     stack: 'recommendations'
                                 },
 
                                 {
                                     label: 'Strong Buy',
-                                    backgroundColor: `rgba(0, 127, 0, 0.6)`,
+                                    backgroundColor: `rgba(0, 110, 30, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(0, 127, 0, 1)`,
-                                    hoverBorderColor: `rgba(0, 127, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(0, 110, 30, 0.6)`,
+                                    hoverBorderColor: `rgba(0, 110, 30, 0.6)`,
                                     data: recommendations.map(rec => rec.strongBuy),
                                     stack: 'recommendations'
                                 }
@@ -192,10 +192,10 @@ export function Summary(props) {
                             datasets: [
                                 {
                                     label: 'Current',
-                                    backgroundColor: `rgba(0, 0, 0, 0.6)`,
+                                    backgroundColor: `rgba(0, 0, 0, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(0, 0, 0, 1)`,
-                                    hoverBorderColor: `rgba(0, 0, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
+                                    hoverBorderColor: `rgba(0, 0, 0, 0.6)`,
                                     data: [getRatioValue('Last Closing Price', false), null],
                                     pointRadius: 15,
                                     pointHoverRadius: 15,
@@ -205,10 +205,10 @@ export function Summary(props) {
                                 },
                                 {
                                     label: 'Low',
-                                    backgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                    backgroundColor: `rgba(255, 0, 0, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(255, 0, 0, 1)`,
-                                    hoverBorderColor: `rgba(255, 0, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                    hoverBorderColor: `rgba(255, 0, 0, 0.6)`,
                                     data: [null, priceTargets.targetLow],
                                     pointRadius: 15,
                                     pointHoverRadius: 15,
@@ -218,10 +218,10 @@ export function Summary(props) {
                                 },
                                 {
                                     label: 'Mean',
-                                    backgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                    backgroundColor: `rgba(255, 255, 0, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(255, 255, 0, 1)`,
-                                    hoverBorderColor: `rgba(255, 255, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                    hoverBorderColor: `rgba(255, 255, 0, 0.6)`,
                                     data: [null, priceTargets.targetMean],
                                     pointRadius: 15,
                                     pointHoverRadius: 15,
@@ -230,10 +230,10 @@ export function Summary(props) {
                                 },
                                 {
                                     label: 'High',
-                                    backgroundColor: `rgba(0, 255, 0, 0.6)`,
+                                    backgroundColor: `rgba(0, 222, 41, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(0, 255, 0, 1)`,
-                                    hoverBorderColor: `rgba(0, 255, 0, 1)`,
+                                    hoverBackgroundColor: `rgba(0, 222, 41, 0.6)`,
+                                    hoverBorderColor: `rgba(0, 222, 41, 0.6)`,
                                     data: [null, priceTargets.targetHigh],
                                     pointRadius: 15,
                                     pointHoverRadius: 15,
