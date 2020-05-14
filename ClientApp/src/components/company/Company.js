@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
-import { StatementData } from './StatementData';
+import { StatementData } from './statement-data/StatementData';
 import { Ratios } from './Ratios';
 import { Summary } from './Summary';
 import { News } from './News';
@@ -122,9 +122,14 @@ export function StockSimfin(props) {
                       color: [200, 200, 200]
                     },
                     {
+                      label: 'Operating Income (Loss)',
+                      stack: 'operatingIncome',
+                      color: [0, 110, 30]
+                    },
+                    {
                       label: 'Net Income',
                       stack: 'netIncome',
-                      color: [99, 255, 132]
+                      color: [156, 255, 174]
                     }
                   ]
                 }
@@ -146,12 +151,12 @@ export function StockSimfin(props) {
                     {
                       label: 'Total Equity',
                       stack: 'assets',
-                      color: [43, 179, 16]
+                      color: [74, 74, 74]
                     },
                     {
                       label: 'Total Liabilities',
                       stack: 'assets',
-                      color: [214, 214, 19]
+                      color: [191, 191, 191]
                     }
                   ]
                 },
@@ -161,17 +166,17 @@ export function StockSimfin(props) {
                     {
                       label: 'Cash, Cash Equivalents & Short Term Investments',
                       stack: 'cash',
-                      color: [43, 179, 16]
+                      color: [0, 222, 41]
                     },
                     {
                       label: 'Short Term Debt',
                       stack: 'debt',
-                      color: [200, 0, 0]
+                      color: [255, 0, 0]
                     },
                     {
                       label: 'Long Term Debt',
                       stack: 'debt',
-                      color: [189, 82, 0]
+                      color: [255, 150, 150]
                     }
                   ]
                 },
@@ -192,17 +197,22 @@ export function StockSimfin(props) {
                   {
                     label: 'Cash from Operating Activities',
                     stack: 'Cash from Operating Activities',
-                    color: [0, 255, 17]
+                    color: [0, 110, 30]
                   },
                   {
                     label: 'Cash from Investing Activities',
                     stack: 'Cash from Investing Activities',
-                    color: [183, 255, 0]
+                    color: [0, 222, 41]
                   },
                   {
                     label: 'Cash from Financing Activities',
                     stack: 'Cash from Financing Activities',
-                    color: [0, 255, 217]
+                    color: [156, 255, 174]
+                  },
+                  {
+                    label: 'Free Cash Flow',
+                    stack: 'Free Cash Flow',
+                    color: [0, 0, 0]
                   }
                 ]
               },

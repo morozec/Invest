@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Table, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+import { ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
-import { getMillions } from '../../helpers';
+import { IncomeTable } from './IncomeTable';
+import { BalanceSheetTable } from './BalanceSheetTable';
+import { CashFlowTable } from './CashFlowTable';
 
 export function StatementData(props) {
     const [ttmData, setTtmData] = useState(null);
     const [yearsData, setYearsData] = useState(null);
     const [quartersData, setQuartersData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [visibleTids, setVisibleTids] = useState(new Map());
     const [periodType, setPeriodType] = useState('year');
 
     const { statementType, statementTitle, isActive, chartInfos, ticker, simfinId } = props;
@@ -20,13 +21,24 @@ export function StatementData(props) {
         if (periodType === 'quarter' && quartersData) return;
 
         setIsLoading(true);
-        let periods = periodType === 'year'
+        let periods = periodType === 'year' //TODO!!!
             ? [[2019, 'fy'], [2018, 'fy'], [2017, 'fy'], [2016, 'fy'], [2015, 'fy']]
-            : [[2020, 'q1'], [2019, 'q4'], [2019, 'q3'], [2019, 'q2'], [2019, 'q1']]
+            : [[2020, 'q1'], [2019, 'q4'], [2019, 'q3'], [2019, 'q2'], [2019, 'q1']];
 
         const getData = async (companyId, year, pType) => {
             const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}/${pType}`);
             const data = await response.json();
+            if (statementType === 'cashFlow'){
+                data.values.push({
+                    tid:'fcf',
+                    standardisedName:'Free Cash Flow',
+                    displayLevel: "0",
+                    valueChosen: 
+                        +data.values.filter(v => v.tid === '13')[0].valueChosen
+                        +
+                        +data.values.filter(v => v.tid === '14')[0].valueChosen
+                })
+            }
             return data;
         }
         let promises = !ttmData ? [getData(simfinId, 0, 'ttm')] : [];
@@ -43,16 +55,12 @@ export function StatementData(props) {
                 else setQuartersData(results);
             }
 
-            let visibleTids = new Map();
-            for (let value of results[0].values) {
-                visibleTids.set(value.tid, true);
-            }
-            setVisibleTids(visibleTids);
-
             setIsLoading(false);
         });
 
     }, [isActive, yearsData, quartersData, ttmData, statementType, periodType, simfinId])
+
+    const getMillions = (v) => Math.floor(+v / 1e6);
 
     let content;
     let data = periodType === 'year' ? yearsData : quartersData;
@@ -60,65 +68,7 @@ export function StatementData(props) {
     if (isLoading || !data) {
         content = <p><em>Loading...</em></p>;
     } else {
-        let children = new Map();
-        let baseIndexes = [];
-
-        for (let index = 0; index < ttmData.values.length; ++index) {
-            let value = ttmData.values[index];
-            if (value.valueChosen === null) continue;
-            if (value['parent_tid'] === "0") {
-                baseIndexes.push(index);
-                continue;
-            }
-            let parentId = value['parent_tid'];
-            if (!children.has(parentId)) {
-                children.set(parentId, [index]);
-            } else {
-                children.get(parentId).push(index);
-            }
-        }
-
-        const handleClickRow = (tid) => {
-            if (!children.has(tid)) return;
-            let newVisibleTids = new Map(visibleTids);
-            newVisibleTids.set(tid, !visibleTids.get(tid));
-            setVisibleTids(newVisibleTids);
-        }
-
-        let tableRows = [];
-        const fillTableRec = (indexes, level) => {
-            if (!indexes) return;
-            for (let index of indexes) {
-                let cells = [];
-                let ttmValue = ttmData.values[index];
-                let tid = ttmValue['tid'];
-                let standardisedName = ttmValue['standardisedName'];
-
-                cells.push(
-                    children.has(tid)
-                        ? <td key={0} className={`dl-${level}`}>{standardisedName} &#x25bc;</td>
-                        : <td key={0} className={`dl-${level}`}>{standardisedName}</td>
-                )
-
-                let fullData = [ttmData, ...data];
-                for (let i = 0; i < fullData.length; ++i) {
-                    let value = fullData[i].values[index];
-                    cells.push(<td key={i + 1} className='value'>{getMillions(value.valueChosen)}</td>)
-                }
-
-
-                tableRows.push(
-                    <tr className={children.has(tid) ? 'container' : ''} key={index} onClick={() => handleClickRow(tid)}>
-                        {cells}
-                    </tr>)
-
-                if (visibleTids.get(tid)) {
-                    fillTableRec(children.get(tid), level + 1);
-                }
-            }
-        }
-        fillTableRec(baseIndexes, 0);
-
+        console.log('data', data)
         const dates = data.map(d => d.periodEndDate).reverse();
         let chartDatas = chartInfos.map(chartInfo => ({
             labels: dates,
@@ -126,30 +76,24 @@ export function StatementData(props) {
                 chartInfo.bars.map((ci, i) => (
                     {
                         label: ci.label,
-                        backgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
+                        backgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 1)`,
                         borderWidth: 1,
-                        hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 1)`,
-                        hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 1)`,
+                        hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
+                        hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
                         data: data.map(d => getMillions(d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen)).reverse(),
                         stack: ci.stack
                     }
                 ))
         }));
 
+        let table = null;
+        if (statementType === 'income') table = <IncomeTable ttmData={ttmData} data={data}/>
+        else if (statementType === 'balanceSheet') table = <BalanceSheetTable ttmData={ttmData} data={data}/>
+        else if (statementType === 'cashFlow') table = <CashFlowTable ttmData={ttmData} data={data}/>
+
         content = (
             <div className='content'>
-                <Table className='content-table' bordered hover variant='light'>
-                    <thead>
-                        <tr>
-                            <th>Breakdown</th>
-                            {[ttmData, ...data].map((data, i) => <th className='date' key={i}>{i === 0 ? 'TTM' : data.periodEndDate}</th>)}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tableRows}
-                    </tbody>
-                </Table>
-
+               {table}     
 
                 <div className='content-charts'>
                     {chartDatas.map((chartData, i) =>
