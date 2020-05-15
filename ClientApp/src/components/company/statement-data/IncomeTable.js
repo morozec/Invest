@@ -17,7 +17,7 @@ export function IncomeTable(props) {
     let tableRows = [];
     let fullData = [ttmData, ...data];
     for (let row = 0; row < ttmData.values.length; ++row) {
-        
+
         let ttmValue = ttmData.values[row];
         let lastPeriodValue = data[0].values[row];
         if (ttmValue.valueChosen === null && lastPeriodValue.valueChosen === null) continue;
@@ -28,18 +28,28 @@ export function IncomeTable(props) {
         const isContainer = tid === '11' || tid === '20';
 
         let cells = [];
-        const needStrong = standardisedName === 'Revenue' || standardisedName === 'Operating Income (Loss)' || standardisedName === 'Net Income';
+        const needStrong = 
+            standardisedName === 'Revenue' 
+            || standardisedName === 'Operating Income (Loss)' 
+            || standardisedName === 'Net Income'
+            || standardisedName === 'Basic EPS'
+            || standardisedName === 'Diluted EPS';
         cells.push(isContainer
             ? <td key={0} className={`dl-${displayLevel}`}>{needStrong ? <strong>{standardisedName}</strong> : standardisedName}  &#x25bc;</td>
             : <td key={0} className={`dl-${displayLevel}`}>{needStrong ? <strong>{standardisedName}</strong> : standardisedName}</td>);
 
         for (let i = 0; i < fullData.length; ++i) {
             let value = fullData[i].values[row];
-            cells.push(<td key={i + 1} className='value'>{value.valueChosen === null ? '-' : getMillions(value.valueChosen)}</td>)
+            let displayValue = value.valueChosen === null
+                ? '-'
+                : value.tid === 'basicEps' || value.tid === 'dilutedEps'
+                    ? value.valueChosen.toFixed(2)
+                    : getMillions(value.valueChosen);
+            cells.push(<td key={i + 1} className='value'>{displayValue}</td>)
         }
-       
+
         tableRows.push(
-            <tr key={row} onClick = {() => handleClickRow(tid)} className={isContainer ? 'container' :''}>
+            <tr key={row} onClick={() => handleClickRow(tid)} className={isContainer ? 'container' : ''}>
                 {cells}
             </tr>)
     }

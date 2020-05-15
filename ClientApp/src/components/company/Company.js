@@ -4,7 +4,7 @@ import { StatementData } from './statement-data/StatementData';
 import { Ratios } from './Ratios';
 import { Summary } from './Summary';
 import { News } from './News';
-import {SharesAggregated} from './SharesAggregated'
+import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
 
 export function StockSimfin(props) {
@@ -17,6 +17,9 @@ export function StockSimfin(props) {
   const [recommendations, setRecommendations] = useState(null);
   const [priceTargets, setPriceTargets] = useState(null);
   const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
+
+  const [sharesAggregatedBasicData, setSharesAggregatedBasicData] = useState(null);
+  const [sharesAggregatedDilutedData, setSharesAggregatedDilutedData] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,29 +66,46 @@ export function StockSimfin(props) {
       return data;
     }
 
-    let promises = [
-      getSimfinId(ticker),
-      getProfile(ticker),
-      getRecommendations(ticker),
-      getPriceTargets(ticker),
-      getUpgradeDowngrade(ticker)
-    ];
+    const getSharesAggregated = async (companyId) => {
+      const response = await fetch(`api/simfin/sharesAggregated/${companyId}`);
+      const data = await response.json();
+      return data;
+    }
 
-    Promise.all(promises).then(result => {
+    const handleSharesAggregated = (sharesAggregatedResult) => {
+      const saBasicData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-basic');
+      const saDilutedData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-diluted');
+      setSharesAggregatedBasicData(saBasicData);
+      setSharesAggregatedDilutedData(saDilutedData);
+    }
+
+    (async () => {
+      let promises = [
+        getSimfinId(ticker),
+        getProfile(ticker),
+        getRecommendations(ticker),
+        getPriceTargets(ticker),
+        getUpgradeDowngrade(ticker),
+      ];
+
+      let result = await Promise.all(promises);
+
       console.log(result);
       setSimfinId(result[0]);
       setProfile(result[1]);
       setRecommendations(result[2].reverse());
       setPriceTargets(result[3]);
       setUpgradeDowngrade(result[4].slice(0, 10));
-      return result[0];//simfin id
-    })
-      .then(simfinId => getRatios(simfinId))
-      .then(ratios => {
-        setRatios(ratios);
-        setIsLoading(false);
-      })
 
+      let promises2 = [
+        getRatios(result[0]),
+        getSharesAggregated(result[0])
+      ];
+      let result2 = await Promise.all(promises2);
+      setRatios(result2[0]);
+      handleSharesAggregated(result2[1]);
+      setIsLoading(false);
+    })();
 
   }, [ticker])
 
@@ -112,6 +132,10 @@ export function StockSimfin(props) {
             statementType='income'
             statementTitle='Income'
             isActive={key === 'income'}
+
+            sharesAggregatedBasicData={sharesAggregatedBasicData}
+            sharesAggregatedDilutedData={sharesAggregatedDilutedData}
+
             chartInfos={
               [
                 {
@@ -237,8 +261,9 @@ export function StockSimfin(props) {
         <Tab eventKey="sharesAggregated" title="Shares Outstanding">
           <SharesAggregated
             ticker={profile.ticker}
-            simfinId={simfinId}
-            isActive={key === 'sharesAggregated'}
+
+            sharesAggregatedBasicData={sharesAggregatedBasicData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
+            sharesAggregatedDilutedData={sharesAggregatedDilutedData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
           />
         </Tab>
       </Tabs>

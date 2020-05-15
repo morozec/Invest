@@ -12,7 +12,10 @@ export function StatementData(props) {
     const [isLoading, setIsLoading] = useState(true);
     const [periodType, setPeriodType] = useState('year');
 
-    const { statementType, statementTitle, isActive, chartInfos, ticker, simfinId } = props;
+    const { statementType, statementTitle, isActive, chartInfos, ticker, simfinId,
+        sharesAggregatedBasicData,
+        sharesAggregatedDilutedData
+    } = props;
 
 
     useEffect(() => {
@@ -28,12 +31,61 @@ export function StatementData(props) {
         const getData = async (companyId, year, pType) => {
             const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}/${pType}`);
             const data = await response.json();
-            if (statementType === 'cashFlow'){
+            if (statementType === 'income') {
+                let netIncome = +data.values.filter(v => v.tid === '55')[0].valueChosen;
+
+
+                let sharesAggregatedBasic = sharesAggregatedBasicData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
+                let basicAverageShares = sharesAggregatedBasic !== undefined ?
+                    sharesAggregatedBasic.value
+                    : null;
+                let epsBasic = sharesAggregatedBasic !== undefined
+                    ? netIncome / sharesAggregatedBasic.value
+                    : null;
+
                 data.values.push({
-                    tid:'fcf',
-                    standardisedName:'Free Cash Flow',
+                    tid: 'basicAverageShares',
+                    standardisedName: 'Basic Average Shares',
                     displayLevel: "0",
-                    valueChosen: 
+                    valueChosen: basicAverageShares
+                });
+
+                data.values.push({
+                    tid: 'basicEps',
+                    standardisedName: 'Basic EPS',
+                    displayLevel: "0",
+                    valueChosen: epsBasic
+                });
+
+
+                let sharesAggregatedDiluted = sharesAggregatedDilutedData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
+                let dilutedAverageShares = sharesAggregatedDiluted !== undefined ?
+                    sharesAggregatedDiluted.value
+                    : null;
+                let epsDiluted = sharesAggregatedDiluted !== undefined
+                    ? netIncome / sharesAggregatedDiluted.value
+                    : null;
+
+                data.values.push({
+                    tid: 'dilutedAverageShares',
+                    standardisedName: 'Diluted Average Shares',
+                    displayLevel: "0",
+                    valueChosen: dilutedAverageShares
+                });
+
+                data.values.push({
+                    tid: 'dilutedEps',
+                    standardisedName: 'Diluted EPS',
+                    displayLevel: "0",
+                    valueChosen: epsDiluted
+                });
+            }
+            else if (statementType === 'cashFlow') {
+                data.values.push({
+                    tid: 'fcf',
+                    standardisedName: 'Free Cash Flow',
+                    displayLevel: "0",
+                    valueChosen:
                         +data.values.filter(v => v.tid === '13')[0].valueChosen
                         +
                         +data.values.filter(v => v.tid === '14')[0].valueChosen
@@ -86,13 +138,13 @@ export function StatementData(props) {
         }));
 
         let table = null;
-        if (statementType === 'income') table = <IncomeTable ttmData={ttmData} data={data}/>
-        else if (statementType === 'balanceSheet') table = <BalanceSheetTable ttmData={ttmData} data={data}/>
-        else if (statementType === 'cashFlow') table = <CashFlowTable ttmData={ttmData} data={data}/>
+        if (statementType === 'income') table = <IncomeTable ttmData={ttmData} data={data} />
+        else if (statementType === 'balanceSheet') table = <BalanceSheetTable ttmData={ttmData} data={data} />
+        else if (statementType === 'cashFlow') table = <CashFlowTable ttmData={ttmData} data={data} />
 
         content = (
             <div className='content'>
-               {table}     
+                {table}
 
                 <div className='content-charts'>
                     {chartDatas.map((chartData, i) =>
