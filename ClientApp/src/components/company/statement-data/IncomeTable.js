@@ -5,7 +5,7 @@ export function IncomeTable(props) {
     const { ttmData, data } = props;
     const [visibleTids, setVisibleTids] = useState(new Map([['11', false], ['20', false]]))
 
-    const getMillions = (v) => Math.floor(+v / 1e6);
+    const getMillions = (v) => +v / 1e6;
 
     const handleClickRow = (tid) => {
         if (!visibleTids.has(tid)) return;

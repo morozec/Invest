@@ -13,7 +13,7 @@ export function CashFlowTable(props) {
         setVisibleTids(vTids);
     }, [ttmData])
 
-    const getMillions = (v) => Math.floor(+v / 1e6);
+    const getMillions = (v) => +v / 1e6;
 
     let tableRows = [];
     let fullData = [ttmData, ...data];
