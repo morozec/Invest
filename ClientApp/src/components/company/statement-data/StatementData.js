@@ -131,7 +131,11 @@ export function StatementData(props) {
                         borderWidth: 1,
                         hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
                         hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
-                        data: data.map(d => getMillions(d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen)).reverse(),
+                        data: data.map(d =>
+                            chartInfo.isMillions
+                                ? getMillions(d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen)
+                                : d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen
+                        ).reverse(),
                         stack: ci.stack
                     }
                 ))

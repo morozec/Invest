@@ -32,7 +32,6 @@ export function IncomeTable(props) {
             standardisedName === 'Revenue' 
             || standardisedName === 'Operating Income (Loss)' 
             || standardisedName === 'Net Income'
-            || standardisedName === 'Basic EPS'
             || standardisedName === 'Diluted EPS';
         cells.push(isContainer
             ? <td key={0} className={`dl-${displayLevel}`}>{needStrong ? <strong>{standardisedName}</strong> : standardisedName}  &#x25bc;</td>

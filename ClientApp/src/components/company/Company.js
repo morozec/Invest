@@ -155,7 +155,19 @@ export function StockSimfin(props) {
                       stack: 'netIncome',
                       color: [156, 255, 174]
                     }
-                  ]
+                  ],
+                  isMillions:true
+                },
+
+                {
+                  bars: [
+                    {
+                      label: 'Diluted EPS',
+                      stack: 'eps',
+                      color: [200, 200, 200]
+                    },
+                  ],
+                  isMillions:false
                 }
               ]
             }
@@ -182,7 +194,8 @@ export function StockSimfin(props) {
                       stack: 'assets',
                       color: [191, 191, 191]
                     }
-                  ]
+                  ],
+                  isMillions:true
                 },
 
                 {
@@ -202,7 +215,8 @@ export function StockSimfin(props) {
                       stack: 'debt',
                       color: [255, 150, 150]
                     }
-                  ]
+                  ],
+                  isMillions:true
                 },
               ]
             }
@@ -238,7 +252,8 @@ export function StockSimfin(props) {
                     stack: 'Free Cash Flow',
                     color: [0, 0, 0]
                   }
-                ]
+                ],
+                isMillions:true
               },
             ]}
           />
