@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { Container } from 'react-bootstrap';
 
 export function SharesAggregated(props) {
     const { isActive, ticker, simfinId } = props;
     const [isLoading, setIsLoading] = useState(true);
-    const [sharesAggregatedData, setSharesAggregatedData] = useState(null);
-    const [sharesAggregatedDataChanges, setSharesAggregatedDataChanges] = useState(null);
+
+    const [sharesAggregatedBasicData, setSharesAggregatedBasicData] = useState(null);
+    const [sharesAggregatedBasicDataChanges, setSharesAggregatedBiasicDataChanges] = useState(null);
+
+    const [sharesAggregatedDilutedData, setSharesAggregatedDilutedData] = useState(null);
+    const [sharesAggregatedDilutedDataChanges, setSharesAggregatedDilutedDataChanges] = useState(null);
 
 
     useEffect(() => {
         if (!isActive) return;
-        if (sharesAggregatedData) return;
+        if (sharesAggregatedBasicData) return;
 
         setIsLoading(true);
 
@@ -23,18 +26,32 @@ export function SharesAggregated(props) {
 
         getData(simfinId).then(result => {
             console.log(result);
-            setSharesAggregatedData(result);
-            let changes = [0, 0, 0, 0];
-            for (let i = 4; i < result.length; ++i) {
-                let change = ((result[i].value - result[i - 4].value) / result[i - 4].value * 100).toFixed(2);
-                changes.push(change);
+
+            const saBasicData = result.filter(d => d.figure === 'common-outstanding-basic');
+            const saDilutedData = result.filter(d => d.figure === 'common-outstanding-diluted');
+            
+            let basicChanges = [0, 0, 0, 0];
+            for (let i = 4; i < saBasicData.length; ++i) {
+                let change = ((saBasicData[i].value - saBasicData[i - 4].value) / saBasicData[i - 4].value * 100).toFixed(2);
+                basicChanges.push(change);
             }
-            setSharesAggregatedDataChanges(changes);
+
+            setSharesAggregatedBasicData(saBasicData);
+            setSharesAggregatedBiasicDataChanges(basicChanges);
+
+            let dilutedChanges = [0, 0, 0, 0];
+            for (let i = 4; i < saDilutedData.length; ++i) {
+                let change = ((saDilutedData[i].value - saDilutedData[i - 4].value) / saDilutedData[i - 4].value * 100).toFixed(2);
+                dilutedChanges.push(change);
+            }
+
+            setSharesAggregatedDilutedData(saDilutedData);
+            setSharesAggregatedDilutedDataChanges(dilutedChanges);
 
             setIsLoading(false);
         })
 
-    }, [isActive, simfinId, sharesAggregatedData])
+    }, [isActive, simfinId, sharesAggregatedBasicData])
 
     const getBillions = (value) => {
         return (+value / 1e9).toFixed(3);
@@ -46,19 +63,19 @@ export function SharesAggregated(props) {
         content = <p><em>Loading...</em></p>;
     } else {
         content =
-            <Container className='sharesAggregatedContainer'>
-                <div>
+            <div className='sharesAggregatedContainer'>
+                <div className='sharesAggregatedBasic'>
                     <Bar
                         data={{
-                            labels: sharesAggregatedData.map(sa => sa.date),
+                            labels: sharesAggregatedBasicData.map(sa => sa.date),
                             datasets:
                                 [{
-                                    label: 'Quarterly Shares Outstanding, B',
+                                    label: 'Quarterly Shares Outstanding BASIC, B',
                                     backgroundColor: `rgba(0, 0, 255, 0.6)`,
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(0, 0, 255, 1)`,
                                     hoverBorderColor: `rgba(0, 0, 255, 1)`,
-                                    data: sharesAggregatedData.map(sa => getBillions(sa.value)),
+                                    data: sharesAggregatedBasicData.map(sa => getBillions(sa.value)),
                                 }]
                         }}
                         options={{
@@ -66,28 +83,70 @@ export function SharesAggregated(props) {
                         }} />
                 </div>
 
-                <div>
+                <div className='sharesAggregatedBasicChanges'>
                     <Bar
                         data={{
-                            labels: sharesAggregatedData.map(sa => sa.date),
+                            labels: sharesAggregatedBasicData.map(sa => sa.date),
                             datasets:
                                 [{
-                                    label: 'YoY Quarterly Growth, %',
-                                    backgroundColor: sharesAggregatedDataChanges.map(c =>
+                                    label: 'YoY Quarterly Growth BASIC, %',
+                                    backgroundColor: sharesAggregatedBasicDataChanges.map(c =>
                                         c >= 0 ? `rgba(0, 255, 0, 0.6)` : `rgba(255, 0, 0, 0.6)`),
                                     borderWidth: 1,
-                                    hoverBackgroundColor: sharesAggregatedDataChanges.map(c =>
+                                    hoverBackgroundColor: sharesAggregatedBasicDataChanges.map(c =>
                                         c >= 0 ? `rgba(0, 255, 0, 1)` : `rgba(255, 0, 0, 1)`),
-                                    hoverBorderColor: sharesAggregatedDataChanges.map(c =>
+                                    hoverBorderColor: sharesAggregatedBasicDataChanges.map(c =>
                                         c >= 0 ? `rgba(0, 255, 0, 1)` : `rgba(255, 0, 0, 1)`),
-                                    data: sharesAggregatedDataChanges,
+                                    data: sharesAggregatedBasicDataChanges,
                                 }]
                         }}
                         options={{
                             responsive: true,
                         }} />
                 </div>
-            </Container>
+
+
+                <div className='sharesAggregatedDilued'>
+                    <Bar
+                        data={{
+                            labels: sharesAggregatedDilutedData.map(sa => sa.date),
+                            datasets:
+                                [{
+                                    label: 'Quarterly Shares Outstanding DILUTED, B',
+                                    backgroundColor: `rgba(0, 0, 255, 0.6)`,
+                                    borderWidth: 1,
+                                    hoverBackgroundColor: `rgba(0, 0, 255, 1)`,
+                                    hoverBorderColor: `rgba(0, 0, 255, 1)`,
+                                    data: sharesAggregatedDilutedData.map(sa => getBillions(sa.value)),
+                                }]
+                        }}
+                        options={{
+                            responsive: true,
+                        }} />
+                </div>
+
+                <div className='sharesAggregatedDiluedChanges'>
+                    <Bar
+                        data={{
+                            labels: sharesAggregatedDilutedData.map(sa => sa.date),
+                            datasets:
+                                [{
+                                    label: 'YoY Quarterly Growth DILUTED, %',
+                                    backgroundColor: sharesAggregatedDilutedDataChanges.map(c =>
+                                        c >= 0 ? `rgba(0, 255, 0, 0.6)` : `rgba(255, 0, 0, 0.6)`),
+                                    borderWidth: 1,
+                                    hoverBackgroundColor: sharesAggregatedDilutedDataChanges.map(c =>
+                                        c >= 0 ? `rgba(0, 255, 0, 1)` : `rgba(255, 0, 0, 1)`),
+                                    hoverBorderColor: sharesAggregatedDilutedDataChanges.map(c =>
+                                        c >= 0 ? `rgba(0, 255, 0, 1)` : `rgba(255, 0, 0, 1)`),
+                                    data: sharesAggregatedDilutedDataChanges,
+                                }]
+                        }}
+                        options={{
+                            responsive: true,
+                        }} />
+                </div>
+            </div>
     }
 
 

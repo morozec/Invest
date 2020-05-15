@@ -74,7 +74,7 @@ namespace Invest.Controllers
         public IActionResult GetSharesAggregated(int companyId)
         {
             var url =
-                $"https://simfin.com/api/v1/companies/id/{companyId}/shares/aggregated?filter=common-outstanding-diluted&api-key={Constants.SIMFIN_API}";
+                $"https://simfin.com/api/v1/companies/id/{companyId}/shares/aggregated?api-key={Constants.SIMFIN_API}";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
