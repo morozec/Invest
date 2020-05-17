@@ -83,6 +83,7 @@ export function StatementData(props) {
             else if (statementType === 'cashFlow') {
                 data.values.push({
                     tid: 'fcf',
+                    uid: 'fcf',
                     standardisedName: 'Free Cash Flow',
                     displayLevel: "0",
                     parent_tid:"0",

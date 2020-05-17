@@ -233,22 +233,22 @@ export function StockSimfin(props) {
               {
                 bars: [
                   {
-                    label: 'Cash from Operating Activities',
+                    uid: '13',
                     stack: 'Cash from Operating Activities',
                     color: [0, 110, 30]
                   },
                   {
-                    label: 'Cash from Investing Activities',
+                    uid: '31',
                     stack: 'Cash from Investing Activities',
                     color: [0, 222, 41]
                   },
                   {
-                    label: 'Cash from Financing Activities',
+                    uid: '43',
                     stack: 'Cash from Financing Activities',
                     color: [156, 255, 174]
                   },
                   {
-                    label: 'Free Cash Flow',
+                    uid: 'fcf',
                     stack: 'Free Cash Flow',
                     color: [0, 0, 0]
                   }
