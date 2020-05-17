@@ -185,12 +185,12 @@ export function StockSimfin(props) {
                 {
                   bars: [
                     {
-                      label: 'Total Equity',
+                      uid: '84',
                       stack: 'assets',
                       color: [74, 74, 74]
                     },
                     {
-                      label: 'Total Liabilities',
+                      uid: '73',
                       stack: 'assets',
                       color: [191, 191, 191]
                     }
@@ -201,17 +201,17 @@ export function StockSimfin(props) {
                 {
                   bars: [
                     {
-                      label: 'Cash, Cash Equivalents & Short Term Investments',
+                      uid: '1',
                       stack: 'cash',
                       color: [0, 222, 41]
                     },
                     {
-                      label: 'Short Term Debt',
+                      uid: '47',
                       stack: 'debt',
                       color: [255, 0, 0]
                     },
                     {
-                      label: 'Long Term Debt',
+                      uid: '58',
                       stack: 'debt',
                       color: [255, 150, 150]
                     }

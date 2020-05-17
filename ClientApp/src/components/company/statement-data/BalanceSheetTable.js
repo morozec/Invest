@@ -50,16 +50,17 @@ export function BalanceSheetTable(props) {
             let cells = [];
             let ttmValue = ttmData.values[index];
             let tid = ttmValue['tid'];
+            let uid = ttmValue['uid'];
             let standardisedName = ttmValue['standardisedName'];
 
-            const needStrong = 
-                standardisedName === 'Total Assets' 
-                || standardisedName === 'Total Liabilities & Equity' 
-                || standardisedName === 'Total Liabilities' 
-                || standardisedName === 'Total Equity' 
-                || standardisedName === 'Cash, Cash Equivalents & Short Term Investments'
-                || standardisedName === 'Short Term Debt'
-                || standardisedName === 'Long Term Debt';
+            const needStrong =
+                uid === '41'
+                || uid === '85'
+                || uid === '73'
+                || uid === '84'
+                || uid === '1'
+                || uid === '47'
+                || uid === '58';
 
             cells.push(
                 children.has(tid)
