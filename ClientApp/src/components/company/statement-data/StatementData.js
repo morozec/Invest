@@ -85,6 +85,7 @@ export function StatementData(props) {
                     tid: 'fcf',
                     standardisedName: 'Free Cash Flow',
                     displayLevel: "0",
+                    parent_tid:"0",
                     valueChosen:
                         +data.values.filter(v => v.tid === '13')[0].valueChosen
                         +

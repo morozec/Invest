@@ -24,9 +24,11 @@ export function CashFlowTable(props) {
     for (let index = 0; index < ttmData.values.length; ++index) {
         let value = ttmData.values[index];
         if (value.valueChosen === null) continue;
-        if (value['parent_tid'] !== '13' && value['parent_tid'] !== '31' && value['parent_tid'] !== '43' && value['tid'] !== '40') {
+        if (value['uid'] === '13' || value['uid'] === '31' || value['uid'] === '43' ||
+            value['uid'] === '44' || value['uid'] === '47' || value['uid'] === '48') {
             value['parent_tid'] = '0';
         }
+
         if (value['parent_tid'] === "0") {
             baseIndexes.push(index);
             continue;
