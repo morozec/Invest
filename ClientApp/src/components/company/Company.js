@@ -141,17 +141,17 @@ export function StockSimfin(props) {
                 {
                   bars: [
                     {
-                      label: 'Revenue',
+                      uid: '1',
                       stack: 'revenue',
                       color: [200, 200, 200]
                     },
                     {
-                      label: 'Operating Income (Loss)',
+                      uid: '19',
                       stack: 'operatingIncome',
                       color: [0, 110, 30]
                     },
                     {
-                      label: 'Net Income',
+                      uid: '55',
                       stack: 'netIncome',
                       color: [156, 255, 174]
                     }
@@ -159,16 +159,16 @@ export function StockSimfin(props) {
                   isMillions:true
                 },
 
-                {
-                  bars: [
-                    {
-                      label: 'Diluted EPS',
-                      stack: 'eps',
-                      color: [200, 200, 200]
-                    },
-                  ],
-                  isMillions:false
-                }
+                // {
+                //   bars: [
+                //     {
+                //       label: 'Diluted EPS',
+                //       stack: 'eps',
+                //       color: [200, 200, 200]
+                //     },
+                //   ],
+                //   isMillions:false
+                // }
               ]
             }
           />

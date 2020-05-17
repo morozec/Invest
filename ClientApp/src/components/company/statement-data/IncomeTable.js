@@ -3,7 +3,12 @@ import { Table } from 'react-bootstrap';
 
 export function IncomeTable(props) {
     const { ttmData, data } = props;
-    const [visibleTids, setVisibleTids] = useState(new Map([['11', false], ['20', false]]))
+    const [visibleTids, setVisibleTids] = useState(
+        ttmData.industryTemplate === 'general'
+            ? new Map([['11', false], ['20', false]])
+            : ttmData.industryTemplate === 'banks'
+                ? new Map([['1', false], ['2', false], ['7', false], ['16', false]])
+                : new Map()); //TODO: insurance
 
     const getMillions = (v) => +v / 1e6;
 
@@ -25,14 +30,12 @@ export function IncomeTable(props) {
         let standardisedName = ttmValue['standardisedName'];
         let displayLevel = ttmValue['displayLevel'];
         let tid = ttmValue.tid;
-        const isContainer = tid === '11' || tid === '20';
+        let uid = ttmValue.uid;
+        const isContainer = visibleTids.has(tid);
 
         let cells = [];
-        const needStrong = 
-            standardisedName === 'Revenue' 
-            || standardisedName === 'Operating Income (Loss)' 
-            || standardisedName === 'Net Income'
-            || standardisedName === 'Diluted EPS';
+        const needStrong = uid === '1' || uid === '19' || uid === '55';
+
         cells.push(isContainer
             ? <td key={0} className={`dl-${displayLevel}`}>{needStrong ? <strong>{standardisedName}</strong> : standardisedName}  &#x25bc;</td>
             : <td key={0} className={`dl-${displayLevel}`}>{needStrong ? <strong>{standardisedName}</strong> : standardisedName}</td>);

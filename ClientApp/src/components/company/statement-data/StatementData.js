@@ -32,53 +32,53 @@ export function StatementData(props) {
             const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}/${pType}`);
             const data = await response.json();
             if (statementType === 'income') {
-                let netIncome = +data.values.filter(v => v.tid === '55')[0].valueChosen;
+                // let netIncome = +data.values.filter(v => v.tid === '55')[0].valueChosen;
 
 
-                let sharesAggregatedBasic = sharesAggregatedBasicData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
-                let basicAverageShares = sharesAggregatedBasic !== undefined ?
-                    sharesAggregatedBasic.value
-                    : null;
-                let epsBasic = sharesAggregatedBasic !== undefined
-                    ? netIncome / sharesAggregatedBasic.value
-                    : null;
+                // let sharesAggregatedBasic = sharesAggregatedBasicData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
+                // let basicAverageShares = sharesAggregatedBasic !== undefined ?
+                //     sharesAggregatedBasic.value
+                //     : null;
+                // let epsBasic = sharesAggregatedBasic !== undefined
+                //     ? netIncome / sharesAggregatedBasic.value
+                //     : null;
 
-                data.values.push({
-                    tid: 'basicAverageShares',
-                    standardisedName: 'Basic Average Shares',
-                    displayLevel: "0",
-                    valueChosen: basicAverageShares
-                });
+                // data.values.push({
+                //     tid: 'basicAverageShares',
+                //     standardisedName: 'Basic Average Shares',
+                //     displayLevel: "0",
+                //     valueChosen: basicAverageShares
+                // });
 
-                data.values.push({
-                    tid: 'basicEps',
-                    standardisedName: 'Basic EPS',
-                    displayLevel: "0",
-                    valueChosen: epsBasic
-                });
+                // data.values.push({
+                //     tid: 'basicEps',
+                //     standardisedName: 'Basic EPS',
+                //     displayLevel: "0",
+                //     valueChosen: epsBasic
+                // });
 
 
-                let sharesAggregatedDiluted = sharesAggregatedDilutedData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
-                let dilutedAverageShares = sharesAggregatedDiluted !== undefined ?
-                    sharesAggregatedDiluted.value
-                    : null;
-                let epsDiluted = sharesAggregatedDiluted !== undefined
-                    ? netIncome / sharesAggregatedDiluted.value
-                    : null;
+                // let sharesAggregatedDiluted = sharesAggregatedDilutedData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
+                // let dilutedAverageShares = sharesAggregatedDiluted !== undefined ?
+                //     sharesAggregatedDiluted.value
+                //     : null;
+                // let epsDiluted = sharesAggregatedDiluted !== undefined
+                //     ? netIncome / sharesAggregatedDiluted.value
+                //     : null;
 
-                data.values.push({
-                    tid: 'dilutedAverageShares',
-                    standardisedName: 'Diluted Average Shares',
-                    displayLevel: "0",
-                    valueChosen: dilutedAverageShares
-                });
+                // data.values.push({
+                //     tid: 'dilutedAverageShares',
+                //     standardisedName: 'Diluted Average Shares',
+                //     displayLevel: "0",
+                //     valueChosen: dilutedAverageShares
+                // });
 
-                data.values.push({
-                    tid: 'dilutedEps',
-                    standardisedName: 'Diluted EPS',
-                    displayLevel: "0",
-                    valueChosen: epsDiluted
-                });
+                // data.values.push({
+                //     tid: 'dilutedEps',
+                //     standardisedName: 'Diluted EPS',
+                //     displayLevel: "0",
+                //     valueChosen: epsDiluted
+                // });
             }
             else if (statementType === 'cashFlow') {
                 data.values.push({
@@ -127,15 +127,15 @@ export function StatementData(props) {
             datasets:
                 chartInfo.bars.map((ci, i) => (
                     {
-                        label: ci.label,
+                        label: ttmData.values.filter(v => v.uid === ci.uid)[0].standardisedName,
                         backgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 1)`,
                         borderWidth: 1,
                         hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
                         hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
                         data: data.map(d =>
                             chartInfo.isMillions
-                                ? getMillions(d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen)
-                                : d.values.filter(v => v.standardisedName === ci.label)[0].valueChosen
+                                ? getMillions(d.values.filter(v => v.uid === ci.uid)[0].valueChosen)
+                                : d.values.filter(v => v.uid === ci.uid)[0].valueChosen
                         ).reverse(),
                         stack: ci.stack
                     }
