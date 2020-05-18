@@ -159,16 +159,16 @@ export function StockSimfin(props) {
                   isMillions:true
                 },
 
-                // {
-                //   bars: [
-                //     {
-                //       label: 'Diluted EPS',
-                //       stack: 'eps',
-                //       color: [200, 200, 200]
-                //     },
-                //   ],
-                //   isMillions:false
-                // }
+                {
+                  bars: [
+                    {
+                      uid: 'dilutedEps',
+                      stack: 'eps',
+                      color: [200, 200, 200]
+                    },
+                  ],
+                  isMillions:false
+                }
               ]
             }
           />

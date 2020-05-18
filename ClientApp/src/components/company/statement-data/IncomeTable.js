@@ -34,7 +34,7 @@ export function IncomeTable(props) {
         const isContainer = visibleTids.has(tid);
 
         let cells = [];
-        const needStrong = uid === '1' || uid === '19' || uid === '55';
+        const needStrong = uid === '1' || uid === '19' || uid === '55' || uid === 'dilutedEps';
 
         cells.push(isContainer
             ? <td key={0} className={`dl-${displayLevel}`}>{needStrong ? <strong>{standardisedName}</strong> : standardisedName}  &#x25bc;</td>

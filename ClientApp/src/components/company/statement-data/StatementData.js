@@ -25,60 +25,63 @@ export function StatementData(props) {
 
         setIsLoading(true);
         let periods = periodType === 'year' //TODO!!!
-            ? [[2019, 'fy'], [2018, 'fy'], [2017, 'fy'], [2016, 'fy'], [2015, 'fy']]
-            : [[2020, 'q1'], [2019, 'q4'], [2019, 'q3'], [2019, 'q2'], [2019, 'q1']];
+            ? [[2019, 'FY'], [2018, 'FY'], [2017, 'FY'], [2016, 'FY'], [2015, 'FY']]
+            : [[2020, 'Q1'], [2019, 'Q4'], [2019, 'Q3'], [2019, 'Q2'], [2019, 'Q1']];
 
         const getData = async (companyId, year, pType) => {
             const response = await fetch(`api/simfin/${statementType}/${companyId}/${year}/${pType}`);
             const data = await response.json();
             if (statementType === 'income') {
-                // let netIncome = +data.values.filter(v => v.tid === '55')[0].valueChosen;
+                let netIncomeForCommonShareholders = +data.values.filter(v => v.uid === '58')[0].valueChosen;
+
+                let sharesAggregatedBasic = sharesAggregatedBasicData.filter(sa => sa.period === pType && +sa.fyear === year)[0];
+                let basicAverageShares = sharesAggregatedBasic !== undefined ?
+                    sharesAggregatedBasic.value
+                    : null;
+                let epsBasic = sharesAggregatedBasic !== undefined
+                    ? netIncomeForCommonShareholders / sharesAggregatedBasic.value
+                    : null;
+
+                data.values.push({
+                    tid: 'basicAverageShares',
+                    uid: 'basicAverageShares',
+                    standardisedName: 'Basic Average Shares',
+                    displayLevel: "0",
+                    valueChosen: basicAverageShares
+                });
+
+                data.values.push({
+                    tid: 'basicEps',
+                    uid: 'basicEps',
+                    standardisedName: 'Basic EPS',
+                    displayLevel: "0",
+                    valueChosen: epsBasic
+                });
 
 
-                // let sharesAggregatedBasic = sharesAggregatedBasicData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
-                // let basicAverageShares = sharesAggregatedBasic !== undefined ?
-                //     sharesAggregatedBasic.value
-                //     : null;
-                // let epsBasic = sharesAggregatedBasic !== undefined
-                //     ? netIncome / sharesAggregatedBasic.value
-                //     : null;
+                let sharesAggregatedDiluted = sharesAggregatedDilutedData.filter(sa => sa.period === pType && +sa.fyear === year)[0];
+                let dilutedAverageShares = sharesAggregatedDiluted !== undefined ?
+                    sharesAggregatedDiluted.value
+                    : null;
+                let epsDiluted = sharesAggregatedDiluted !== undefined
+                    ? netIncomeForCommonShareholders / sharesAggregatedDiluted.value
+                    : null;
 
-                // data.values.push({
-                //     tid: 'basicAverageShares',
-                //     standardisedName: 'Basic Average Shares',
-                //     displayLevel: "0",
-                //     valueChosen: basicAverageShares
-                // });
+                data.values.push({
+                    tid: 'dilutedAverageShares',
+                    uid: 'dilutedAverageShares',
+                    standardisedName: 'Diluted Average Shares',
+                    displayLevel: "0",
+                    valueChosen: dilutedAverageShares
+                });
 
-                // data.values.push({
-                //     tid: 'basicEps',
-                //     standardisedName: 'Basic EPS',
-                //     displayLevel: "0",
-                //     valueChosen: epsBasic
-                // });
-
-
-                // let sharesAggregatedDiluted = sharesAggregatedDilutedData.filter(sa => sa.period === 'FY' && +sa.fyear === year)[0];
-                // let dilutedAverageShares = sharesAggregatedDiluted !== undefined ?
-                //     sharesAggregatedDiluted.value
-                //     : null;
-                // let epsDiluted = sharesAggregatedDiluted !== undefined
-                //     ? netIncome / sharesAggregatedDiluted.value
-                //     : null;
-
-                // data.values.push({
-                //     tid: 'dilutedAverageShares',
-                //     standardisedName: 'Diluted Average Shares',
-                //     displayLevel: "0",
-                //     valueChosen: dilutedAverageShares
-                // });
-
-                // data.values.push({
-                //     tid: 'dilutedEps',
-                //     standardisedName: 'Diluted EPS',
-                //     displayLevel: "0",
-                //     valueChosen: epsDiluted
-                // });
+                data.values.push({
+                    tid: 'dilutedEps',
+                    uid: 'dilutedEps',
+                    standardisedName: 'Diluted EPS',
+                    displayLevel: "0",
+                    valueChosen: epsDiluted
+                });
             }
             else if (statementType === 'cashFlow') {
                 data.values.push({
