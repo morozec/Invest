@@ -72,5 +72,23 @@ namespace Invest.Controllers
             return Ok(response.Content);
         }
 
+        /// <summary>
+        /// Календарь
+        /// </summary>
+        /// <param name="companySymbol"></param>
+        /// <returns></returns>
+        [HttpGet("earnings/{companySymbol}")]
+        public IActionResult GetEarnings(string companySymbol)
+        {
+            const string startDate = "2015-01-01";
+            const string endDate = "2030-01-01";
+
+            var url =
+                $"https://finnhub.io/api/v1/calendar/earnings?from={startDate}&to={endDate}&symbol={companySymbol}&token={Constants.FINNHUB_API}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
     }
 }

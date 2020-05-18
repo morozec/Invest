@@ -6,6 +6,7 @@ import { Summary } from './Summary';
 import { News } from './News';
 import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
+import { AnalystEstimate } from './AnalystEstimate';
 
 export function StockSimfin(props) {
 
@@ -279,6 +280,13 @@ export function StockSimfin(props) {
 
             sharesAggregatedBasicData={sharesAggregatedBasicData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
             sharesAggregatedDilutedData={sharesAggregatedDilutedData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
+          />
+        </Tab>
+
+        <Tab eventKey="analystEstimate" title="Analyst Estimate">
+          <AnalystEstimate
+            ticker={profile.ticker}
+            isActive={key === 'analystEstimate'}
           />
         </Tab>
       </Tabs>
