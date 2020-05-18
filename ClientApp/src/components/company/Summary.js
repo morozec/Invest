@@ -52,28 +52,32 @@ export function Summary(props) {
                             <td>{`${getRatioValue('Market Capitalisation', true)}B`}</td>
                         </tr>
                         <tr>
-                            <td>P/E</td>
+                            <td>P/E (TTM)</td>
                             <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
                         </tr>
                         <tr>
-                            <td>P/S</td>
+                            <td>P/S (TTM)</td>
                             <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
                         </tr>
                         <tr>
-                            <td>P/B</td>
+                            <td>P/B (TTM)</td>
                             <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
                         </tr>
                         <tr>
-                            <td>P/FCF</td>
+                            <td>P/FCF (TTM)</td>
                             <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
                         </tr>
                         <tr>
-                            <td>Revenue</td>
+                            <td>Revenue (TTM)</td>
                             <td>{`${getRatioValue('Revenues', true)}B`}</td>
                         </tr>
                         <tr>
-                            <td>EPS</td>
+                            <td>Basic EPS (TTM)</td>
                             <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
+                        </tr>
+                        <tr>
+                            <td>Diluted EPS (TTM)</td>
+                            <td>{`${getRatioValue('Earnings per Share, Diluted', false)}`}</td>
                         </tr>
                         <tr>
                             <td>Dividends per Share (Yield %)</td>
