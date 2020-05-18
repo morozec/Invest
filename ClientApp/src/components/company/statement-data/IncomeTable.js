@@ -8,7 +8,7 @@ export function IncomeTable(props) {
             ? new Map([['11', false], ['20', false]])
             : ttmData.industryTemplate === 'banks'
                 ? new Map([['1', false], ['2', false], ['7', false], ['16', false]])
-                : new Map()); //TODO: insurance
+                : new Map([['1', false], ['8', false], ['62', false], ['11', false], ['28', false]])); //insurance
 
     const getMillions = (v) => +v / 1e6;
 
