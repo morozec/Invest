@@ -34,6 +34,7 @@ export function AnalystEstimate(props) {
     if (isLoading) {
         content = <p><em>Loading...</em></p>;
     } else {
+        const reversedEarningsCalendar = [...earnings.earningsCalendar].reverse();
         content =
             <div className='content'>
                 <Table bordered hover striped variant='light' className='table-sm'>
@@ -60,8 +61,39 @@ export function AnalystEstimate(props) {
                 <div className='content-charts'>
                     <Bar
                         data={{
-                            labels: earnings.earningsCalendar.map(v => v.date),
+                            labels: reversedEarningsCalendar.map(v => v.date),
                             datasets: [
+                                {
+                                    label: 'EPS Actual',
+                                    backgroundColor: `rgba(0, 110, 30, 1)`,
+                                    borderColor: `rgba(0, 110, 30, 1)`,
+                                    borderWidth: 1,
+                                    hoverBackgroundColor: `rgba(0, 110, 30, 0.6)`,
+                                    hoverBorderColor: `rgba(0, 110, 30, 0.6)`,
+                                    data: reversedEarningsCalendar.map(v => v.epsActual),
+                                    yAxisID: 'epsAxis',
+                                    type: 'line',
+                                    pointRadius: 10,
+                                    pointHoverRadius: 10,
+                                    fill: false,
+                                    showLine: false,
+                                },
+                                {
+                                    label: 'EPS Estimate',
+                                    backgroundColor: `rgba(156, 255, 174, 1)`,
+                                    borderColor: `rgba(156, 255, 174, 1)`,
+                                    borderWidth: 1,
+                                    hoverBackgroundColor: `rgba(156, 255, 174, 0.6)`,
+                                    hoverBorderColor: `rgba(156, 255, 174, 0.6)`,
+                                    data: reversedEarningsCalendar.map(v => v.epsEstimate),
+                                    yAxisID: 'epsAxis',
+                                    type: 'line',
+                                    pointRadius: 10,
+                                    pointHoverRadius: 10,
+                                    fill: false,
+                                    showLine: false,
+                                },
+
 
                                 {
                                     label: 'Revenue Estimate',
@@ -69,29 +101,63 @@ export function AnalystEstimate(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(191, 191, 191, 0.6)`,
                                     hoverBorderColor: `rgba(191, 191, 191, 0.6)`,
-                                    data: earnings.earningsCalendar.map(v => v.revenueEstimate),
+                                    data: reversedEarningsCalendar.map(v => v.revenueEstimate),
+                                    yAxisID: 'revenueAxis'
                                 },
-
                                 {
                                     label: 'Revenue Actual',
                                     backgroundColor: `rgba(74, 74, 74, 1)`,
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(74, 74, 74, 0.6)`,
                                     hoverBorderColor: `rgba(74, 74, 74, 0.6)`,
-                                    data: earnings.earningsCalendar.map(v => v.revenueActual),
+                                    data: reversedEarningsCalendar.map(v => v.revenueActual),
+                                    revenueAxis: 'revenueAxis',
                                 },
 
-                                
+
+
                             ]
                         }}
                         options={{
-                            scales:{
-                                yAxes:[
+                            scales: {
+                                yAxes: [
                                     {
-                                        type:'bar',
                                         display: true,
                                         position: 'left',
-                                        id:'revenueAxis'
+                                        id: 'revenueAxis',
+                                        gridLines: {
+                                            display: true
+                                        },
+                                        labels: {
+                                            show: true,
+                                        },
+                                        ticks:{
+                                            beginAtZero:true,
+                                        },
+
+                                        scaleLabel:{
+                                            display:true,
+                                            labelString:'Revenue'
+                                        }
+                                    },
+                                    {
+                                        display: true,
+                                        position: 'right',
+                                        id: 'epsAxis',
+                                        gridLines: {
+                                            display: false
+                                        },
+                                        labels: {
+                                            show: true
+                                        },
+                                        ticks:{
+                                            beginAtZero:true,
+                                        },
+
+                                        scaleLabel:{
+                                            display:true,
+                                            labelString:'EPS'
+                                        }
                                     }
                                 ]
                             }
