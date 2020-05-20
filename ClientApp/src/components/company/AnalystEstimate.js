@@ -47,7 +47,8 @@ export function AnalystEstimate(props) {
                     revenueActual: null,
                     revenueEstimate: rev.revenueAvg,
                     epsActual: null,
-                    epsEstimate: estEps !== undefined ? estEps.epsAvg : null
+                    epsEstimate: estEps !== undefined ? estEps.epsAvg : null,
+                    isEstimate:true
                 }
             });
             const fullEarnings = [...estEarnings, ...result[0].earningsCalendar]
@@ -58,6 +59,22 @@ export function AnalystEstimate(props) {
 
     }, [isActive, earnings, ticker])
 
+    const dateToQuarter = (date, isEstimate) => {
+        let year = +date.substring(0, 4);
+        const month = date.substring(5, 7);
+        let quarter = month >= '01' && month <= '03' 
+            ? 1
+            : month >= '04' && month <= '06' 
+                ? 2
+                : month >= '07' && month <= '09'
+                    ? 3
+                    : 4;
+        if (!isEstimate){
+            year = quarter > 1 ? year : year - 1;
+            quarter = quarter > 1 ? quarter - 1 : 4;
+        }
+        return `${year} Q${quarter}`;
+    }
 
     let content;
 
@@ -80,8 +97,8 @@ export function AnalystEstimate(props) {
                     <tbody>
                         {earnings.map((v, i) => (
                             <tr key={i}>
-                                <td>{v.date}</td>
-                                <td>-</td>
+                                <td>{v.isEstimate ? '-' : v.date}</td>
+                                <td>{dateToQuarter(v.date, v.isEstimate)}</td>
                                 <td>{`${v.revenueActual !== null ? v.revenueActual : '-'} / ${v.revenueEstimate !== null ? v.revenueEstimate : '-'}`}</td>
                                 <td>{`${v.epsActual !== null ? (v.epsActual).toFixed(2) : '-'} / ${v.epsEstimate !== null ? (v.epsEstimate).toFixed(2) : '-'}`}</td>
                             </tr>
@@ -91,7 +108,7 @@ export function AnalystEstimate(props) {
                 <div className='content-charts'>
                     <Bar
                         data={{
-                            labels: reversedEarnings.map(v => v.date),
+                            labels: reversedEarnings.map(v => dateToQuarter(v.date, v.isEstimate)),
                             datasets: [
                                 {
                                     label: 'EPS Actual',
