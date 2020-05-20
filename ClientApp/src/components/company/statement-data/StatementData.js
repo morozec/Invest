@@ -82,6 +82,26 @@ export function StatementData(props) {
                     displayLevel: "0",
                     valueChosen: epsDiluted
                 });
+
+                if (data.industryTemplate === 'general') {
+                    let pretaxIncome = +data.values.filter(v => v.uid === '43')[0].valueChosen;
+
+                    let interestExpense = data.values.filter(v => v.tid === '22')[0].valueChosen;
+                    if (interestExpense === null){
+                        interestExpense = data.values.filter(v => v.tid === '21')[0].valueChosen;
+                    }
+                    if (interestExpense !== null) {
+                        let ebit = pretaxIncome - +interestExpense;
+
+                        data.values.push({
+                            tid: 'ebit',
+                            uid: 'ebit',
+                            standardisedName: 'EBIT',
+                            displayLevel: "0",
+                            valueChosen: ebit
+                        });
+                    }
+                }
             }
             else if (statementType === 'cashFlow') {
                 data.values.push({
@@ -89,7 +109,7 @@ export function StatementData(props) {
                     uid: 'fcf',
                     standardisedName: 'Free Cash Flow',
                     displayLevel: "0",
-                    parent_tid:"0",
+                    parent_tid: "0",
                     valueChosen:
                         +data.values.filter(v => v.tid === '13')[0].valueChosen
                         +

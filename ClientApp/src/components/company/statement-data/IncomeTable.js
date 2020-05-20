@@ -5,7 +5,7 @@ export function IncomeTable(props) {
     const { ttmData, data } = props;
     const [visibleTids, setVisibleTids] = useState(
         ttmData.industryTemplate === 'general'
-            ? new Map([['11', false], ['20', false]])
+            ? new Map([['11', false], ['20', false], ['21', false]])//TODO: 21 may be empty (MCD)
             : ttmData.industryTemplate === 'banks'
                 ? new Map([['1', false], ['2', false], ['7', false], ['16', false]])
                 : new Map([['1', false], ['8', false], ['62', false], ['11', false], ['28', false]])); //insurance
