@@ -4,6 +4,7 @@ import { Bar } from 'react-chartjs-2';
 
 export function AnalystEstimate(props) {
     const { ticker, isActive } = props;
+    console.log(props);
 
     const [earnings, setEarnings] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -20,11 +21,40 @@ export function AnalystEstimate(props) {
             return data;
         }
 
-        getEarnings(ticker).then(result => {
+        const getRevenueEstamates = async (companySymbol) => {
+            const response = await fetch(`api/finnhub/revenueEstimates/${companySymbol}`);
+            const data = await response.json();
+            return data;
+        }
+
+        const getEpsEstamates = async (companySymbol) => {
+            const response = await fetch(`api/finnhub/epsEstimates/${companySymbol}`);
+            const data = await response.json();
+            return data;
+        }
+
+        console.log('aEst')
+
+        const promises = [getEarnings(ticker), getRevenueEstamates(ticker), getEpsEstamates(ticker)];
+        Promise.all(promises).then(result => {
             console.log(result);
-            setEarnings(result);
+            const lastDate = result[0].earningsCalendar[0].date;
+
+            const estEarnings = result[1].data.filter(rev => rev.period > lastDate).map(rev => {
+                let estEps = result[2].data.filter(eps => eps.period === rev.period)[0];
+                return {
+                    date: rev.period,
+                    revenueActual: null,
+                    revenueEstimate: rev.revenueAvg,
+                    epsActual: null,
+                    epsEstimate: estEps !== undefined ? estEps.epsAvg : null
+                }
+            });
+            const fullEarnings = [...estEarnings, ...result[0].earningsCalendar]
+            setEarnings(fullEarnings);
             setIsLoading(false);
         })
+
 
     }, [isActive, earnings, ticker])
 
@@ -34,7 +64,7 @@ export function AnalystEstimate(props) {
     if (isLoading) {
         content = <p><em>Loading...</em></p>;
     } else {
-        const reversedEarningsCalendar = [...earnings.earningsCalendar].reverse();
+        const reversedEarnings = [...earnings].reverse();
         content =
             <div className='content'>
                 <Table bordered hover striped variant='light' className='table-sm'>
@@ -48,12 +78,12 @@ export function AnalystEstimate(props) {
                         </tr>
                     </thead>
                     <tbody>
-                        {earnings.earningsCalendar.map((v, i) => (
+                        {earnings.map((v, i) => (
                             <tr key={i}>
                                 <td>{v.date}</td>
                                 <td>-</td>
-                                <td>{`${v.revenueActual} / ${v.revenueEstimate}`}</td>
-                                <td>{`${(v.epsActual).toFixed(2)} / ${(v.epsEstimate).toFixed(2)}`}</td>
+                                <td>{`${v.revenueActual !== null ? v.revenueActual : '-'} / ${v.revenueEstimate !== null ? v.revenueEstimate : '-'}`}</td>
+                                <td>{`${v.epsActual !== null ? (v.epsActual).toFixed(2) : '-'} / ${v.epsEstimate !== null ? (v.epsEstimate).toFixed(2) : '-'}`}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -61,7 +91,7 @@ export function AnalystEstimate(props) {
                 <div className='content-charts'>
                     <Bar
                         data={{
-                            labels: reversedEarningsCalendar.map(v => v.date),
+                            labels: reversedEarnings.map(v => v.date),
                             datasets: [
                                 {
                                     label: 'EPS Actual',
@@ -70,7 +100,7 @@ export function AnalystEstimate(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(0, 110, 30, 0.6)`,
                                     hoverBorderColor: `rgba(0, 110, 30, 0.6)`,
-                                    data: reversedEarningsCalendar.map(v => v.epsActual),
+                                    data: reversedEarnings.map(v => v.epsActual),
                                     yAxisID: 'epsAxis',
                                     type: 'line',
                                     pointRadius: 10,
@@ -85,7 +115,7 @@ export function AnalystEstimate(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(156, 255, 174, 0.6)`,
                                     hoverBorderColor: `rgba(156, 255, 174, 0.6)`,
-                                    data: reversedEarningsCalendar.map(v => v.epsEstimate),
+                                    data: reversedEarnings.map(v => v.epsEstimate),
                                     yAxisID: 'epsAxis',
                                     type: 'line',
                                     pointRadius: 10,
@@ -101,7 +131,7 @@ export function AnalystEstimate(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(191, 191, 191, 0.6)`,
                                     hoverBorderColor: `rgba(191, 191, 191, 0.6)`,
-                                    data: reversedEarningsCalendar.map(v => v.revenueEstimate),
+                                    data: reversedEarnings.map(v => v.revenueEstimate),
                                     yAxisID: 'revenueAxis'
                                 },
                                 {
@@ -110,7 +140,7 @@ export function AnalystEstimate(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(74, 74, 74, 0.6)`,
                                     hoverBorderColor: `rgba(74, 74, 74, 0.6)`,
-                                    data: reversedEarningsCalendar.map(v => v.revenueActual),
+                                    data: reversedEarnings.map(v => v.revenueActual),
                                     revenueAxis: 'revenueAxis',
                                 },
 
@@ -131,13 +161,13 @@ export function AnalystEstimate(props) {
                                         labels: {
                                             show: true,
                                         },
-                                        ticks:{
-                                            beginAtZero:true,
+                                        ticks: {
+                                            beginAtZero: true,
                                         },
 
-                                        scaleLabel:{
-                                            display:true,
-                                            labelString:'Revenue'
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: 'Revenue'
                                         }
                                     },
                                     {
@@ -150,13 +180,13 @@ export function AnalystEstimate(props) {
                                         labels: {
                                             show: true
                                         },
-                                        ticks:{
-                                            beginAtZero:true,
+                                        ticks: {
+                                            beginAtZero: true,
                                         },
 
-                                        scaleLabel:{
-                                            display:true,
-                                            labelString:'EPS'
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: 'EPS'
                                         }
                                     }
                                 ]

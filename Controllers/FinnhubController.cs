@@ -90,5 +90,28 @@ namespace Invest.Controllers
             IRestResponse response = client.Execute(request);
             return Ok(response.Content);
         }
+
+
+        [HttpGet("revenueEstimates/{companySymbol}")]
+        public IActionResult GetRevenueEstimates(string companySymbol)
+        {
+            var url =
+                $"https://finnhub.io/api/v1/stock/revenue-estimate?symbol={companySymbol}&token={Constants.FINNHUB_API}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
+        [HttpGet("epsEstimates/{companySymbol}")]
+        public IActionResult GetEpsEstimates(string companySymbol)
+        {
+            var url =
+                $"https://finnhub.io/api/v1/stock/eps-estimate?symbol={companySymbol}&token={Constants.FINNHUB_API}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
     }
 }

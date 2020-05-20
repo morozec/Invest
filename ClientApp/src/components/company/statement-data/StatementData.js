@@ -115,7 +115,7 @@ export function StatementData(props) {
             setIsLoading(false);
         });
 
-    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType, simfinId])
+    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType, simfinId, sharesAggregatedBasicData, sharesAggregatedDilutedData])
 
     const getMillions = (v) => Math.floor(+v / 1e6);
 
