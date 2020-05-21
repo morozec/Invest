@@ -4,7 +4,6 @@ import { Bar } from 'react-chartjs-2';
 
 export function AnalystEstimate(props) {
     const { ticker, isActive } = props;
-    console.log(props);
 
     const [earnings, setEarnings] = useState(null);
     const [isLoading, setIsLoading] = useState(true);

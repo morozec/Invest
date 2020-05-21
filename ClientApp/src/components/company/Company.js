@@ -7,12 +7,12 @@ import { News } from './News';
 import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
 import { AnalystEstimate } from './AnalystEstimate';
+import { withRouter } from 'react-router-dom';
 
-export function StockSimfin(props) {
-
+function Company(props) {
   const [key, setKey] = useState('summary');
 
-  const [simfinId, setSimfinId] = useState(null);
+  const [simfinId, setSimfinId] = useState(props.location.state ? props.location.state.simId : null);
   const [profile, setProfile] = useState(null);
   const [ratios, setRatios] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
@@ -81,34 +81,56 @@ export function StockSimfin(props) {
     }
 
     (async () => {
-      let promises = [
-        getSimfinId(ticker),
-        getProfile(ticker),
-        getRecommendations(ticker),
-        getPriceTargets(ticker),
-        getUpgradeDowngrade(ticker),
-      ];
+      let promises;
+      if (simfinId !== null) {
+        promises = [
+          getProfile(ticker),
+          getRecommendations(ticker),
+          getPriceTargets(ticker),
+          getUpgradeDowngrade(ticker),
+          getRatios(simfinId),
+          getSharesAggregated(simfinId)
+        ];
+        let result = await Promise.all(promises);
 
-      let result = await Promise.all(promises);
+        console.log('one step', result);
+        setProfile(result[0]);
+        setRecommendations(result[1].reverse());
+        setPriceTargets(result[2]);
+        setUpgradeDowngrade(result[3].slice(0, 10));
+        setRatios(result[4]);
+        handleSharesAggregated(result[5]);
+      } else {
+        promises = [
+          getSimfinId(ticker),
+          getProfile(ticker),
+          getRecommendations(ticker),
+          getPriceTargets(ticker),
+          getUpgradeDowngrade(ticker),
+        ];
 
-      console.log(result);
-      setSimfinId(result[0]);
-      setProfile(result[1]);
-      setRecommendations(result[2].reverse());
-      setPriceTargets(result[3]);
-      setUpgradeDowngrade(result[4].slice(0, 10));
+        let result = await Promise.all(promises);
 
-      let promises2 = [
-        getRatios(result[0]),
-        getSharesAggregated(result[0])
-      ];
-      let result2 = await Promise.all(promises2);
-      setRatios(result2[0]);
-      handleSharesAggregated(result2[1]);
+        console.log('two steps', result);
+        setSimfinId(result[0]);
+        setProfile(result[1]);
+        setRecommendations(result[2].reverse());
+        setPriceTargets(result[3]);
+        setUpgradeDowngrade(result[4].slice(0, 10));
+
+        let promises2 = [
+          getRatios(result[0]),
+          getSharesAggregated(result[0])
+        ];
+        let result2 = await Promise.all(promises2);
+        setRatios(result2[0]);
+        handleSharesAggregated(result2[1]);
+      }
+
       setIsLoading(false);
     })();
 
-  }, [ticker])
+  }, [ticker, simfinId])
 
   let content;
   if (isLoading) {
@@ -157,7 +179,7 @@ export function StockSimfin(props) {
                       color: [156, 255, 174]
                     }
                   ],
-                  isMillions:true
+                  isMillions: true
                 },
 
                 {
@@ -168,7 +190,7 @@ export function StockSimfin(props) {
                       color: [200, 200, 200]
                     },
                   ],
-                  isMillions:false
+                  isMillions: false
                 }
               ]
             }
@@ -196,7 +218,7 @@ export function StockSimfin(props) {
                       color: [191, 191, 191]
                     }
                   ],
-                  isMillions:true
+                  isMillions: true
                 },
 
                 {
@@ -217,7 +239,7 @@ export function StockSimfin(props) {
                       color: [255, 150, 150]
                     }
                   ],
-                  isMillions:true
+                  isMillions: true
                 },
               ]
             }
@@ -254,7 +276,7 @@ export function StockSimfin(props) {
                     color: [0, 0, 0]
                   }
                 ],
-                isMillions:true
+                isMillions: true
               },
             ]}
           />
@@ -299,3 +321,4 @@ export function StockSimfin(props) {
   )
 }
 
+export default withRouter(Company);

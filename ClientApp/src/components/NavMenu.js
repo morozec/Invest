@@ -1,11 +1,68 @@
-import React, {useState} from 'react';
-import { Container, Navbar, Nav, Form, FormControl } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Container, Navbar, Nav, Form } from 'react-bootstrap';
+import { Link, withRouter } from 'react-router-dom';
 import './NavMenu.css';
 import LinkButton from '../LinkButton';
+import { DebounceInput } from 'react-debounce-input';
 
-export function NavMenu() {
+function NavMenu(props) {
   const [ticker, setTicker] = useState('')
+  const [companies, setCompanies] = useState([])
+
+  const getCompanyByTicker = async (ticker) => {
+    const response = await fetch(`api/simfin/id/${ticker}`);
+    const data = await response.json();
+    return data;
+  }
+  const getCompanyByName = async (name) => {
+    const response = await fetch(`api/simfin/name/${name}`);
+    const data = await response.json();
+    return data;
+  }
+
+
+  const handleSearchChange = (e) => {
+
+    let t = e.target.value;
+    setTicker(t);
+    if (t === '') return;
+
+    let selectedOption = document.querySelector(`#stocks option[value="${t}"]`);
+    if (selectedOption !== null) {
+      const simId = selectedOption.dataset.simid;
+      const ticker = selectedOption.dataset.ticker;
+      const name = selectedOption.dataset.name;
+      console.log('value to send', simId, ticker, name);
+      props.history.push({
+        pathname:'/stock',
+        search:`t=${ticker}`,
+        state:{
+          simId:simId,
+          name:name
+        }
+      });
+    } else {
+      console.log('update list', t);
+      const promises = [getCompanyByTicker(t), getCompanyByName(t)];
+      Promise.all(promises).then(result => {
+        let companies = [];
+        let id = -1;
+        if (result[0].length > 0) {
+          companies.push(result[0][0]);
+          id = result[0][0].simId;
+        }
+        let i = 0;
+        while (companies.length < 10 && i < result[1].length) {
+          if (result[1][i].simId !== id) {
+            companies.push(result[1][i]);
+          }
+          i++;
+        }
+        console.log(companies);
+        setCompanies(companies);
+      })
+    }
+  }
 
   return (
     <header>
@@ -20,7 +77,25 @@ export function NavMenu() {
               <Nav.Link as={Link} to="/yahoo">Yahoo</Nav.Link>
 
               <Form inline>
-                <FormControl type="text" placeholder="Search" className="mr-sm-2" value={ticker} onChange={e => setTicker(e.target.value)} />
+                {/* <FormControl type="text" placeholder="Search" className="mr-sm-2" value={ticker} onChange={handleSearchChange} /> */}
+                <DebounceInput
+                  debounceTimeout={500}
+                  onChange={handleSearchChange}
+                  placeholder='Search'
+                  list='stocks'
+                  className='mr-sm-2 form-control' />
+
+                <datalist id='stocks'>
+                  {companies.map((c, i) =>
+                    <option key={i}
+                      value={c.ticker !== null ? `${c.name} (${c.ticker})` : c.name}
+                      data-simid={c.simId}
+                      data-ticker={c.ticker}
+                      data-name={c.name}
+                      >
+                    </option>)}
+                </datalist>
+
                 <LinkButton to={`/stock?t=${ticker}`} variant="outline-success">Search</LinkButton>
               </Form>
             </Nav>
@@ -32,3 +107,5 @@ export function NavMenu() {
   );
 
 }
+
+export default withRouter(NavMenu);

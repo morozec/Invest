@@ -15,10 +15,21 @@ namespace Invest.Controllers
     public class SimfinController : ControllerBase
     {
         [HttpGet("id/{companySymbol}")]
-        public IActionResult GetId(string companySymbol)
+        public IActionResult GetById(string companySymbol)
         {
             var url =
                 $"https://simfin.com/api/v1/info/find-id/ticker/{companySymbol}?api-key={Constants.SIMFIN_API}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
+        [HttpGet("name/{companySymbol}")]
+        public IActionResult GetByName(string companySymbol)
+        {
+            var url =
+                $"https://simfin.com/api/v1/info/find-id/name-search/{companySymbol}?api-key={Constants.SIMFIN_API}";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);

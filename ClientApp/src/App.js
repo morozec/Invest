@@ -6,7 +6,7 @@ import { YahooFinance } from './components/Stock';
 import { Counter } from './components/Counter';
 
 import './custom.css'
-import { StockSimfin } from './components/company/Company';
+import Company from './components/company/Company';
 
 export default class App extends Component {
   static displayName = App.name;
@@ -17,7 +17,7 @@ export default class App extends Component {
         <Route exact path='/' component={Home} />
         <Route path='/counter' component={Counter} />
         <Route path='/yahoo' component={YahooFinance} />
-        <Route path='/stock' component={StockSimfin} />
+        <Route path='/stock' component={Company} />
       </Layout>
     );
   }
