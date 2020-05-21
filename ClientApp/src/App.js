@@ -7,6 +7,7 @@ import { Counter } from './components/Counter';
 
 import './custom.css'
 import Company from './components/company/Company';
+import { SearchList } from './components/SearchList';
 
 export default class App extends Component {
   static displayName = App.name;
@@ -18,6 +19,7 @@ export default class App extends Component {
         <Route path='/counter' component={Counter} />
         <Route path='/yahoo' component={YahooFinance} />
         <Route path='/stock' component={Company} />
+        <Route path='/search' component={SearchList} />
       </Layout>
     );
   }

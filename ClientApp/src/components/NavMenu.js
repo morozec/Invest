@@ -96,7 +96,7 @@ function NavMenu(props) {
                     </option>)}
                 </datalist>
 
-                <LinkButton to={`/stock?t=${ticker}`} variant="outline-success">Search</LinkButton>
+                <LinkButton to={`/search?q=${ticker}`} variant="outline-success" disabled={ticker === ''}>Search</LinkButton>
               </Form>
             </Nav>
           </Navbar.Collapse>

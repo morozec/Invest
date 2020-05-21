@@ -26,7 +26,7 @@ const LinkButton = (props) => {
 }
 
 LinkButton.propTypes = {
-  to: PropTypes.string.isRequired,
+  to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
   children: PropTypes.node.isRequired
 }
 
