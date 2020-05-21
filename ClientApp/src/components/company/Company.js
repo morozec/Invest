@@ -28,7 +28,7 @@ function Company(props) {
   const query = useQuery();
   const ticker = query.get('t');
 
-  useEffect(() => {
+  const loadData = () => {
     setIsLoading(true);
 
     const getSimfinId = async (companySymbol) => {
@@ -129,8 +129,9 @@ function Company(props) {
 
       setIsLoading(false);
     })();
+  }
 
-  }, [ticker, simfinId])
+  useEffect(loadData, [ticker])
 
   let content;
   if (isLoading) {
