@@ -8,21 +8,30 @@ export function Comparing(props) {
     const EPS = 1E-3;
 
     const getRatioClass = (companyRatio, allCompaniesValues) => {
+        const min = Math.min(...allCompaniesValues);
+        const max = Math.max(...allCompaniesValues);
+
         if (companyRatio.comparingCoeff === 0 || allCompaniesValues.length === 1) return 'value';
         if (companyRatio.comparingCoeff === 1) {
-            if (companyRatio.value === Math.max(...allCompaniesValues)) {
+            if (companyRatio.value === max) {
                 return `value best`;
-            } else if (companyRatio.value === Math.min(...allCompaniesValues)) {
+            } else if (companyRatio.value === min) {
                 return 'value worst';
             } else {
                 return 'value';
             }
         }
 
-        if (companyRatio.value === Math.min(...allCompaniesValues)) {
-            return `value best`;
-        } else if (companyRatio.value === Math.max(...allCompaniesValues)) {
-            return 'value worst';
+        if (companyRatio.value === min) {
+            if (companyRatio.value >= 0) return 'value best';
+            if (companyRatio.value === min) return 'value worst';
+            if (companyRatio.value === max) return 'value best';
+            return 'value';
+        } else if (companyRatio.value === max) {
+            if (companyRatio.value < 0) return 'value best';
+            if (min >= 0) return 'value worst';
+            if (allCompaniesValues.every(v => v < 0 || v === companyRatio.value)) return 'value best';
+            return 'value';
         } else {
             return 'value';
         }
