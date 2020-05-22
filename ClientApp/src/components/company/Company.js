@@ -12,7 +12,7 @@ import { withRouter } from 'react-router-dom';
 function Company(props) {
   const [key, setKey] = useState('summary');
 
-  const [simfinId, setSimfinId] = useState(props.location.state ? props.location.state.simId : null);
+  const [simId, setSimId] = useState(props.location.state ? props.location.state.simId : null);
   const [profile, setProfile] = useState(null);
   const [ratios, setRatios] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
@@ -24,6 +24,8 @@ function Company(props) {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const {addComparingCompany} = props;
+
   const useQuery = () => new URLSearchParams(useLocation().search);
   const query = useQuery();
   const ticker = query.get('t');
@@ -31,7 +33,7 @@ function Company(props) {
   const loadData = () => {
     setIsLoading(true);
 
-    const getSimfinId = async (companySymbol) => {
+    const getSimId = async (companySymbol) => {
       const response = await fetch(`api/simfin/id/${companySymbol}`);
       const json = await response.json();
       return json[0].simId;
@@ -82,14 +84,14 @@ function Company(props) {
 
     (async () => {
       let promises;
-      if (simfinId !== null) {
+      if (simId !== null) {
         promises = [
           getProfile(ticker),
           getRecommendations(ticker),
           getPriceTargets(ticker),
           getUpgradeDowngrade(ticker),
-          getRatios(simfinId),
-          getSharesAggregated(simfinId)
+          getRatios(simId),
+          getSharesAggregated(simId)
         ];
         let result = await Promise.all(promises);
 
@@ -102,7 +104,7 @@ function Company(props) {
         handleSharesAggregated(result[5]);
       } else {
         promises = [
-          getSimfinId(ticker),
+          getSimId(ticker),
           getProfile(ticker),
           getRecommendations(ticker),
           getPriceTargets(ticker),
@@ -112,7 +114,7 @@ function Company(props) {
         let result = await Promise.all(promises);
 
         console.log('two steps', result);
-        setSimfinId(result[0]);
+        setSimId(result[0]);
         setProfile(result[1]);
         setRecommendations(result[2].reverse());
         setPriceTargets(result[3]);
@@ -141,18 +143,20 @@ function Company(props) {
       <Tabs activeKey={key} onSelect={(k) => setKey(k)} className='mb-2'>
         <Tab eventKey="summary" title="Summary">
           <Summary
+            simId={simId}
             profile={profile}
             ratios={ratios}
             recommendations={recommendations}
             priceTargets={priceTargets}
             upgradeDowngrade={upgradeDowngrade}
+            addComparingCompany={addComparingCompany}
           />
         </Tab>
 
         <Tab eventKey="income" title="Income" >
           <StatementData
             ticker={profile.ticker}
-            simfinId={simfinId}
+            simId={simId}
             statementType='income'
             statementTitle='Income'
             isActive={key === 'income'}
@@ -200,7 +204,7 @@ function Company(props) {
         <Tab eventKey="balanceSheet" title="Balance Sheet">
           <StatementData
             ticker={profile.ticker}
-            simfinId={simfinId}
+            simId={simId}
             statementType='balanceSheet'
             statementTitle='Balance Sheet'
             isActive={key === 'balanceSheet'}
@@ -249,7 +253,7 @@ function Company(props) {
         <Tab eventKey="cashFlow" title="Cash Flow">
           <StatementData
             ticker={profile.ticker}
-            simfinId={simfinId}
+            simId={simId}
             statementType='cashFlow'
             statementTitle='Cash Flow'
             isActive={key === 'cashFlow'}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Container, ListGroup } from 'react-bootstrap';
-import LinkButton from '../LinkButton';
 
 export function SearchList() {
     const [companies, setCompanies] = useState([]);

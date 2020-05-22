@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Navbar, Nav, Form } from 'react-bootstrap';
+import { Container, Navbar, Nav, Form, Button } from 'react-bootstrap';
 import { Link, withRouter } from 'react-router-dom';
 import './NavMenu.css';
 import LinkButton from '../LinkButton';
@@ -8,6 +8,7 @@ import { DebounceInput } from 'react-debounce-input';
 function NavMenu(props) {
   const [ticker, setTicker] = useState('')
   const [companies, setCompanies] = useState([])
+  const { comparingCompanies } = props;
 
   const getCompanyByTicker = async (ticker) => {
     const response = await fetch(`api/simfin/id/${ticker}`);
@@ -34,11 +35,11 @@ function NavMenu(props) {
       const name = selectedOption.dataset.name;
       console.log('value to send', simId, ticker, name);
       props.history.push({
-        pathname:'/stock',
-        search:`t=${ticker}`,
-        state:{
-          simId:simId,
-          name:name
+        pathname: '/stock',
+        search: `t=${ticker}`,
+        state: {
+          simId: simId,
+          name: name
         }
       });
     } else {
@@ -72,6 +73,9 @@ function NavMenu(props) {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ml-auto">
+              <LinkButton to='/comparing' variant="outline-success" disabled={comparingCompanies.length < 2}>
+                Comparing ({comparingCompanies.length})
+              </LinkButton>
               <Nav.Link as={Link} to="/">Home</Nav.Link>
               <Nav.Link as={Link} to="/counter">Counter</Nav.Link>
               <Nav.Link as={Link} to="/yahoo">Yahoo</Nav.Link>
@@ -92,7 +96,7 @@ function NavMenu(props) {
                       data-simid={c.simId}
                       data-ticker={c.ticker}
                       data-name={c.name}
-                      >
+                    >
                     </option>)}
                 </datalist>
 

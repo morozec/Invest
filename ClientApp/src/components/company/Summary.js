@@ -1,12 +1,12 @@
 import React, { Fragment } from 'react';
-import { Table } from 'react-bootstrap';
+import { Table, Button } from 'react-bootstrap';
 import { getBillions, getDateStringFromUnixTime } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Bar, Line } from 'react-chartjs-2';
 
 export function Summary(props) {
 
-    const { profile, ratios, recommendations, priceTargets, upgradeDowngrade } = props;
+    const { profile, ratios, recommendations, priceTargets, upgradeDowngrade, addComparingCompany, simId } = props;
 
     const getRatioValue = (ratioName, isAbsolute) => {
         let ratio = ratios.filter(r => r.indicatorName === ratioName)[0];
@@ -22,11 +22,21 @@ export function Summary(props) {
         dividendYield = +((dividend / price) * 100).toFixed(2);
     }
 
+    const handleCompareClick = () => {
+        addComparingCompany({
+            simId:simId,
+            profile:profile,
+            ratios:ratios
+        });
+    }
+
     let content = (
         <Fragment>
             <div className='companyHeader mb-2'>
                 <div className='companyName'>
-                    <h1>{`${profile.name} (${profile.ticker})`}</h1>
+                    <h1>{`${profile.name} (${profile.ticker})`} <Button variant='outline-success' onClick={handleCompareClick}>
+                        Compare</Button>
+                    </h1>
                 </div>
 
                 <div className='companyUrl'>
