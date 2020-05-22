@@ -6,6 +6,27 @@ export function Comparing(props) {
     const { comparingCompanies } = props;
     const groupedRatios = comparingCompanies.map(c => (new RatioHelper(c.ratios)).getGroupedRatios());
 
+    const getCellClass = (companyRatio, allCompaniesValues) => {
+        if (companyRatio.comparingCoeff === 0) return 'value';
+        if (companyRatio.comparingCoeff === 1) {
+            if (companyRatio.value === Math.max(...allCompaniesValues)) {
+                return `value best`;
+            } else if (companyRatio.value === Math.min(...allCompaniesValues)) {
+                return 'value worst';
+            } else {
+                return 'value';
+            }
+        }
+
+        if (companyRatio.value === Math.min(...allCompaniesValues)) {
+            return `value best`;
+        } else if (companyRatio.value === Math.max(...allCompaniesValues)) {
+            return 'value worst';
+        } else {
+            return 'value';
+        }
+    }
+
     return (
         <div>
             <Table bordered hover variant='light' className='table-sm'>
@@ -19,7 +40,7 @@ export function Comparing(props) {
 
                     {Object.keys(GROUPS).map(groupName =>
                         <Fragment key={groupName}>
-                            <tr>
+                            <tr className='groupName'>
                                 <th colSpan={comparingCompanies.length + 1} className='centered'>{groupName}</th>
                             </tr>
                             {GROUPS[groupName].map((ratioName, i) =>
@@ -27,7 +48,10 @@ export function Comparing(props) {
                                     <td>
                                         {ratioName}
                                     </td>
-                                    {groupedRatios.map((gr, j) => <td key={j} className='value'> {gr[groupName][ratioName]} </td>)}
+                                    {groupedRatios.map((gr, j) => <td key={j}
+                                        className={getCellClass(gr[groupName][ratioName], groupedRatios.map(gr => gr[groupName][ratioName].value))}>
+                                        {gr[groupName][ratioName].displayValue}
+                                    </td>)}
                                 </tr>
                             )}
                         </Fragment>

@@ -228,3 +228,15 @@ table > caption{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
+
+tr.groupName{
+  background-color: lightgrey;
+}
+
+td.best{
+  background-color: lightgreen;
+}
+
+td.worst{
+  background-color: lightcoral;
+}
