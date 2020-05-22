@@ -8,7 +8,7 @@ export const GROUPS = {
     Valuation: ['Market Capitalisation', 'Enterprise Value', 'Price to Earnings (P/E) Ratio', 'Price to Sales (P/S) Ratio',
         'Price to Book (P/B) Value', 'Price to Free Cash Flow (P/FCF)', 'EV/EBITDA', 'EV/Sales', 'EV/FCF'],
     Profitability: ['Gross Margin %', 'Operating Margin %', 'Net Profit Margin %', 'Return on Equity (ROE) %', 'Return on Assets (ROA) %'],
-    Dividends: ['Dividends Paid', 'Dividends per Share'],
+    Dividends: ['Dividends Paid', 'Dividends per Share', 'Dividend Yield'],
     Income: ['Revenue', 'Gross Profit', 'Operating Income (EBIT)', 'EBITDA', 'Net Income (common shareholders)',
         'Earnings per Share (EPS), Basic', 'Earnings per Share (EPS), Diluted'],
     'Balance Sheet': ['Total Assets', 'Total Liabilities', 'Total Equity', 'Liabilities to Equity Ratio', 'Cash and Cash-equivalents',
@@ -150,6 +150,12 @@ RatioHelper.prototype.getGroupedRatios = function () {
                     value: +ratio.value,
                     comparingCoeff:0,
                     displayValue:getValue(ratio.value)
+                }; 
+                const lastClosingPrice = + (this.ratios.filter(r => r.indicatorName === 'Last Closing Price')[0].value);
+                groupedRatios.Dividends['Dividend Yield'] ={
+                    value: +ratio.value / lastClosingPrice,
+                    comparingCoeff:1,
+                    displayValue:getValue(+ratio.value / lastClosingPrice, RATIO_TYPE.percent)
                 }; 
                 break;
 
@@ -307,5 +313,7 @@ RatioHelper.prototype.getGroupedRatios = function () {
                 break;
         }
     }
+   
+
     return groupedRatios;
 } 

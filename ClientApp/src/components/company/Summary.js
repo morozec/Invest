@@ -26,7 +26,9 @@ export function Summary(props) {
         addComparingCompany({
             simId:simId,
             profile:profile,
-            ratios:ratios
+            ratios:ratios,
+            recommendations:recommendations,
+            priceTargets:priceTargets
         });
     }
 
