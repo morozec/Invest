@@ -18,6 +18,10 @@ export default function App() {
     setComparingCompanies([...comparingCompanies, company]);
   }
 
+  const removeComparingCompany = (company) => {
+    setComparingCompanies(comparingCompanies.filter(c => c.simId !== company.simId))
+  }
+
   return (
     <div>
       <NavMenu comparingCompanies={comparingCompanies} />
@@ -27,7 +31,8 @@ export default function App() {
         <Route path='/yahoo' component={YahooFinance} />
         <Route path='/stock' render={props => <Company addComparingCompany={addComparingCompany} {...props}/>} />
         <Route path='/search' component={SearchList} />
-        <Route path='/comparing' render={props => <Comparing comparingCompanies={comparingCompanies} {...props}/>}/>
+        <Route path='/comparing' render={props => 
+          <Comparing comparingCompanies={comparingCompanies} removeComparingCompany={removeComparingCompany} {...props}/>}/>
       </div>
     </div>
   );

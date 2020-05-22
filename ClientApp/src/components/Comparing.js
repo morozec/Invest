@@ -1,14 +1,14 @@
 import React, { Fragment } from 'react'
-import { Table } from 'react-bootstrap';
+import { Table, Button } from 'react-bootstrap';
 import { RatioHelper, GROUPS } from './../RatiosHelper';
 
 export function Comparing(props) {
-    const { comparingCompanies } = props;
+    const { comparingCompanies, removeComparingCompany } = props;
     const groupedRatios = comparingCompanies.map(c => (new RatioHelper(c.ratios)).getGroupedRatios());
     const EPS = 1E-3;
 
     const getRatioClass = (companyRatio, allCompaniesValues) => {
-        if (companyRatio.comparingCoeff === 0) return 'value';
+        if (companyRatio.comparingCoeff === 0 || allCompaniesValues.length === 1) return 'value';
         if (companyRatio.comparingCoeff === 1) {
             if (companyRatio.value === Math.max(...allCompaniesValues)) {
                 return `value best`;
@@ -78,13 +78,20 @@ export function Comparing(props) {
         return ((targetMean - lastClosingPrice) / lastClosingPrice * 100).toFixed(2);
     }
 
+    const handleDelete = (company) => {
+        removeComparingCompany(company);
+    }
+
     return (
         <div>
             <Table bordered hover variant='light' className='table-sm'>
                 <thead>
                     <tr>
                         <th>Company</th>
-                        {comparingCompanies.map((c, i) => <th key={i} className='centered'>{`${c.profile.name} (${c.profile.ticker})`}</th>)}
+                        {comparingCompanies.map((c, i) => <th key={i} className='centered'>
+                            {`${c.profile.name} (${c.profile.ticker})`}
+                            <Button variant='danger' onClick={() => handleDelete(c)}>Delete</Button>
+                        </th>)}
                     </tr>
                 </thead>
                 <tbody>
