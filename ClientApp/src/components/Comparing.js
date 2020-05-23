@@ -164,10 +164,10 @@ export function Comparing(props) {
                 <Button variant='outline-primary' className='ml-auto' onClick={handleShowSettings}>Settings</Button>
             </div>
 
-            <Table bordered hover variant='light' className='table-sm'>
+            <Table bordered hover variant='light' className='table-sm comparingTable'>
                 <thead>
                     <tr>
-                        <th>Company</th>
+                        <th className='comparingTableCol0'>Company</th>
                         {comparingCompanies.map((c, i) => <th key={i} className='centered'>
 
                             <Link to={{

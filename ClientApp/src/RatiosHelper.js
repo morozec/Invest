@@ -9,7 +9,7 @@ export const GROUPS = {
         'Price to Book (P/B) Value', 'Price to Free Cash Flow (P/FCF)', 'EV/EBITDA', 'EV/Sales', 'EV/FCF'],
     Profitability: ['Gross Margin %', 'Operating Margin %', 'Net Profit Margin %', 'Return on Equity (ROE) %', 'Return on Assets (ROA) %'],
     Dividends: ['Dividends Paid', 'Dividends per Share', 'Dividend Yield'],
-    Income: ['Revenue', 'Gross Profit', 'Operating Income (EBIT)', 'EBITDA', 'Net Income (common shareholders)',
+    Income: ['Revenue', 'Gross Profit', 'Operating Income (EBIT)', 'EBITDA', 'Net Income (common s-holders)',
         'Earnings per Share (EPS), Basic', 'Earnings per Share (EPS), Diluted'],
     'Balance Sheet': ['Total Assets', 'Total Liabilities', 'Total Equity', 'Liabilities to Equity Ratio', 'Cash and Cash-equivalents',
         'Total Debt', 'Debt to Assets Ratio', 'Current Ratio', 'Book Value per Share', 'Pietroski F-Score'],
@@ -189,7 +189,7 @@ RatioHelper.prototype.getGroupedRatios = function () {
                 }; 
                 break;
             case 'Net Income (common shareholders)':
-                groupedRatios.Income['Net Income (common shareholders)'] ={
+                groupedRatios.Income['Net Income (common s-holders)'] ={
                     value: +ratio.value,
                     comparingCoeff:0,
                     displayValue:getValue(ratio.value, RATIO_TYPE.absolute)
