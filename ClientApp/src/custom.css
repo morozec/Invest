@@ -21,6 +21,9 @@ code {
 th.centered{
   text-align: center;
 }
+td.centered{
+  text-align: center;
+}
 
 td.dl-0{
   padding-left: 0.75rem;
@@ -239,4 +242,16 @@ td.best{
 
 td.worst{
   background-color: lightcoral;
+}
+
+.modal-dialog{
+  height: 80%;
+}
+
+.modal-content{
+  height: 100%;
+}
+
+.modal-body{
+  overflow-y: auto;
 }
