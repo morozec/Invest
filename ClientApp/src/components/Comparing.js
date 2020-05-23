@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react'
 import { Table, Button } from 'react-bootstrap';
 import { RatioHelper, GROUPS } from './../RatiosHelper';
+import { Link } from 'react-router-dom';
 
 export function Comparing(props) {
     const { comparingCompanies, removeComparingCompany } = props;
@@ -98,7 +99,18 @@ export function Comparing(props) {
                     <tr>
                         <th>Company</th>
                         {comparingCompanies.map((c, i) => <th key={i} className='centered'>
-                            {`${c.profile.name} (${c.profile.ticker})`}
+
+                            <Link to={{
+                                pathname: '/stock',
+                                search: `t=${c.profile.ticker}`,
+                                state: {
+                                    simId: c.simId,
+                                    name: c.profile.name
+                                }
+                            }}>
+                                {`${c.profile.name} (${c.profile.ticker})`}
+                            </Link>
+
                             <Button variant='danger' onClick={() => handleDelete(c)}>Delete</Button>
                         </th>)}
                     </tr>
