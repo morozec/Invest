@@ -42,7 +42,7 @@ export function Summary(props) {
         <Fragment>
             <div className='companyHeader mb-2'>
                 <div className='companyName'>
-                    <h1>{`${profile.name} (${profile.ticker})`}
+                    <h1>{`${profile.name} (${profile.ticker}) `}
                         {comparingCompanies.some(c => c.simId === simId) 
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}

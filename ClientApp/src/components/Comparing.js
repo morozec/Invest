@@ -108,7 +108,7 @@ export function Comparing(props) {
                                     name: c.profile.name
                                 }
                             }}>
-                                {`${c.profile.name} (${c.profile.ticker})`}
+                                {`${c.profile.name} (${c.profile.ticker}) `}
                             </Link>
 
                             <Button variant='outline-danger' onClick={() => handleDelete(c.simId)}>Delete</Button>
