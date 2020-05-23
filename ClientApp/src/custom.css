@@ -18,7 +18,10 @@ code {
   margin-right: 2rem;
 }
 
-th.date{
+th.centered{
+  text-align: center;
+}
+td.centered{
   text-align: center;
 }
 
@@ -221,4 +224,34 @@ table > caption{
 .companyItem{
   display: grid;
   grid-template-columns: 1fr 3fr;
+}
+
+
+.comparingCotnainer{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+tr.groupName{
+  background-color: lightgrey;
+}
+
+td.best{
+  background-color: lightgreen;
+}
+
+td.worst{
+  background-color: lightcoral;
+}
+
+.modal-dialog{
+  height: 80%;
+}
+
+.modal-content{
+  height: 100%;
+}
+
+.modal-body{
+  overflow-y: auto;
 }

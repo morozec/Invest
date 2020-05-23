@@ -91,7 +91,7 @@ export function BalanceSheetTable(props) {
             <thead>
                 <tr>
                     <th>Breakdown</th>
-                    {[ttmData, ...data].map((data, i) => <th className='date' key={i}>{i === 0 ? 'TTM' : data.periodEndDate}</th>)}
+                    {[ttmData, ...data].map((data, i) => <th className='centered' key={i}>{i === 0 ? 'TTM' : data.periodEndDate}</th>)}
                 </tr>
             </thead>
             <tbody>

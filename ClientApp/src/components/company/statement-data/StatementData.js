@@ -12,7 +12,7 @@ export function StatementData(props) {
     const [isLoading, setIsLoading] = useState(true);
     const [periodType, setPeriodType] = useState('year');
 
-    const { statementType, statementTitle, isActive, chartInfos, ticker, simfinId,
+    const { statementType, statementTitle, isActive, chartInfos, ticker, simId,
         sharesAggregatedBasicData,
         sharesAggregatedDilutedData
     } = props;
@@ -118,8 +118,8 @@ export function StatementData(props) {
             }
             return data;
         }
-        let promises = !ttmData ? [getData(simfinId, 0, 'ttm')] : [];
-        promises = [...promises, ...periods.map(period => getData(simfinId, period[0], period[1]))]
+        let promises = !ttmData ? [getData(simId, 0, 'ttm')] : [];
+        promises = [...promises, ...periods.map(period => getData(simId, period[0], period[1]))]
 
         Promise.all(promises).then((results) => {
             console.log(results);
@@ -135,7 +135,7 @@ export function StatementData(props) {
             setIsLoading(false);
         });
 
-    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType, simfinId, sharesAggregatedBasicData, sharesAggregatedDilutedData])
+    }, [isActive, yearsData, quartersData, ttmData, statementType, periodType, simId, sharesAggregatedBasicData, sharesAggregatedDilutedData])
 
     const getMillions = (v) => Math.floor(+v / 1e6);
 
