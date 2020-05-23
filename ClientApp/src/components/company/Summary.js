@@ -6,7 +6,9 @@ import { Bar, Line } from 'react-chartjs-2';
 
 export function Summary(props) {
 
-    const { profile, ratios, recommendations, priceTargets, upgradeDowngrade, addComparingCompany, simId } = props;
+    const { profile, ratios, recommendations, priceTargets, upgradeDowngrade,
+        comparingCompanies, addComparingCompany, removeComparingCompany,
+        simId } = props;
 
     const getRatioValue = (ratioName, isAbsolute) => {
         let ratio = ratios.filter(r => r.indicatorName === ratioName)[0];
@@ -24,20 +26,27 @@ export function Summary(props) {
 
     const handleCompareClick = () => {
         addComparingCompany({
-            simId:simId,
-            profile:profile,
-            ratios:ratios,
-            recommendations:recommendations,
-            priceTargets:priceTargets
+            simId: simId,
+            profile: profile,
+            ratios: ratios,
+            recommendations: recommendations,
+            priceTargets: priceTargets
         });
+    }
+
+    const handleRemoveFromComparingClick = () => {
+        removeComparingCompany(simId);
     }
 
     let content = (
         <Fragment>
             <div className='companyHeader mb-2'>
                 <div className='companyName'>
-                    <h1>{`${profile.name} (${profile.ticker})`} <Button variant='outline-success' onClick={handleCompareClick}>
-                        Compare</Button>
+                    <h1>{`${profile.name} (${profile.ticker})`}
+                        {comparingCompanies.some(c => c.simId === simId) 
+                            ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
+                            : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
+
                     </h1>
                 </div>
 

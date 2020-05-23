@@ -24,7 +24,7 @@ function Company(props) {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const { addComparingCompany } = props;
+  const { comparingCompanies, addComparingCompany, removeComparingCompany } = props;
 
 
   const useQuery = () => new URLSearchParams(useLocation().search);
@@ -136,7 +136,10 @@ function Company(props) {
             recommendations={recommendations}
             priceTargets={priceTargets}
             upgradeDowngrade={upgradeDowngrade}
+
+            comparingCompanies={comparingCompanies}
             addComparingCompany={addComparingCompany}
+            removeComparingCompany={removeComparingCompany}
           />
         </Tab>
 

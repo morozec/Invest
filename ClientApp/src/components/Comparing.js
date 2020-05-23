@@ -88,8 +88,8 @@ export function Comparing(props) {
         return ((targetMean - lastClosingPrice) / lastClosingPrice * 100).toFixed(2);
     }
 
-    const handleDelete = (company) => {
-        removeComparingCompany(company);
+    const handleDelete = (companySimId) => {
+        removeComparingCompany(companySimId);
     }
 
     return (
@@ -111,7 +111,7 @@ export function Comparing(props) {
                                 {`${c.profile.name} (${c.profile.ticker})`}
                             </Link>
 
-                            <Button variant='danger' onClick={() => handleDelete(c)}>Delete</Button>
+                            <Button variant='outline-danger' onClick={() => handleDelete(c.simId)}>Delete</Button>
                         </th>)}
                     </tr>
                 </thead>
