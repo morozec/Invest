@@ -102,10 +102,10 @@ function NavMenu(props) {
                 <datalist id='stocks'>
                   {companies.map((c, i) =>
                     <option key={i}
-                      value={c.ticker !== null ? `${c.name} (${c.ticker})` : c.name}
+                      value={`${c.shortName} (${c.ticker}) - ${c.exchange}`}
                       data-simid={c.simId}
                       data-ticker={c.ticker}
-                      data-name={c.name}
+                      data-name={c.shortName}
                     >
                     </option>)}
                 </datalist>
