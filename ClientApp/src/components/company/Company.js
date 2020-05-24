@@ -12,9 +12,9 @@ import { withRouter } from 'react-router-dom';
 function Company(props) {
   const [key, setKey] = useState('summary');
 
-  const [simId, setSimId] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [ratios, setRatios] = useState(null);
+
+  // const [ratios, setRatios] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [priceTargets, setPriceTargets] = useState(null);
   const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
@@ -31,39 +31,42 @@ function Company(props) {
   const query = useQuery();
   const ticker = query.get('t');
 
-  useEffect(() => {
+  const {name, exchange} = props.location.state;//TODO
+  console.log(props.location.state)
 
-    if (props.location.state) {
-      setSimId(props.location.state.simId);
-    } else {
+  // useEffect(() => {
 
-      const getSimId = async (companySymbol) => {
-        const response = await fetch(`api/simfin/id/${companySymbol}`);
-        const json = await response.json();
-        return json[0].simId;
-      }
+  //   if (props.location.state) {
+  //     setSimId(props.location.state.simId);
+  //   } else {
 
-      getSimId(ticker).then(result => setSimId(result));
-    }
+  //     const getSimId = async (companySymbol) => {
+  //       const response = await fetch(`api/simfin/id/${companySymbol}`);
+  //       const json = await response.json();
+  //       return json[0].simId;
+  //     }
 
-  }, [ticker])
+  //     getSimId(ticker).then(result => setSimId(result));
+  //   }
+
+  // }, [ticker])
 
   const loadData = () => {
-    if (simId === null) return;
-
     setIsLoading(true);
 
     const getProfile = async (companySymbol) => {
-      const response = await fetch(`api/yahoofinance/info/${companySymbol}`);
+      const yahooCompanySymbol = exchange === 'MOEX' ? `${companySymbol}.ME` : companySymbol;
+      console.log(yahooCompanySymbol);
+      const response = await fetch(`api/yahoofinance/info/${yahooCompanySymbol}`);
       const profile = await response.json();
       return profile;
     }
 
-    const getRatios = async (companyId) => {
-      const response = await fetch(`api/simfin/ratios/${companyId}`);
-      const ratios = await response.json();
-      return ratios;
-    }
+    // const getRatios = async (companyId) => {
+    //   const response = await fetch(`api/simfin/ratios/${companyId}`);
+    //   const ratios = await response.json();
+    //   return ratios;
+    // }
 
     const getRecommendations = async (companySymbol) => {
       const response = await fetch(`api/finnhub/recommendations/${companySymbol}`);
@@ -83,18 +86,18 @@ function Company(props) {
       return data;
     }
 
-    const getSharesAggregated = async (companyId) => {
-      const response = await fetch(`api/simfin/sharesAggregated/${companyId}`);
-      const data = await response.json();
-      return data;
-    }
+    // const getSharesAggregated = async (companyId) => {
+    //   const response = await fetch(`api/simfin/sharesAggregated/${companyId}`);
+    //   const data = await response.json();
+    //   return data;
+    // }
 
-    const handleSharesAggregated = (sharesAggregatedResult) => {
-      const saBasicData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-basic');
-      const saDilutedData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-diluted');
-      setSharesAggregatedBasicData(saBasicData);
-      setSharesAggregatedDilutedData(saDilutedData);
-    }
+    // const handleSharesAggregated = (sharesAggregatedResult) => {
+    //   const saBasicData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-basic');
+    //   const saDilutedData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-diluted');
+    //   setSharesAggregatedBasicData(saBasicData);
+    //   setSharesAggregatedDilutedData(saDilutedData);
+    // }
 
     (async () => {
       let promises;
@@ -103,24 +106,20 @@ function Company(props) {
         getRecommendations(ticker),
         getPriceTargets(ticker),
         getUpgradeDowngrade(ticker),
-        getRatios(simId),
-        getSharesAggregated(simId)
       ];
       let result = await Promise.all(promises);
 
-      console.log('one step', simId, result);
+      console.log('one step', result);
       setProfile(result[0]);
       setRecommendations(result[1].reverse());
       setPriceTargets(result[2]);
       setUpgradeDowngrade(result[3].slice(0, 10));
-      setRatios(result[4]);
-      handleSharesAggregated(result[5]);
 
       setIsLoading(false);
     })();
   }
 
-  useEffect(loadData, [simId])
+  useEffect(loadData, [ticker])
 
   let content;
   if (isLoading) {
@@ -130,9 +129,8 @@ function Company(props) {
       <Tabs activeKey={key} onSelect={(k) => setKey(k)} className='mb-2'>
         <Tab eventKey="summary" title="Summary">
           <Summary
-            simId={simId}
+            ticker={ticker}
             profile={profile}
-            ratios={ratios}
             recommendations={recommendations}
             priceTargets={priceTargets}
             upgradeDowngrade={upgradeDowngrade}
@@ -143,7 +141,7 @@ function Company(props) {
           />
         </Tab>
 
-        <Tab eventKey="income" title="Income" >
+        {/* <Tab eventKey="income" title="Income" >
           <StatementData
             ticker={profile.symbol}
             simId={simId}
@@ -275,14 +273,14 @@ function Company(props) {
               },
             ]}
           />
-        </Tab>
+        </Tab> */}
 
-        <Tab eventKey="ratios" title="Ratios">
+        {/* <Tab eventKey="ratios" title="Ratios">
           <Ratios
             ticker={profile.symbol}
             ratios={ratios}
           />
-        </Tab>
+        </Tab> */}
 
         <Tab eventKey="news" title="News">
           <News
@@ -291,14 +289,14 @@ function Company(props) {
           />
         </Tab>
 
-        <Tab eventKey="sharesAggregated" title="Shares Outstanding">
+        {/* <Tab eventKey="sharesAggregated" title="Shares Outstanding">
           <SharesAggregated
             ticker={profile.symbol}
 
             sharesAggregatedBasicData={sharesAggregatedBasicData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
             sharesAggregatedDilutedData={sharesAggregatedDilutedData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
           />
-        </Tab>
+        </Tab> */}
 
         <Tab eventKey="analystEstimate" title="Analyst Estimate">
           <AnalystEstimate

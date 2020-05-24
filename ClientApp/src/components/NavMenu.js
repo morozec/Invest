@@ -35,16 +35,16 @@ function NavMenu(props) {
 
     let selectedOption = document.querySelector(`#stocks option[value="${t}"]`);
     if (selectedOption !== null) {
-      const simId = selectedOption.dataset.simid;
       const ticker = selectedOption.dataset.ticker;
       const name = selectedOption.dataset.name;
-      console.log('value to send', simId, ticker, name);
+      const exchange = selectedOption.dataset.exchange;
+      console.log('value to send', ticker, name);
       props.history.push({
         pathname: '/stock',
         search: `t=${ticker}`,
         state: {
-          simId: simId,
-          name: name
+          name: name,
+          exchange:exchange
         }
       });
     } else {
@@ -103,9 +103,9 @@ function NavMenu(props) {
                   {companies.map((c, i) =>
                     <option key={i}
                       value={`${c.shortName} (${c.ticker}) - ${c.exchange}`}
-                      data-simid={c.simId}
                       data-ticker={c.ticker}
                       data-name={c.shortName}
+                      data-exchange={c.exchange}
                     >
                     </option>)}
                 </datalist>

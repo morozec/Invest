@@ -18,8 +18,8 @@ export default function App() {
     setComparingCompanies([...comparingCompanies, company]);
   }
 
-  const removeComparingCompany = (companySimId) => {
-    setComparingCompanies(comparingCompanies.filter(c => c.simId !== companySimId))
+  const removeComparingCompany = (companySymbol) => {
+    setComparingCompanies(comparingCompanies.filter(c => c.pofile.symbol !== companySymbol))
   }
 
   return (

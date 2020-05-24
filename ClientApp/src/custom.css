@@ -158,6 +158,9 @@ tr.down{
 .mainRatiosContainer{
   grid-row: 1/2;
   grid-column: 1/2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 0.5rem;
 }
 
 .tradingViewContainer{

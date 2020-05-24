@@ -6,44 +6,27 @@ import { Bar, Line } from 'react-chartjs-2';
 
 export function Summary(props) {
 
-    const { profile, ratios, recommendations, priceTargets, upgradeDowngrade,
-        comparingCompanies, addComparingCompany, removeComparingCompany,
-        simId } = props;
-
-    const getRatioValue = (ratioName, isAbsolute) => {
-        let ratio = ratios.filter(r => r.indicatorName === ratioName)[0];
-        if (ratio.value === null) return null;
-        return isAbsolute ? getBillions(ratio.value) : +ratio.value;
-    }
-
-
-    let dividend = getRatioValue('Dividends per Share', false);
-    let dividendYield = null;
-    if (dividend !== null) {
-        let price = getRatioValue('Last Closing Price', false);
-        dividendYield = +((dividend / price) * 100).toFixed(2);
-    }
+    const { ticker, profile, recommendations, priceTargets, upgradeDowngrade,
+        comparingCompanies, addComparingCompany, removeComparingCompany } = props;
 
     const handleCompareClick = () => {
         addComparingCompany({
-            simId: simId,
             profile: profile,
-            ratios: ratios,
             recommendations: recommendations,
             priceTargets: priceTargets
         });
     }
 
     const handleRemoveFromComparingClick = () => {
-        removeComparingCompany(simId);
+        removeComparingCompany(profile.symbol);
     }
 
     let content = (
         <Fragment>
             <div className='companyHeader mb-2'>
                 <div className='companyName'>
-                    <h1>{`${profile.longName} (${profile.symbol}) `}
-                        {comparingCompanies.some(c => c.simId === simId) 
+                    <h1>{`${profile.longName} (${ticker}) `}
+                        {comparingCompanies.some(c => c.profile.symbol === profile.symbol)
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
 
@@ -62,54 +45,85 @@ export function Summary(props) {
 
 
             <div className='companyInfo'>
-                <Table bordered hover striped variant='dark' className='mainRatiosContainer'>
-                    <tbody>
-                        <tr>
-                            <td>Last Closing Price</td>
-                            <td>{`${getRatioValue('Last Closing Price', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Market Capitalisation</td>
-                            <td>{`${getRatioValue('Market Capitalisation', true)}B`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/E (TTM)</td>
-                            <td>{`${getRatioValue('Price to Earnings Ratio', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/S (TTM)</td>
-                            <td>{`${getRatioValue('Price to Sales Ratio', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/B (TTM)</td>
-                            <td>{`${getRatioValue('Price to Book Value', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>P/FCF (TTM)</td>
-                            <td>{`${getRatioValue('Price to Free Cash Flow', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Revenue (TTM)</td>
-                            <td>{`${getRatioValue('Revenues', true)}B`}</td>
-                        </tr>
-                        <tr>
-                            <td>Basic EPS (TTM)</td>
-                            <td>{`${getRatioValue('Earnings per Share, Basic', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Diluted EPS (TTM)</td>
-                            <td>{`${getRatioValue('Earnings per Share, Diluted', false)}`}</td>
-                        </tr>
-                        <tr>
-                            <td>Dividends per Share (Yield %)</td>
-                            <td>{`${dividend} ${dividendYield !== null ? `(${dividendYield}%)` : ''}`}</td>
-                        </tr>
-                    </tbody>
-                </Table>
+                <div className='mainRatiosContainer'>
+                    <Table bordered hover striped variant='dark' className='table-sm'>
+                        <tbody>
+                            <tr>
+                                <td>Previous Close</td>
+                                <td>{profile.previousClose}</td>
+                            </tr>
+                            <tr>
+                                <td>Open</td>
+                                <td>{profile.open}</td>
+                            </tr>
+                            <tr>
+                                <td>Bid</td>
+                                <td>{`${profile.bid} x ${profile.bidSize}`}</td>
+                            </tr>
+                            <tr>
+                                <td>Ask</td>
+                                <td>{`${profile.ask} x ${profile.askSize}`}</td>
+                            </tr>
+                            <tr>
+                                <td>Day's Range</td>
+                                <td>{`${profile.dayLow} - ${profile.dayHigh}`}</td>
+                            </tr>
+                            <tr>
+                                <td>52 Week Change</td>
+                                <td>{profile['52WeekChange']}</td>
+                            </tr>
+                            <tr>
+                                <td>Volume</td>
+                                <td>{profile.volume}</td>
+                            </tr>
+                            <tr>
+                                <td>Avg. Volume</td>
+                                <td>{profile.averageVolume}</td>
+                            </tr>
+                        </tbody>
+                    </Table>
+
+                    <Table bordered hover striped variant='dark' className='table-sm'>
+                        <tbody>
+                            <tr>
+                                <td>Market Cap</td>
+                                <td>{profile.marketCap}</td>
+                            </tr>
+                            <tr>
+                                <td>Beta (5Y Monthly)</td>
+                                <td>{profile.beta}</td>
+                            </tr>
+                            <tr>
+                                <td>PE Ratio (TTM)</td>
+                                <td>{profile.trailingPE}</td>
+                            </tr>
+                            <tr>
+                                <td>EPS (TTM)</td>
+                                <td>{profile.trailingEps}</td>
+                            </tr>
+                            <tr>
+                                <td>Earnings Date</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>{`Forward Dividend & Yield`}</td>
+                                <td>{`${profile.dividendRate} (${profile.dividendYield * 100}%)`}</td>
+                            </tr>
+                            <tr>
+                                <td>Ex-Dividend Date</td>
+                                <td>{getDateStringFromUnixTime(profile.exDividendDate)}</td>
+                            </tr>
+                            <tr>
+                                <td>1y Target Est</td>
+                                <td>-</td>
+                            </tr>
+                        </tbody>
+                    </Table>
+                </div>
 
                 <div className='tradingViewContainer'>
                     <TradingViewWidget
-                        symbol={`${profile.symbol}`}
+                        symbol={`${ticker}`}
                         theme={Themes.LIGHT}
                         locale="en"
                         autosize
@@ -221,7 +235,7 @@ export function Summary(props) {
                                     borderWidth: 1,
                                     hoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
                                     hoverBorderColor: `rgba(0, 0, 0, 0.6)`,
-                                    data: [getRatioValue('Last Closing Price', false), null],
+                                    data: [profile.previousClose, null],
                                     pointRadius: 15,
                                     pointHoverRadius: 15,
                                     borderDash: [10, 5],
