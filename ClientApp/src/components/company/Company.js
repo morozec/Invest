@@ -54,7 +54,7 @@ function Company(props) {
     setIsLoading(true);
 
     const getProfile = async (companySymbol) => {
-      const response = await fetch(`api/finnhub/profile/${companySymbol}`);
+      const response = await fetch(`api/yahoofinance/info/${companySymbol}`);
       const profile = await response.json();
       return profile;
     }
@@ -145,7 +145,7 @@ function Company(props) {
 
         <Tab eventKey="income" title="Income" >
           <StatementData
-            ticker={profile.ticker}
+            ticker={profile.symbol}
             simId={simId}
             statementType='income'
             statementTitle='Income'
@@ -193,7 +193,7 @@ function Company(props) {
         </Tab>
         <Tab eventKey="balanceSheet" title="Balance Sheet">
           <StatementData
-            ticker={profile.ticker}
+            ticker={profile.symbol}
             simId={simId}
             statementType='balanceSheet'
             statementTitle='Balance Sheet'
@@ -242,7 +242,7 @@ function Company(props) {
         </Tab>
         <Tab eventKey="cashFlow" title="Cash Flow">
           <StatementData
-            ticker={profile.ticker}
+            ticker={profile.symbol}
             simId={simId}
             statementType='cashFlow'
             statementTitle='Cash Flow'
@@ -279,21 +279,21 @@ function Company(props) {
 
         <Tab eventKey="ratios" title="Ratios">
           <Ratios
-            ticker={profile.ticker}
+            ticker={profile.symbol}
             ratios={ratios}
           />
         </Tab>
 
         <Tab eventKey="news" title="News">
           <News
-            ticker={profile.ticker}
+            ticker={profile.symbol}
             isActive={key === 'news'}
           />
         </Tab>
 
         <Tab eventKey="sharesAggregated" title="Shares Outstanding">
           <SharesAggregated
-            ticker={profile.ticker}
+            ticker={profile.symbol}
 
             sharesAggregatedBasicData={sharesAggregatedBasicData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
             sharesAggregatedDilutedData={sharesAggregatedDilutedData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
@@ -302,7 +302,7 @@ function Company(props) {
 
         <Tab eventKey="analystEstimate" title="Analyst Estimate">
           <AnalystEstimate
-            ticker={profile.ticker}
+            ticker={profile.symbol}
             isActive={key === 'analystEstimate'}
           />
         </Tab>

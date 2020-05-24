@@ -5,7 +5,7 @@ export function YahooFinance() {
 
   useEffect(() => {
     (async () => {
-      const response = await fetch('api/yahoofinance/info/msft');
+      const response = await fetch('api/search/aa');
       const test = await response.json();
       console.log(test);
       setIsLoading(false);

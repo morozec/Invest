@@ -172,13 +172,13 @@ export function Comparing(props) {
 
                             <Link to={{
                                 pathname: '/stock',
-                                search: `t=${c.profile.ticker}`,
+                                search: `t=${c.profile.symbol}`,
                                 state: {
                                     simId: c.simId,
-                                    name: c.profile.name
+                                    name: c.profile.longName
                                 }
                             }}>
-                                {`${c.profile.name} (${c.profile.ticker}) `}
+                                {`${c.profile.longName} (${c.profile.symbol}) `}
                             </Link>
 
                             <Button variant='outline-danger' onClick={() => handleDelete(c.simId)}>Delete</Button>

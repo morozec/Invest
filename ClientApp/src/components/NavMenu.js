@@ -21,6 +21,11 @@ function NavMenu(props) {
     return data;
   }
 
+  const getCompanyFromDb = async (searchText) => {
+    const response = await fetch(`api/search/${searchText}`);
+    const data = await response.json();
+    return data;
+  }
 
   const handleSearchChange = (e) => {
 
@@ -44,21 +49,26 @@ function NavMenu(props) {
       });
     } else {
       console.log('update list', t);
-      const promises = [getCompanyByTicker(t), getCompanyByName(t)];
-      Promise.all(promises).then(result => {
-        let companies = [];
-        let id = -1;
-        if (result[0].length > 0) {
-          companies.push(result[0][0]);
-          id = result[0][0].simId;
-        }
-        let i = 0;
-        while (companies.length < 10 && i < result[1].length) {
-          if (result[1][i].simId !== id) {
-            companies.push(result[1][i]);
-          }
-          i++;
-        }
+      // const promises = [getCompanyByTicker(t), getCompanyByName(t)];
+      // Promise.all(promises).then(result => {
+      //   let companies = [];
+      //   let id = -1;
+      //   if (result[0].length > 0) {
+      //     companies.push(result[0][0]);
+      //     id = result[0][0].simId;
+      //   }
+      //   let i = 0;
+      //   while (companies.length < 10 && i < result[1].length) {
+      //     if (result[1][i].simId !== id) {
+      //       companies.push(result[1][i]);
+      //     }
+      //     i++;
+      //   }
+      //   console.log(companies);
+      //   setCompanies(companies);
+      // })
+      getCompanyFromDb(t).then(result => {
+        let companies = result.slice(0, 10);
         console.log(companies);
         setCompanies(companies);
       })

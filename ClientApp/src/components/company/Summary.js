@@ -42,7 +42,7 @@ export function Summary(props) {
         <Fragment>
             <div className='companyHeader mb-2'>
                 <div className='companyName'>
-                    <h1>{`${profile.name} (${profile.ticker}) `}
+                    <h1>{`${profile.longName} (${profile.symbol}) `}
                         {comparingCompanies.some(c => c.simId === simId) 
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
@@ -51,11 +51,11 @@ export function Summary(props) {
                 </div>
 
                 <div className='companyUrl'>
-                    <a href={profile.weburl} target="_blank" rel="noopener noreferrer">{profile.weburl}</a>
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer">{profile.website}</a>
                 </div>
 
                 <div className='companyLogo'>
-                    <img src={profile.logo} alt={`${profile.name} logo`} />
+                    <img src={profile.logo_url} alt={`${profile.logo_url} logo`} />
                 </div>
             </div>
 
@@ -109,7 +109,7 @@ export function Summary(props) {
 
                 <div className='tradingViewContainer'>
                     <TradingViewWidget
-                        symbol={`${profile.ticker}`}
+                        symbol={`${profile.symbol}`}
                         theme={Themes.LIGHT}
                         locale="en"
                         autosize
