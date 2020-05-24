@@ -12,22 +12,26 @@ namespace Invest.Controllers
     [ApiController]
     public class YahooFinanceController : ControllerBase
     {
-        [HttpGet("balanceSheet")]
-        public IActionResult GetBalanceSheet()
+        [HttpGet("info/{companySymbol}")]
+        public IActionResult GetInfo(string companySymbol)
         {
-            var ibmFile = @"C:\Users\andre\Documents\ibm.txt";
-            //var client = new RestClient("https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-balance-sheet?symbol=IBM");
-            //var request = new RestRequest(Method.GET);
-            //request.AddHeader("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
-            //request.AddHeader("x-rapidapi-key", "0b4cd80286msh853ffa4af8bdab2p170732jsnb807240dce12");
-            //IRestResponse response = client.Execute(request);
+            var url =
+                $"http://localhost:4567/api/info/{companySymbol}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
 
-            //System.IO.File.WriteAllText(@"C:\Users\andre\Documents\ibm.txt", response.Content);
-            //return Ok(response.Content);
-
-            var content = System.IO.File.ReadAllText(ibmFile);
-            return Ok(content);
-
+        [HttpGet("income/{companySymbol}")]
+        public IActionResult GetIncome(string companySymbol)
+        {
+            var url =
+                $"http://localhost:4567/api/financials/{companySymbol}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
         }
     }
 }
