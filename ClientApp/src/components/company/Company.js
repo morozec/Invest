@@ -124,69 +124,116 @@ function Company(props) {
 
   useEffect(loadData, [ticker])
 
-  const parseIncome = (income) => {
-    let dates = income.columns.map(d => getDateStringFromUnixTime(d, 1));
-    let data = {};
-    for (let i = 0; i < income.index.length; ++i) {
-      let index = income.index[i];
-      data[index] = income.data[i];
+
+  let incomeIndexes = [
+    { name: 'Total Revenue', children: [] },
+    { name: 'Cost Of Revenue', children: [] },
+    { name: 'Gross Profit', children: [] },
+    {
+      name: 'Total Operating Expenses', children: [
+        { name: 'Research Development', children: [] },
+        { name: 'Selling General Administrative', children: [] },
+        { name: 'Other Operating Expenses', children: [] },
+      ]
+    },
+    { name: 'Operating Income', children: [] },
+    { name: 'Interest Expense', children: [] },
+    { name: 'Total Other Income Expense Net', children: [] },
+    { name: 'Income Before Tax', children: [] },
+    { name: 'Income Tax Expense', children: [] },
+    { name: 'Net Income From Continuing Ops', children: [] },
+    { name: "Net Income", children: [] },
+    { name: 'Net Income Applicable To Common Shares', children: [] },
+    { name: 'Ebit', children: [] },
+  ];
+
+  let balanceSheetIndexes = [
+    {
+      name: "Total Assets", children: [
+        {
+          name: "Total Current Assets", children: [
+            { name: "Cash", children: [] },
+            { name: "Short Term Investments", children: [] },
+            { name: "Net Receivables", children: [] },
+            { name: "Inventory", children: [] },
+            { name: "Other Current Assets", children: [] },
+          ]
+        },
+        {
+          name:'Non-current assets', children:[//!!!
+            {name:"Property Plant Equipment", children: []},
+            {name:"Long Term Investments", children: []},
+            {name:"Good Will", children: []},
+            {name:"Intangible Assets", children: []},
+          ]
+        },
+        {name: "Other Assets", children:[]}
+      ]
+    },
+
+    {
+      name: "Liabilities and stockholders' equity", children:[//!!!
+        {name: "Total Liab", children:[
+          {name: "Total Current Liabilities", children:[
+            {name: "Short Long Term Debt", children: []},
+            {name: "Accounts Payable", children: []},
+            {name: "Other Current Liab", children: []}
+          ]},
+          {name: "Non-current liabilities", children:[//!!!
+            {name: "Long Term Debt", children:[]},
+
+          ]},
+          {name: "Other Liab", children: []}
+        ]},
+        {name: "Total Stockholder Equity", children:[
+          {name: "Common Stock", children: []},
+          {name: "Retained Earnings", children: []},
+          {name: "Other Stockholder Equity", children: []}
+        ]},
+      ]
     }
 
-    let indexes = [
-      { name: 'Total Revenue', children: [] },
-      { name: 'Cost Of Revenue', children: [] },
-      { name: 'Gross Profit', children: [] },
-      {
-        name: 'Total Operating Expenses', children: [
-          { name: 'Research Development', children: [] },
-          { name: 'Selling General Administrative', children: [] },
-          { name: 'Other Operating Expenses', children: [] },
-        ]
-      },
-      { name: 'Operating Income', children: [] },
-      { name: 'Interest Expense', children: [] },
-      { name: 'Total Other Income Expense Net', children: [] },
-      { name: 'Income Before Tax', children: [] },
-      { name: 'Income Tax Expense', children: [] },
-      { name: 'Net Income From Continuing Ops', children: [] },
-      { name: "Net Income", children: [] },
-      { name: 'Net Income Applicable To Common Shares', children: [] },
-      { name: 'Ebit', children: [] },
-    ]
-    let indexesSet = new Set();
-    const fillSet = (arr) => {
-      for (let index of arr) {
-        let name = index.name;
-        indexesSet.add(name);
-        fillSet(index.children);
+  ];
+
+  const parseFinancials = (indexes) => {
+
+    return (income) => {
+      let dates = income.columns.map(d => getDateStringFromUnixTime(d, 1));
+      let data = {};
+      for (let i = 0; i < income.index.length; ++i) {
+        let index = income.index[i];
+        data[index] = income.data[i];
       }
+
+      // let indexesSet = new Set();
+      // const fillSet = (arr) => {
+      //   for (let index of arr) {
+      //     let name = index.name;
+      //     indexesSet.add(name);
+      //     fillSet(index.children);
+      //   }
+      // }
+      // fillSet(indexes);
+
+      // for (let i = 0; i < income.index.length; ++i) {
+      //   if (!indexesSet.has(income.index[i])) {
+      //     indexesSet.add(income.index[i]);
+      //     indexes.push({
+      //       name: income.index[i],
+      //       children: []
+      //     })
+      //   }
+      // }
+
+      return {
+        dates,
+        indexes,
+        data
+      };
     }
-    fillSet(indexes);
-
-    for (let i = 0; i < income.index.length; ++i) {
-      if (!indexesSet.has(income.index[i])) {
-        indexesSet.add(income.index[i]);
-        indexes.push({
-          name:income.index[i],
-          children:[]
-        })
-      }
-    }
-
-    return {
-      dates,
-      indexes,
-      data
-    };
-  }
-
-  const parseBalanceSheet = (balanceSheet) => {
 
   }
 
-  const parseCashFlow = (cashFlow) => {
-
-  }
 
   let content;
   if (isLoading) {
@@ -214,7 +261,7 @@ function Company(props) {
             statementType='income'
             statementTitle='Income'
             companySymbol={profile.symbol}
-            parseFinancials={parseIncome}
+            parseFinancials={parseFinancials(incomeIndexes)}
 
             chartInfos={
               [
@@ -249,6 +296,57 @@ function Company(props) {
                 //   ],
                 //   isMillions: false
                 // }
+              ]
+            }
+          />
+        </Tab>
+
+        <Tab eventKey='balanceSheet' title='Balance Sheet'>
+          <Financials
+            isActive={key === 'balanceSheet'}
+            statementType='balanceSheet'
+            statementTitle='Balance Sheet'
+            companySymbol={profile.symbol}
+            parseFinancials={parseFinancials(balanceSheetIndexes)}
+
+            chartInfos={
+              [
+                {
+                  bars: [
+                    {
+                      name: 'Total Stockholder Equity',
+                      stack: 'assets',
+                      color: [74, 74, 74]
+                    },
+                    {
+                      name: 'Total Liab',
+                      stack: 'assets',
+                      color: [191, 191, 191]
+                    }
+                  ],
+                  isMillions: true
+                },
+
+                {
+                  bars: [
+                    {
+                      name: 'Cash',
+                      stack: 'cash',
+                      color: [0, 222, 41]
+                    },
+                    {
+                      name: 'Short Long Term Debt',
+                      stack: 'debt',
+                      color: [255, 0, 0]
+                    },
+                    {
+                      name: 'Long Term Debt',
+                      stack: 'debt',
+                      color: [255, 150, 150]
+                    }
+                  ],
+                  isMillions: true
+                },
               ]
             }
           />
@@ -302,6 +400,8 @@ function Company(props) {
             }
           />
         </Tab>
+
+        
         <Tab eventKey="balanceSheet" title="Balance Sheet">
           <StatementData
             ticker={profile.symbol}
