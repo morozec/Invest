@@ -6,12 +6,15 @@ import { ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
 export function Financials(props) {
     const { isActive, statementType, companySymbol, parseFinancials, statementTitle, chartInfos } = props;
 
-    const [financials, setFinancials] = useState(null);
+    const [financialsYear, setFinancialsYear] = useState(null);
+    const [financialsQuarter, setFinancialsQuarter] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [periodType, setPeriodType] = useState('year');
 
     useEffect(() => {
         if (!isActive) return;
+        if (periodType === 'year' && financialsYear) return;
+        if (periodType === 'quarter' && financialsQuarter) return;
 
         setIsLoading(true);
 
@@ -24,11 +27,12 @@ export function Financials(props) {
         getData(companySymbol, periodType).then(result => {
             let financials = parseFinancials(result);
             console.log(financials);
-            setFinancials(financials);
+            if (periodType === 'year') setFinancialsYear(financials);
+            else setFinancialsQuarter(financials);
             setIsLoading(false);
         })
 
-    }, [isActive, statementType, companySymbol, parseFinancials, periodType])
+    }, [isActive, statementType, companySymbol, parseFinancials, periodType, financialsYear, financialsQuarter])
 
     const getStrongNames = () => {
         let strongNames = new Set();
@@ -40,7 +44,8 @@ export function Financials(props) {
         return strongNames;
     }
 
-    let content = isLoading
+    let financials = periodType === 'year' ? financialsYear : financialsQuarter;
+    let content = isLoading || financials === null
         ? <p><em>Loading...</em></p>
         : <div className='content'>
             <FinancialsTable financials={financials} strongNames={getStrongNames()} />
