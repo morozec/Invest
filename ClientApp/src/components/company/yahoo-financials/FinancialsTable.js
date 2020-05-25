@@ -5,8 +5,8 @@ export function FinancialsTable(props) {
 
     const getAllContainers = (indexes) => {
         let res = [];
-        for (let index of indexes){
-            if (index.children.length > 0){
+        for (let index of indexes) {
+            if (index.children.length > 0) {
                 res.push(index.name);
                 res = [...res, ...getAllContainers(index.children)];
             }
@@ -23,6 +23,11 @@ export function FinancialsTable(props) {
         setExpanded(newExpanded);
     }
 
+    const getSum = (index, j) => {
+        let sum = index.children.reduce((s, child) => s + financials.data[child.name][j], 0);
+        return sum;
+    }
+
     const getIndexRow = (index, displayLevel = 0) => {
         return (
             <Fragment key={index.name}>
@@ -37,6 +42,10 @@ export function FinancialsTable(props) {
 
                     {financials.data.hasOwnProperty(index.name) && financials.data[index.name].map((value, j) =>
                         <td key={j + 1} className='centered'>{value !== null ? value : '-'}</td>
+                    )}
+
+                    {!financials.data.hasOwnProperty(index.name) && financials.dates.map((d, j) =>
+                        <td key={j + 1} className='centered'>{getSum(index, j)}</td>
                     )}
                 </tr>
                 {(!expanded.has(index.name) || expanded.get(index.name)) &&
