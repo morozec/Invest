@@ -8,6 +8,9 @@ import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
 import { AnalystEstimate } from './AnalystEstimate';
 import { withRouter } from 'react-router-dom';
+import { getDateStringFromUnixTime } from '../../helpers';
+import { IncomeTable } from './statement-data/IncomeTable';
+import { Financials } from './yahoo-financials/Financials';
 
 function Company(props) {
   const [key, setKey] = useState('summary');
@@ -31,7 +34,7 @@ function Company(props) {
   const query = useQuery();
   const ticker = query.get('t');
 
-  const {name, exchange} = props.location.state;//TODO
+  const { name, exchange } = props.location.state;//TODO
   console.log(props.location.state)
 
   // useEffect(() => {
@@ -121,6 +124,70 @@ function Company(props) {
 
   useEffect(loadData, [ticker])
 
+  const parseIncome = (income) => {
+    let dates = income.columns.map(d => getDateStringFromUnixTime(d, 1));
+    let data = {};
+    for (let i = 0; i < income.index.length; ++i) {
+      let index = income.index[i];
+      data[index] = income.data[i];
+    }
+
+    let indexes = [
+      { name: 'Total Revenue', children: [] },
+      { name: 'Cost Of Revenue', children: [] },
+      { name: 'Gross Profit', children: [] },
+      {
+        name: 'Total Operating Expenses', children: [
+          { name: 'Research Development', children: [] },
+          { name: 'Selling General Administrative', children: [] },
+          { name: 'Other Operating Expenses', children: [] },
+        ]
+      },
+      { name: 'Operating Income', children: [] },
+      { name: 'Interest Expense', children: [] },
+      { name: 'Total Other Income Expense Net', children: [] },
+      { name: 'Income Before Tax', children: [] },
+      { name: 'Income Tax Expense', children: [] },
+      { name: 'Net Income From Continuing Ops', children: [] },
+      { name: "Net Income", children: [] },
+      { name: 'Net Income Applicable To Common Shares', children: [] },
+      { name: 'Ebit', children: [] },
+    ]
+    let indexesSet = new Set();
+    const fillSet = (arr) => {
+      for (let index of arr) {
+        let name = index.name;
+        indexesSet.add(name);
+        fillSet(index.children);
+      }
+    }
+    fillSet(indexes);
+
+    for (let i = 0; i < income.index.length; ++i) {
+      if (!indexesSet.has(income.index[i])) {
+        indexesSet.add(income.index[i]);
+        indexes.push({
+          name:income.index[i],
+          children:[]
+        })
+      }
+    }
+
+    return {
+      dates,
+      indexes,
+      data
+    };
+  }
+
+  const parseBalanceSheet = (balanceSheet) => {
+
+  }
+
+  const parseCashFlow = (cashFlow) => {
+
+  }
+
   let content;
   if (isLoading) {
     content = <p><em>Loading...</em></p>;
@@ -138,6 +205,52 @@ function Company(props) {
             comparingCompanies={comparingCompanies}
             addComparingCompany={addComparingCompany}
             removeComparingCompany={removeComparingCompany}
+          />
+        </Tab>
+
+        <Tab eventKey='income' title='Income'>
+          <Financials
+            isActive={key === 'income'}
+            statementType='income'
+            statementTitle='Income'
+            companySymbol={profile.symbol}
+            parseFinancials={parseIncome}
+
+            chartInfos={
+              [
+                {
+                  bars: [
+                    {
+                      name: 'Total Revenue',
+                      stack: 'revenue',
+                      color: [200, 200, 200]
+                    },
+                    {
+                      name: 'Operating Income',
+                      stack: 'operatingIncome',
+                      color: [0, 110, 30]
+                    },
+                    {
+                      name: 'Net Income',
+                      stack: 'netIncome',
+                      color: [156, 255, 174]
+                    }
+                  ],
+                  isMillions: true
+                },
+
+                // {
+                //   bars: [
+                //     {
+                //       uid: 'dilutedEps',
+                //       stack: 'eps',
+                //       color: [200, 200, 200]
+                //     },
+                //   ],
+                //   isMillions: false
+                // }
+              ]
+            }
           />
         </Tab>
 
