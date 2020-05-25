@@ -165,9 +165,10 @@ function Company(props) {
             {name:"Long Term Investments", children: []},
             {name:"Good Will", children: []},
             {name:"Intangible Assets", children: []},
+            {name: "Other Assets", children:[]}
           ]
         },
-        {name: "Other Assets", children:[]}
+        
       ]
     },
 
@@ -205,25 +206,25 @@ function Company(props) {
         data[index] = income.data[i];
       }
 
-      // let indexesSet = new Set();
-      // const fillSet = (arr) => {
-      //   for (let index of arr) {
-      //     let name = index.name;
-      //     indexesSet.add(name);
-      //     fillSet(index.children);
-      //   }
-      // }
-      // fillSet(indexes);
+      let indexesSet = new Set();
+      const fillSet = (arr) => {
+        for (let index of arr) {
+          let name = index.name;
+          indexesSet.add(name);
+          fillSet(index.children);
+        }
+      }
+      fillSet(indexes);
 
-      // for (let i = 0; i < income.index.length; ++i) {
-      //   if (!indexesSet.has(income.index[i])) {
-      //     indexesSet.add(income.index[i]);
-      //     indexes.push({
-      //       name: income.index[i],
-      //       children: []
-      //     })
-      //   }
-      // }
+      for (let i = 0; i < income.index.length; ++i) {
+        if (!indexesSet.has(income.index[i])) {
+          indexesSet.add(income.index[i]);
+          indexes.push({
+            name: income.index[i],
+            children: []
+          })
+        }
+      }
 
       return {
         dates,

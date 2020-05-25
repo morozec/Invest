@@ -2,10 +2,19 @@ import React, { Fragment, useState } from 'react';
 import { Table } from 'react-bootstrap';
 export function FinancialsTable(props) {
     const { financials, strongNames } = props;
-    const [expanded, setExpanded] = useState(new Map(
-        financials.indexes.filter(
-            i => i.children.length > 0).map(
-                i => [i.name, false])))
+
+    const getAllContainers = (indexes) => {
+        let res = [];
+        for (let index of indexes){
+            if (index.children.length > 0){
+                res.push(index.name);
+                res = [...res, ...getAllContainers(index.children)];
+            }
+        }
+        return res;
+    }
+
+    const [expanded, setExpanded] = useState(new Map(getAllContainers(financials.indexes).map(c => [c, false])));
 
     const handleRowClick = (indexName) => {
         if (!expanded.has(indexName)) return;
