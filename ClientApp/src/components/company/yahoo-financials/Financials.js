@@ -1,32 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { FinancialsTable } from './FinancialsTable';
 import { Bar } from 'react-chartjs-2';
+import { ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
 
 export function Financials(props) {
     const { isActive, statementType, companySymbol, parseFinancials, statementTitle, chartInfos } = props;
 
     const [financials, setFinancials] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [periodType, setPeriodType] = useState('year');
 
     useEffect(() => {
         if (!isActive) return;
 
         setIsLoading(true);
 
-        const getData = async (companySymbol) => {
-            const response = await fetch(`api/yahooFinance/${statementType}/${companySymbol}`);
+        const getData = async (companySymbol, periodType) => {
+            const response = await fetch(`api/yahooFinance/${statementType}/${companySymbol}/${periodType}`);
             const data = await response.json();
             return data;
         }
 
-        getData(companySymbol).then(result => {
+        getData(companySymbol, periodType).then(result => {
             let financials = parseFinancials(result);
             console.log(financials);
             setFinancials(financials);
             setIsLoading(false);
         })
 
-    }, [isActive, statementType, companySymbol, parseFinancials])
+    }, [isActive, statementType, companySymbol, parseFinancials, periodType])
 
     const getStrongNames = () => {
         let strongNames = new Set();
@@ -76,15 +78,20 @@ export function Financials(props) {
             </div>
         </div>
 
-
+    const handlePeriodTypeChanged = (v) => {
+        setPeriodType(v);
+    }
 
     return (
         <div>
             <div className='statementHeader'>
                 <h1>{companySymbol} {statementTitle}</h1>
+
+                <ToggleButtonGroup className='periodType' type='radio' value={periodType} name='periodType' onChange={handlePeriodTypeChanged}>
+                    <ToggleButton value='year' variant='outline-secondary'>Year</ToggleButton>
+                    <ToggleButton value='quarter' variant='outline-secondary'>Quarter</ToggleButton>
+                </ToggleButtonGroup>
             </div>
-
-
             {content}
         </div>
     )

@@ -23,11 +23,33 @@ namespace Invest.Controllers
             return Ok(response.Content);
         }
 
-        [HttpGet("income/{companySymbol}")]
-        public IActionResult GetIncome(string companySymbol)
+        [HttpGet("income/{companySymbol}/{period}")]
+        public IActionResult GetIncome(string companySymbol, string period)
         {
             var url =
-                $"http://localhost:4567/api/financials/{companySymbol}";
+                $"http://localhost:4567/api/financials/{companySymbol}/{period}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
+        [HttpGet("balanceSheet/{companySymbol}/{period}")]
+        public IActionResult GetBalanceSheet(string companySymbol, string period)
+        {
+            var url =
+                $"http://localhost:4567/api/balanceSheet/{companySymbol}/{period}";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            IRestResponse response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
+        [HttpGet("cashflow/{companySymbol}/{period}")]
+        public IActionResult GetCashflow(string companySymbol, string period)
+        {
+            var url =
+                $"http://localhost:4567/api/cashflow/{companySymbol}/{period}";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
