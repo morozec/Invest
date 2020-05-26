@@ -210,36 +210,36 @@ function Company(props) {
 
   let cashflowIndexes = [
     {
-      name: "Total Cash From Operating Activities", children: [
-        { name: "Net Income", children: [] },
-        { name: "Depreciation", children: [] },
-        { name: "Change To Account Receivables", children: [] },
-        { name: "Change To Inventory", children: [] },
+      name: "totalCashFromOperatingActivities", children: [
+        { name: "netIncome", children: [] },
+        { name: "depreciation", children: [] },
+        { name: "changeToAccountReceivables", children: [] },
+        { name: "changeToInventory", children: [] },
 
       ]
     },
 
     {
-      name: "Total Cashflows From Investing Activities", children: [
-        {name: "Capital Expenditures", children: []},
-        {name: "Other Cashflows From Investing Activities", children:[]},
+      name: "totalCashflowsFromInvestingActivities", children: [
+        {name: "capitalExpenditures", children: []},
+        {name: "otherCashflowsFromInvestingActivities", children:[]},
 
       ]
     },
 
     {
-      name: "Total Cash From Financing Activities", children: [
-        {name: "Net Borrowings", children: []},
-        {name: "Issuance Of Stock", children: []},
-        {name: "Repurchase Of Stock", children: []},
-        {name: "Dividends Paid", children: []},
-        {name:"Other Cashflows From Financing Activities", children:[]},
+      name: "totalCashFromFinancingActivities", children: [
+        {name: "netBorrowings", children: []},
+        {name: "issuanceOfStock", children: []},
+        {name: "repurchaseOfStock", children: []},
+        {name: "dividendsPaid", children: []},
+        {name: "otherCashflowsFromFinancingActivities", children:[]},
 
       ]
     },
 
-    {name: "Change In Cash", children: []},
-    {name: "Effect Of Exchange Rate", children: []}
+    {name: "changeInCash", children: []},
+    {name: "effectOfExchangeRate", children: []}
 
   ];
 
@@ -407,28 +407,29 @@ function Company(props) {
         <Tab eventKey='cashflow' title='Cash Flow'>
           <Financials
             isActive={key === 'cashflow'}
-            statementType='cashflow'
+            yearStatementType='cashflowStatementHistory'
+            quarterStatementType='cashflowStatementHistoryQuarterly'
             statementTitle='Cash Flow'
             companySymbol={profile.quoteType.symbol}
-            parseFinancials={parseFinancials(cashflowIndexes)}
+            parseFinancials={parseFinancials(cashflowIndexes, 'cashflowStatements')}
 
             chartInfos={
               [
                 {
                   bars: [
                     {
-                      name: 'Total Cash From Operating Activities',
-                      stack: 'Total Cash From Operating Activities',
+                      name: 'totalCashFromOperatingActivities',
+                      stack: 'totalCashFromOperatingActivities',
                       color: [0, 110, 30]
                     },
                     {
-                      name: 'Total Cashflows From Investing Activities',
-                      stack: 'Total Cashflows From Investing Activities',
+                      name: 'totalCashflowsFromInvestingActivities',
+                      stack: 'totalCashflowsFromInvestingActivities',
                       color: [0, 222, 41]
                     },
                     {
-                      name: 'Total Cash From Financing Activities',
-                      stack: 'Total Cash From Financing Activities',
+                      name: 'totalCashFromFinancingActivities',
+                      stack: 'totalCashFromFinancingActivities',
                       color: [156, 255, 174]
                     },
                     // {

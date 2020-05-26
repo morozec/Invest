@@ -66,7 +66,8 @@ export function Financials(props) {
                                         borderWidth: 1,
                                         hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
                                         hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
-                                        data: financials.data.map(d => d[ci.name].raw).reverse(),
+                                        data: financials.data.map(d =>
+                                            d[ci.name] !== null && d[ci.name] !== undefined ? d[ci.name].raw : 0).reverse(),
                                         stack: ci.stack
                                     }
                                 ))
