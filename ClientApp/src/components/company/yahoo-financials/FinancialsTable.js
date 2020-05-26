@@ -40,13 +40,17 @@ export function FinancialsTable(props) {
                         {strongNames.has(index.name) ? <strong>{index.name}</strong> : index.name}
                     </td>}
 
-                    {financials.data.hasOwnProperty(index.name) && financials.data[index.name].map((value, j) =>
+                    {financials.data.map((d, j) =>
+                        <td key={j + 1} className='centered'>{d[index.name] !== null ? d[index.name].fmt : '-'}</td>
+                    )}
+
+                    {/* {financials.data.hasOwnProperty(index.name) && financials.data[index.name].map((value, j) =>
                         <td key={j + 1} className='centered'>{value !== null ? value : '-'}</td>
                     )}
 
                     {!financials.data.hasOwnProperty(index.name) && financials.dates.map((d, j) =>
                         <td key={j + 1} className='centered'>{getSum(index, j)}</td>
-                    )}
+                    )} */}
                 </tr>
                 {(!expanded.has(index.name) || expanded.get(index.name)) &&
                     index.children.map(child => getIndexRow(child, displayLevel + 1))}

@@ -18,15 +18,15 @@ export function Summary(props) {
     }
 
     const handleRemoveFromComparingClick = () => {
-        removeComparingCompany(profile.symbol);
+        removeComparingCompany(profile.quoteType.symbol);
     }
 
     let content = (
         <Fragment>
             <div className='companyHeader mb-2'>
                 <div className='companyName'>
-                    <h1>{`${profile.longName} (${ticker}) `}
-                        {comparingCompanies.some(c => c.profile.symbol === profile.symbol)
+                    <h1>{`${profile.quoteType.longName} (${profile.quoteType.symbol}) `}
+                        {comparingCompanies.some(c => c.profile.quoteType.symbol === profile.quoteType.symbol)
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
 
@@ -34,7 +34,7 @@ export function Summary(props) {
                 </div>
 
                 <div className='companyUrl'>
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer">{profile.website}</a>
+                    <a href={profile.assetProfile.website} target="_blank" rel="noopener noreferrer">{profile.assetProfile.website}</a>
                 </div>
 
                 <div className='companyLogo'>
@@ -50,35 +50,35 @@ export function Summary(props) {
                         <tbody>
                             <tr>
                                 <td>Previous Close</td>
-                                <td>{profile.previousClose}</td>
+                                <td>{profile.summaryDetail.previousClose.fmt}</td>
                             </tr>
                             <tr>
                                 <td>Open</td>
-                                <td>{profile.open}</td>
+                                <td>{profile.summaryDetail.open.fmt}</td>
                             </tr>
                             <tr>
                                 <td>Bid</td>
-                                <td>{`${profile.bid} x ${profile.bidSize}`}</td>
+                                <td>{`${profile.summaryDetail.bid.fmt} x ${profile.summaryDetail.bidSize.fmt}`}</td>
                             </tr>
                             <tr>
                                 <td>Ask</td>
-                                <td>{`${profile.ask} x ${profile.askSize}`}</td>
+                                <td>{`${profile.summaryDetail.ask.fmt} x ${profile.summaryDetail.askSize.fmt}`}</td>
                             </tr>
                             <tr>
                                 <td>Day's Range</td>
-                                <td>{`${profile.dayLow} - ${profile.dayHigh}`}</td>
+                                <td>{`${profile.summaryDetail.dayLow.fmt} - ${profile.summaryDetail.dayHigh.fmt}`}</td>
                             </tr>
                             <tr>
                                 <td>52 Week Change</td>
-                                <td>{profile['52WeekChange']}</td>
+                                <td>{profile.defaultKeyStatistics['52WeekChange'].fmt}</td>
                             </tr>
                             <tr>
                                 <td>Volume</td>
-                                <td>{profile.volume}</td>
+                                <td>{profile.summaryDetail.volume.fmt}</td>
                             </tr>
                             <tr>
                                 <td>Avg. Volume</td>
-                                <td>{profile.averageVolume}</td>
+                                <td>{profile.summaryDetail.averageVolume.fmt}</td>
                             </tr>
                         </tbody>
                     </Table>
@@ -87,19 +87,19 @@ export function Summary(props) {
                         <tbody>
                             <tr>
                                 <td>Market Cap</td>
-                                <td>{profile.marketCap}</td>
+                                <td>{profile.summaryDetail.marketCap.fmt}</td>
                             </tr>
                             <tr>
                                 <td>Beta (5Y Monthly)</td>
-                                <td>{profile.beta}</td>
+                                <td>{profile.summaryDetail.beta.fmt}</td>
                             </tr>
                             <tr>
                                 <td>PE Ratio (TTM)</td>
-                                <td>{profile.trailingPE}</td>
+                                <td>{profile.summaryDetail.trailingPE.fmt}</td>
                             </tr>
                             <tr>
                                 <td>EPS (TTM)</td>
-                                <td>{profile.trailingEps}</td>
+                                <td>{profile.defaultKeyStatistics.trailingEps.fmt}</td>
                             </tr>
                             <tr>
                                 <td>Earnings Date</td>
@@ -107,11 +107,11 @@ export function Summary(props) {
                             </tr>
                             <tr>
                                 <td>{`Forward Dividend & Yield`}</td>
-                                <td>{`${profile.dividendRate} (${profile.dividendYield * 100}%)`}</td>
+                                <td>{`${profile.summaryDetail.dividendRate.fmt} (${profile.summaryDetail.dividendYield.fmt})`}</td>
                             </tr>
                             <tr>
                                 <td>Ex-Dividend Date</td>
-                                <td>{getDateStringFromUnixTime(profile.exDividendDate)}</td>
+                                <td>{profile.summaryDetail.exDividendDate.fmt}</td>
                             </tr>
                             <tr>
                                 <td>1y Target Est</td>
@@ -242,7 +242,7 @@ export function Summary(props) {
                                         borderWidth: 1,
                                         hoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
                                         hoverBorderColor: `rgba(0, 0, 0, 0.6)`,
-                                        data: [profile.previousClose, null],
+                                        data: [profile.summaryDetail.previousClose.raw, null],
                                         pointRadius: 15,
                                         pointHoverRadius: 15,
                                         borderDash: [10, 5],

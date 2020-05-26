@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RestSharp;
 
 namespace Invest.Controllers
@@ -16,44 +11,24 @@ namespace Invest.Controllers
         public IActionResult GetInfo(string companySymbol)
         {
             var url =
-                $"http://localhost:4567/api/info/{companySymbol}";
+                $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=" +
+                "summaryProfile,summaryDetail,quoteType,defaultKeyStatistics,assetProfile,financialData";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
+            var response = client.Execute(request);
             return Ok(response.Content);
         }
 
-        [HttpGet("income/{companySymbol}/{period}")]
-        public IActionResult GetIncome(string companySymbol, string period)
+        [HttpGet("financials/{companySymbol}/{statementType}")]
+        public IActionResult GetFinancials(string companySymbol, string statementType)
         {
-            var url =
-                $"http://localhost:4567/api/financials/{companySymbol}/{period}";
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules={statementType}";
+
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
+            var response = client.Execute(request);
             return Ok(response.Content);
         }
 
-        [HttpGet("balanceSheet/{companySymbol}/{period}")]
-        public IActionResult GetBalanceSheet(string companySymbol, string period)
-        {
-            var url =
-                $"http://localhost:4567/api/balanceSheet/{companySymbol}/{period}";
-            var client = new RestClient(url);
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
-            return Ok(response.Content);
-        }
-
-        [HttpGet("cashflow/{companySymbol}/{period}")]
-        public IActionResult GetCashflow(string companySymbol, string period)
-        {
-            var url =
-                $"http://localhost:4567/api/cashflow/{companySymbol}/{period}";
-            var client = new RestClient(url);
-            var request = new RestRequest(Method.GET);
-            IRestResponse response = client.Execute(request);
-            return Ok(response.Content);
-        }
     }
 }

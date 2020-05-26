@@ -4,7 +4,7 @@ import { Bar } from 'react-chartjs-2';
 import { ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
 
 export function Financials(props) {
-    const { isActive, statementType, companySymbol, parseFinancials, statementTitle, chartInfos } = props;
+    const { isActive, yearStatementType, quarterStatementType, companySymbol, parseFinancials, statementTitle, chartInfos } = props;
 
     const [financialsYear, setFinancialsYear] = useState(null);
     const [financialsQuarter, setFinancialsQuarter] = useState(null);
@@ -13,26 +13,29 @@ export function Financials(props) {
 
     useEffect(() => {
         if (!isActive) return;
-        if (periodType === 'year' && financialsYear) return;
-        if (periodType === 'quarter' && financialsQuarter) return;
+        const isYear = periodType === 'year';
+        if (isYear && financialsYear) return;
+        if (!isYear && financialsQuarter) return;
 
         setIsLoading(true);
 
-        const getData = async (companySymbol, periodType) => {
-            const response = await fetch(`api/yahooFinance/${statementType}/${companySymbol}/${periodType}`);
+        const getData = async (companySymbol, statementType) => {
+            const response = await fetch(`api/yahooFinance/financials/${companySymbol}/${statementType}`);
             const data = await response.json();
-            return data;
+            const result = data.quoteSummary.result;
+            if (result === null) return null;
+            return result[0];
         }
 
-        getData(companySymbol, periodType).then(result => {
-            let financials = parseFinancials(result);
-            console.log(financials);
+        getData(companySymbol, isYear ? yearStatementType : quarterStatementType).then(result => {
+            console.log(result);
+            let financials = parseFinancials(result, isYear ? yearStatementType : quarterStatementType, yearStatementType);
             if (periodType === 'year') setFinancialsYear(financials);
             else setFinancialsQuarter(financials);
             setIsLoading(false);
         })
 
-    }, [isActive, statementType, companySymbol, parseFinancials, periodType, financialsYear, financialsQuarter])
+    }, [isActive, yearStatementType, quarterStatementType, companySymbol, parseFinancials, periodType, financialsYear, financialsQuarter])
 
     const getStrongNames = () => {
         let strongNames = new Set();
@@ -63,7 +66,7 @@ export function Financials(props) {
                                         borderWidth: 1,
                                         hoverBackgroundColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
                                         hoverBorderColor: `rgba(${ci.color[0]},${ci.color[1]}, ${ci.color[2]}, 0.6)`,
-                                        data: [...financials.data[ci.name]].reverse(),
+                                        data: financials.data.map(d => d[ci.name].raw).reverse(),
                                         stack: ci.stack
                                     }
                                 ))
