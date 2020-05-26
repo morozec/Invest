@@ -150,23 +150,23 @@ function Company(props) {
 
   let balanceSheetIndexes = [
     {
-      name: "Total Assets", children: [
+      name: "totalAssets", children: [
         {
-          name: "Total Current Assets", children: [
-            { name: "Cash", children: [] },
-            { name: "Short Term Investments", children: [] },
-            { name: "Net Receivables", children: [] },
-            { name: "Inventory", children: [] },
-            { name: "Other Current Assets", children: [] },
+          name: "totalCurrentAssets", children: [
+            { name: "cash", children: [] },
+            { name: "shortTermInvestments", children: [] },
+            { name: "netReceivables", children: [] },
+            { name: "inventory", children: [] },
+            { name: "otherCurrentAssets", children: [] },
           ]
         },
         {
           name: 'Non-current assets', children: [//!!!
-            { name: "Property Plant Equipment", children: [] },
-            { name: "Long Term Investments", children: [] },
-            { name: "Good Will", children: [] },
-            { name: "Intangible Assets", children: [] },
-            { name: "Other Assets", children: [] }
+            { name: "propertyPlantEquipment", children: [] },
+            { name: "longTermInvestments", children: [] },
+            { name: "goodWill", children: [] },
+            { name: "intangibleAssets", children: [] },
+            { name: "otherAssets", children: [] }
           ]
         },
 
@@ -176,28 +176,30 @@ function Company(props) {
     {
       name: "Liabilities and stockholders' equity", children: [//!!!
         {
-          name: "Total Liab", children: [
+          name: "totalLiab", children: [
             {
-              name: "Total Current Liabilities", children: [
-                { name: "Short Long Term Debt", children: [] },
-                { name: "Accounts Payable", children: [] },
-                { name: "Other Current Liab", children: [] }
+              name: "totalCurrentLiabilities", children: [
+                { name: "shortLongTermDebt", children: [] },
+                { name: "accountsPayable", children: [] },
+                { name: "otherCurrentLiab", children: [] }
               ]
             },
             {
               name: "Non-current liabilities", children: [//!!!
-                { name: "Long Term Debt", children: [] },
+                { name: "longTermDebt", children: [] },
 
               ]
             },
-            { name: "Other Liab", children: [] }
+            { name: "minorityInterest", children: [] },
+            { name: "otherLiab", children: [] }
           ]
         },
         {
-          name: "Total Stockholder Equity", children: [
-            { name: "Common Stock", children: [] },
-            { name: "Retained Earnings", children: [] },
-            { name: "Other Stockholder Equity", children: [] }
+          name: "totalStockholderEquity", children: [
+            { name: "commonStock", children: [] },
+            { name: "retainedEarnings", children: [] },
+            { name: "treasuryStock", children: [] },
+            { name: "otherStockholderEquity", children: [] }
           ]
         },
       ]
@@ -241,9 +243,9 @@ function Company(props) {
 
   ];
 
-  const parseFinancials = (indexes) => {
+  const parseFinancials = (indexes, statementType1) => {
 
-    return (statementData, statementType0, statementType1) => {
+    return (statementData, statementType0) => {
       let data = statementData[statementType0][statementType1];
 
       let dates = data.map(v => v.endDate.fmt);
@@ -353,22 +355,23 @@ function Company(props) {
         <Tab eventKey='balanceSheet' title='Balance Sheet'>
           <Financials
             isActive={key === 'balanceSheet'}
-            statementType='balanceSheet'
+            yearStatementType='balanceSheetHistory'
+            quarterStatementType='balanceSheetHistoryQuarterly'
             statementTitle='Balance Sheet'
             companySymbol={profile.quoteType.symbol}
-            parseFinancials={parseFinancials(balanceSheetIndexes)}
+            parseFinancials={parseFinancials(balanceSheetIndexes, 'balanceSheetStatements')}
 
             chartInfos={
               [
                 {
                   bars: [
                     {
-                      name: 'Total Stockholder Equity',
+                      name: 'totalStockholderEquity',
                       stack: 'assets',
                       color: [74, 74, 74]
                     },
                     {
-                      name: 'Total Liab',
+                      name: 'totalLiab',
                       stack: 'assets',
                       color: [191, 191, 191]
                     }
@@ -379,17 +382,17 @@ function Company(props) {
                 {
                   bars: [
                     {
-                      name: 'Cash',
+                      name: 'cash',
                       stack: 'cash',
                       color: [0, 222, 41]
                     },
                     {
-                      name: 'Short Long Term Debt',
+                      name: 'shortLongTermDebt',
                       stack: 'debt',
                       color: [255, 0, 0]
                     },
                     {
-                      name: 'Long Term Debt',
+                      name: 'longTermDebt',
                       stack: 'debt',
                       color: [255, 150, 150]
                     }

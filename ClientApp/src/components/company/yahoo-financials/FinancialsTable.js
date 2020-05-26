@@ -41,7 +41,9 @@ export function FinancialsTable(props) {
                     </td>}
 
                     {financials.data.map((d, j) =>
-                        <td key={j + 1} className='centered'>{d[index.name] !== null ? d[index.name].fmt : '-'}</td>
+                        <td key={j + 1} className='centered'>
+                            {d[index.name] !== null && d[index.name] !== undefined ? d[index.name].fmt : '-'}
+                        </td>
                     )}
 
                     {/* {financials.data.hasOwnProperty(index.name) && financials.data[index.name].map((value, j) =>
