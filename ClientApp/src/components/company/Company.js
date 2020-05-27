@@ -11,6 +11,7 @@ import { withRouter } from 'react-router-dom';
 import { getDateStringFromUnixTime } from '../../helpers';
 import { IncomeTable } from './statement-data/IncomeTable';
 import { Financials } from './yahoo-financials/Financials';
+import { Dividends } from './Dividends';
 
 function Company(props) {
   const [key, setKey] = useState('summary');
@@ -443,6 +444,13 @@ function Company(props) {
         <Tab eventKey="ratios" title="Ratios">
           <Ratios
             profile={profile}
+          />
+        </Tab>
+
+        <Tab eventKey="dividends" title="Dividends">
+          <Dividends
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'dividends'}
           />
         </Tab>
 

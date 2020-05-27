@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using RestSharp;
+using RestSharp.Deserializers;
 
 namespace Invest.Controllers
 {
@@ -28,6 +32,24 @@ namespace Invest.Controllers
             var request = new RestRequest(Method.GET);
             var response = client.Execute(request);
             return Ok(response.Content);
+        }
+
+        [HttpGet("dividends/{companySymbol}")]
+        public IActionResult GetDividends(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{companySymbol}?period1=0&period2=9999999999&interval=1d&events=div";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var events = obj.chart.result[0].events;
+            if (events == null) return NoContent();
+            
+            var dividends = events.dividends;
+            return Ok(dividends.ToString());
         }
 
     }

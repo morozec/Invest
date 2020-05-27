@@ -5,9 +5,14 @@ export function YahooFinance() {
 
   useEffect(() => {
     (async () => {
-      const response = await fetch('api/search/aa');
-      const test = await response.json();
-      console.log(test);
+      const response = await fetch('api/YahooFinance/dividends/O');
+      if (response.status === 204) {
+        console.log('no contenet');
+      } else {
+        const test = await response.json();
+        console.log(test);
+      }
+
       setIsLoading(false);
     })();
   }, [])
@@ -20,7 +25,7 @@ export function YahooFinance() {
   } else {
     content = <p><em>Loaded</em></p>
   }
-    
+
 
   return (
     <div>

@@ -267,3 +267,13 @@ td.worst{
 .comparingTableCol0{
   width: 250px;
 }
+
+.dividendsContainer{
+  display: grid;
+  grid-template-columns: minmax(200px, auto) 1fr;
+}
+
+.dividendsContainer canvas{
+  max-height: 100%;
+  max-width: 100%;
+}
