@@ -35,17 +35,13 @@ function NavMenu(props) {
 
     let selectedOption = document.querySelector(`#stocks option[value="${t}"]`);
     if (selectedOption !== null) {
-      const ticker = selectedOption.dataset.ticker;
-      const name = selectedOption.dataset.name;
+      let ticker = selectedOption.dataset.ticker;
       const exchange = selectedOption.dataset.exchange;
-      console.log('value to send', ticker, name);
+      if (exchange === 'MOEX') ticker += '.ME';
+      console.log('value to send', ticker);
       props.history.push({
         pathname: '/stock',
         search: `t=${ticker}`,
-        state: {
-          name: name,
-          exchange:exchange
-        }
       });
     } else {
       console.log('update list', t);

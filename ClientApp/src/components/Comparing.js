@@ -169,9 +169,6 @@ export function Comparing(props) {
                             <Link to={{
                                 pathname: '/stock',
                                 search: `t=${c.profile.quoteType.symbol}`,
-                                state: {
-                                    name: c.profile.shortName
-                                }
                             }}>
                                 {`${c.profile.quoteType.longName} (${c.profile.quoteType.symbol}) `}
                             </Link>

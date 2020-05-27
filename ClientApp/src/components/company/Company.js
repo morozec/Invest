@@ -34,8 +34,6 @@ function Company(props) {
   const query = useQuery();
   const ticker = query.get('t');
 
-  const { name, exchange } = props.location.state;//TODO
-
   // useEffect(() => {
 
   //   if (props.location.state) {
@@ -57,8 +55,7 @@ function Company(props) {
     setIsLoading(true);
 
     const getProfile = async (companySymbol) => {
-      const yahooCompanySymbol = exchange === 'MOEX' ? `${companySymbol}.ME` : companySymbol;
-      const response = await fetch(`api/yahoofinance/info/${yahooCompanySymbol}`);
+      const response = await fetch(`api/yahoofinance/info/${companySymbol}`);
       const data = await response.json();
       const result = data.quoteSummary.result;
       if (result === null) return null;
