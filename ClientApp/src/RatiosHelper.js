@@ -4,20 +4,80 @@ const RATIO_TYPE = {
     percent: 2
 };
 
-export const GROUPS = {
-    Valuation: ['Market Capitalisation', 'Enterprise Value', 'Price to Earnings (P/E) Ratio', 'Price to Sales (P/S) Ratio',
-        'Price to Book (P/B) Value', 'Price to Free Cash Flow (P/FCF)', 'EV/EBITDA', 'EV/Sales', 'EV/FCF'],
-    Profitability: ['Gross Margin %', 'Operating Margin %', 'Net Profit Margin %', 'Return on Equity (ROE) %', 'Return on Assets (ROA) %'],
-    Dividends: ['Dividends Paid', 'Dividends per Share', 'Dividend Yield'],
-    Income: ['Revenue', 'Gross Profit', 'Operating Income (EBIT)', 'EBITDA', 'Net Income (common s-holders)',
-        'Earnings per Share (EPS), Basic', 'Earnings per Share (EPS), Diluted'],
-    'Balance Sheet': ['Total Assets', 'Total Liabilities', 'Total Equity', 'Liabilities to Equity Ratio', 'Cash and Cash-equivalents',
-        'Total Debt', 'Debt to Assets Ratio', 'Current Ratio', 'Book Value per Share', 'Pietroski F-Score'],
-    'Cash Flow': ['Operating Cash Flow', 'Free Cash Flow', 'Free Cash Flow per Share', 'Net Change in Cash']
-};
+// export const GROUPS = {
+//     Valuation: ['Market Capitalisation', 'Enterprise Value', 'Price to Earnings (P/E) Ratio', 'Price to Sales (P/S) Ratio',
+//         'Price to Book (P/B) Value', 'Price to Free Cash Flow (P/FCF)', 'EV/EBITDA', 'EV/Sales', 'EV/FCF'],
+//     Profitability: ['Gross Margin %', 'Operating Margin %', 'Net Profit Margin %', 'Return on Equity (ROE) %', 'Return on Assets (ROA) %'],
+//     Dividends: ['Dividends Paid', 'Dividends per Share', 'Dividend Yield'],
+//     Income: ['Revenue', 'Gross Profit', 'Operating Income (EBIT)', 'EBITDA', 'Net Income (common s-holders)',
+//         'Earnings per Share (EPS), Basic', 'Earnings per Share (EPS), Diluted'],
+//     'Balance Sheet': ['Total Assets', 'Total Liabilities', 'Total Equity', 'Liabilities to Equity Ratio', 'Cash and Cash-equivalents',
+//         'Total Debt', 'Debt to Assets Ratio', 'Current Ratio', 'Book Value per Share', 'Pietroski F-Score'],
+//     'Cash Flow': ['Operating Cash Flow', 'Free Cash Flow', 'Free Cash Flow per Share', 'Net Change in Cash']
+// };
 
-export function RatioHelper(ratios) {
-    this.ratios = ratios;
+export const GROUPS = [
+    {
+        name:'Valuation',
+        indexes:[
+            {profileGroup:'summaryDetail', name:'marketCap', comparingCoeff:0},
+            {profileGroup:'defaultKeyStatistics', name:'enterpriseValue', comparingCoeff:0},
+            {profileGroup:'summaryDetail', name:'trailingPE', comparingCoeff:-1},
+            {profileGroup:'summaryDetail', name:'priceToSalesTrailing12Months', comparingCoeff:-1},
+            {profileGroup:'defaultKeyStatistics', name:'priceToBook', comparingCoeff:-1},
+            {profileGroup:'defaultKeyStatistics', name:'enterpriseToRevenue', comparingCoeff:-1},
+            {profileGroup:'defaultKeyStatistics', name:'enterpriseToEbitda', comparingCoeff:-1},
+        ]
+    },
+    {
+        name:'Profitability',
+        indexes:[
+            {profileGroup:'financialData', name:'grossMargins', comparingCoeff:0},
+            {profileGroup:'financialData', name:'operatingMargins', comparingCoeff:0},
+            {profileGroup:'financialData', name:'profitMargins', comparingCoeff:0},
+            {profileGroup:'financialData', name:'returnOnEquity', comparingCoeff:1},
+            {profileGroup:'financialData', name:'returnOnAssets', comparingCoeff:1},
+        ]
+    },
+    {
+        name:'Dividends',
+        indexes:[
+            {profileGroup:'summaryDetail', name:'dividendRate', comparingCoeff:0},
+            {profileGroup:'summaryDetail', name:'dividendYield', comparingCoeff:1},
+            {profileGroup:'summaryDetail', name:'payoutRatio', comparingCoeff:-1},
+        ]
+    },
+    {
+        name:'Income',
+        indexes:[
+            {profileGroup:'financialData', name:'totalRevenue', comparingCoeff:0},
+            {profileGroup:'financialData', name:'revenueGrowth', comparingCoeff:1},
+            {profileGroup:'financialData', name:'ebitda', comparingCoeff:0},
+            {profileGroup:'defaultKeyStatistics', name:'netIncomeToCommon', comparingCoeff:0},
+            {profileGroup:'defaultKeyStatistics', name:'trailingEps', comparingCoeff:0},
+        ]
+    },
+    {
+        name:'Balance Sheet',
+        indexes:[
+            {profileGroup:'financialData', name:'totalCash', comparingCoeff:0},
+            {profileGroup:'financialData', name:'totalDebt', comparingCoeff:0},
+            {profileGroup:'financialData', name:'debtToEquity', comparingCoeff:-1},
+            {profileGroup:'financialData', name:'currentRatio', comparingCoeff:1},
+            {profileGroup:'financialData', name:'quickRatio', comparingCoeff:1},
+        ]
+    },
+    {
+        name:'Cash Flow',
+        indexes:[
+            {profileGroup:'financialData', name:'operatingCashflow', comparingCoeff:0},
+            {profileGroup:'financialData', name:'freeCashflow', comparingCoeff:0},
+        ]
+    },    
+];
+
+export function RatioHelper(profile) {
+    this.profile = profile;
 }
 
 const getValue = (value, ratioType = RATIO_TYPE.relative) => {

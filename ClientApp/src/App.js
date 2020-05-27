@@ -19,7 +19,7 @@ export default function App() {
   }
 
   const removeComparingCompany = (companySymbol) => {
-    setComparingCompanies(comparingCompanies.filter(c => c.pofile.symbol !== companySymbol))
+    setComparingCompanies(comparingCompanies.filter(c => c.profile.quoteType.symbol !== companySymbol))
   }
 
   return (

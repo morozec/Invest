@@ -35,7 +35,6 @@ function Company(props) {
   const ticker = query.get('t');
 
   const { name, exchange } = props.location.state;//TODO
-  console.log(props.location.state)
 
   // useEffect(() => {
 
