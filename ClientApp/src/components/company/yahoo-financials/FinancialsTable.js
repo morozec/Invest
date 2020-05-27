@@ -31,7 +31,7 @@ export function FinancialsTable(props) {
     const getIndexRow = (index, displayLevel = 0) => {
         return (
             <Fragment key={index.name}>
-                <tr className={expanded.has(index.name) ? 'container' : ''} onClick={() => handleRowClick(index.name)}>
+                <tr className={expanded.has(index.name) ? 'pointer' : ''} onClick={() => handleRowClick(index.name)}>
 
                     {expanded.has(index.name) && <td key={0} className={`dl-${displayLevel}`}>
                         {strongNames.has(index.name) ? <strong>{index.name}</strong> : index.name} &#x25bc;

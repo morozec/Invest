@@ -10,17 +10,6 @@ function NavMenu(props) {
   const [companies, setCompanies] = useState([])
   const { comparingCompanies } = props;
 
-  const getCompanyByTicker = async (ticker) => {
-    const response = await fetch(`api/simfin/id/${ticker}`);
-    const data = await response.json();
-    return data;
-  }
-  const getCompanyByName = async (name) => {
-    const response = await fetch(`api/simfin/name/${name}`);
-    const data = await response.json();
-    return data;
-  }
-
   const getCompanyFromDb = async (searchText) => {
     const response = await fetch(`api/search/${searchText}`);
     const data = await response.json();

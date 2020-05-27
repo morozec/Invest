@@ -73,7 +73,7 @@ td.value{
   text-align: center;
 }
 
-tr.container{
+tr.pointer{
   cursor: pointer;
 }
 
@@ -227,7 +227,7 @@ table > caption{
 
 .companyItem{
   display: grid;
-  grid-template-columns: 1fr 3fr;
+  grid-template-columns: 1fr 3fr 1fr;
 }
 
 

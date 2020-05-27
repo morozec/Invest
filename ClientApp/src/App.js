@@ -7,7 +7,7 @@ import NavMenu from './components/NavMenu'
 
 import './custom.css'
 import Company from './components/company/Company';
-import { SearchList } from './components/SearchList';
+import SearchList from './components/SearchList';
 import { Comparing } from './components/Comparing';
 
 export default function App() {
