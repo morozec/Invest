@@ -1,13 +1,25 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { getBillions, getDateStringFromUnixTime } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Bar, Line } from 'react-chartjs-2';
 
 export function Summary(props) {
+    const [logo, setLogo] = useState(null);
 
     const { ticker, profile, recommendations, priceTargets, upgradeDowngrade,
         comparingCompanies, addComparingCompany, removeComparingCompany } = props;
+
+    useEffect(() => {
+        let webUrl = profile.assetProfile.website;
+        const startRegexp = /^((https?:\/\/)?www\.)/;
+        let shortWebUrl = webUrl.replace(startRegexp, "");
+
+        const endRegexp = /(\/)$/;
+        shortWebUrl = shortWebUrl.replace(endRegexp, "");
+        let logoUrl = `https://logo.clearbit.com/${shortWebUrl}`;
+        setLogo(logoUrl)
+    }, [profile])
 
     const handleCompareClick = () => {
         addComparingCompany({
@@ -38,7 +50,7 @@ export function Summary(props) {
                 </div>
 
                 <div className='companyLogo'>
-                    <img src={profile.logo_url} alt={`${profile.logo_url} logo`} />
+                    <img src={logo} alt={`${profile.quoteType.symbol} logo`} />
                 </div>
             </div>
 
