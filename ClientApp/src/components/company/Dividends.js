@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { getDateStringFromUnixTime } from '../../helpers';
 import { Table } from 'react-bootstrap';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 
 export function Dividends(props) {
     const { ticker, isActive } = props;
@@ -52,17 +52,31 @@ export function Dividends(props) {
                 <div>
                     <Bar
                         data={{
-                            labels: keys.map(key => getDateStringFromUnixTime(dividends[key].date)),
+                            labels:keys.map(key => getDateStringFromUnixTime(dividends[key].date)),
+                            //labels: [new Date(2000, 1, 1), new Date(2005, 1, 1), new Date(2008, 1, 1), new Date(2010, 1, 1), new Date(2020, 1, 1)],
                             datasets: [
                                 {
-                                    label: 'Dividend',
-                                    backgroundColor: `rgba(0, 0, 255, 1)`,
+                                    label: 'Dividend amount',
+                                    backgroundColor: `rgba(138, 167, 255, 1)`,
                                     borderWidth: 1,
-                                    hoverBackgroundColor: `rgba(0, 0, 255, 0.6)`,
-                                    hoverBorderColor: `rgba(0, 0, 255, 0.6)`,
+                                    hoverBackgroundColor: `rgba(138, 167, 255, 0.6)`,
+                                    hoverBorderColor: `rgba(138, 167, 255, 0.6)`,
                                     data: keys.map(key => dividends[key].amount),
+                                    barPercentage: 0.5,
+                                    barThickness:6,
+                                    maxBarThickness:8
                                 }
-                            ]
+                            ],
+                            
+                        }}
+                        options = {{
+                            scales: {
+                                xAxes: [{
+                                    type: 'time',
+                                    distribution: 'linear',
+                                    
+                                }]
+                            }
                         }}
                     />
                 </div>
