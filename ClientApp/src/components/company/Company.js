@@ -12,6 +12,7 @@ import { getDateStringFromUnixTime } from '../../helpers';
 import { IncomeTable } from './statement-data/IncomeTable';
 import { Financials } from './yahoo-financials/Financials';
 import { Dividends } from './Dividends';
+import {SecFilings} from './SecFilings'
 
 function Company(props) {
   const [key, setKey] = useState('summary');
@@ -34,23 +35,7 @@ function Company(props) {
   const useQuery = () => new URLSearchParams(useLocation().search);
   const query = useQuery();
   const ticker = query.get('t');
-
-  // useEffect(() => {
-
-  //   if (props.location.state) {
-  //     setSimId(props.location.state.simId);
-  //   } else {
-
-  //     const getSimId = async (companySymbol) => {
-  //       const response = await fetch(`api/simfin/id/${companySymbol}`);
-  //       const json = await response.json();
-  //       return json[0].simId;
-  //     }
-
-  //     getSimId(ticker).then(result => setSimId(result));
-  //   }
-
-  // }, [ticker])
+ 
 
   const loadData = () => {
     setIsLoading(true);
@@ -62,12 +47,6 @@ function Company(props) {
       if (result === null) return null;
       return result[0];
     }
-
-    // const getRatios = async (companyId) => {
-    //   const response = await fetch(`api/simfin/ratios/${companyId}`);
-    //   const ratios = await response.json();
-    //   return ratios;
-    // }
 
     const getRecommendations = async (companySymbol) => {
       const response = await fetch(`api/finnhub/recommendations/${companySymbol}`);
@@ -453,6 +432,14 @@ function Company(props) {
             isActive={key === 'dividends'}
           />
         </Tab>
+
+        <Tab eventKey="secFillings" title="SEC Filings">
+          <SecFilings
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'secFillings'}
+          />
+        </Tab>
+
 
         <Tab eventKey="news" title="News">
           <News

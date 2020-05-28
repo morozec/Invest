@@ -52,5 +52,23 @@ namespace Invest.Controllers
             return Ok(dividends.ToString());
         }
 
+        [HttpGet("secFilings/{companySymbol}")]
+        public IActionResult GetSecFillings(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=secFilings";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var result = obj.quoteSummary.result;
+            if (result == null) return NoContent();
+
+            var secFilings = result[0].secFilings.filings;
+            return Ok(secFilings.ToString());
+        }
+
     }
 }
