@@ -160,7 +160,7 @@ export function Comparing(props) {
                 <Button variant='outline-primary' className='ml-auto' onClick={handleShowSettings}>Settings</Button>
             </div>
 
-            <Table bordered hover variant='light' className='table-sm comparingTable'>
+            <Table bordered hover variant='light' className='table-sm fixedTable'>
                 <thead>
                     <tr>
                         <th className='comparingTableCol0'>Company</th>

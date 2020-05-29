@@ -13,6 +13,7 @@ import { IncomeTable } from './statement-data/IncomeTable';
 import { Financials } from './yahoo-financials/Financials';
 import { Dividends } from './Dividends';
 import {SecFilings} from './SecFilings'
+import { Holders } from './holders/Ownership';
 
 function Company(props) {
   const [key, setKey] = useState('summary');
@@ -440,6 +441,12 @@ function Company(props) {
           />
         </Tab>
 
+        <Tab eventKey="ownership" title="Ownership">
+          <Holders
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'ownership'}
+          />
+        </Tab>
 
         <Tab eventKey="news" title="News">
           <News
@@ -447,6 +454,8 @@ function Company(props) {
             isActive={key === 'news'}
           />
         </Tab>
+
+        
 
         {/* <Tab eventKey="sharesAggregated" title="Shares Outstanding">
           <SharesAggregated

@@ -70,5 +70,20 @@ namespace Invest.Controllers
             return Ok(secFilings.ToString());
         }
 
+        [HttpGet("ownership/{companySymbol}")]
+        public IActionResult GetOwnership(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=institutionOwnership,fundOwnership,majorHoldersBreakdown,insiderHolders,netSharePurchaseActivity,insiderTransactions";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var ownership = obj.quoteSummary.result[0];
+            return Ok(ownership.ToString());
+        }
+
     }
 }
