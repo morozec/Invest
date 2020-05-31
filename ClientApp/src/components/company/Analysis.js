@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from 'react-bootstrap';
+import { Line } from 'react-chartjs-2';
 
 export function Analysis(props) {
     const { isActive, ticker } = props;
@@ -211,7 +212,7 @@ export function Analysis(props) {
                             <tr>
                                 <td>Up Last 30 Days</td>
                                 {earningsTrend.map((et, i) => <td key={i} className='centered'>{et.epsRevisions.upLast30days.fmt}</td>)}
-                            </tr>                            
+                            </tr>
                             <tr>
                                 <td>Down Last 30 Days</td>
                                 {earningsTrend.map((et, i) => <td key={i} className='centered'>{et.epsRevisions.downLast30days.fmt}</td>)}
@@ -221,7 +222,7 @@ export function Analysis(props) {
                     </Table>
                 </div>
 
-                 <div>
+                <div>
                     <Table className='table-sm' bordered hover variant='light'>
                         <caption>Growth Estimates</caption>
                         <thead>
@@ -258,6 +259,47 @@ export function Analysis(props) {
 
                         </tbody>
                     </Table>
+                </div>
+
+
+                <div>
+                    <Line
+                        data={{
+                            labels: [...earningsContainer.earningsHistory.history.map(h => h.quarter.fmt), earningsTrend[0].endDate, earningsTrend[1].endDate],
+                            datasets: [
+                                {
+                                    label: 'EPS Actual',
+                                    pointBackgroundColor: `rgba(0, 110, 30, 1)`,
+                                    borderWidth: 1,
+                                    pointHoverBackgroundColor: `rgba(0, 110, 30, 0.6)`,
+                                    pointHoverBorderColor: `rgba(0, 110, 30, 0.6)`,
+                                    data: earningsContainer.earningsHistory.history.map(h => h.epsActual.raw),
+                                    pointRadius: 15,
+                                    pointHoverRadius: 15,
+                                    fill:null,
+                                    showLine:false,
+                                },
+                                {
+                                    label: 'Consensus EPS',
+                                    pointBackgroundColor: `rgba(255, 255, 255, 1)`,
+                                    pointBorderColor: `rgba(0, 0, 0, 1)`,
+                                    borderWidth: 1,
+                                    pointHoverBackgroundColor: `rgba(255, 255, 255, 0.6)`,
+                                    pointHoverBorderColor: `rgba(0, 0, 0, 0.6)`,
+                                    data: [...earningsContainer.earningsHistory.history.map(h => h.epsEstimate.raw), earningsTrend[0].earningsEstimate.avg.raw, earningsTrend[1].earningsEstimate.avg.raw], 
+                                    pointRadius: 15,
+                                    pointHoverRadius: 15,
+                                    fill:null,
+                                    showLine:false,
+                                },
+                            ],
+
+                        }}    
+                        legend={{labels:{
+                            usePointStyle:true
+                        }}}
+                                        
+                    />
                 </div>
 
 

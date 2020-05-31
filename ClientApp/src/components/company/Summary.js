@@ -244,59 +244,61 @@ export function Summary(props) {
 
                     <div className='priceTragetsContainer'>
                         <Line
-                            legend={{ display: false }}
+                            legend={{
+                                labels: {
+                                    usePointStyle: true
+                                }
+                            }}
                             data={{
                                 labels: ['Current Price', 'Price Targets'],
                                 datasets: [
                                     {
                                         label: 'Current',
-                                        backgroundColor: `rgba(0, 0, 0, 1)`,
+                                        pointBackgroundColor: `rgba(0, 0, 0, 1)`,
                                         borderWidth: 1,
-                                        hoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
-                                        hoverBorderColor: `rgba(0, 0, 0, 0.6)`,
+                                        pointHoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
+                                        pointHoverBorderColor: `rgba(0, 0, 0, 0.6)`,
                                         data: [profile.summaryDetail.previousClose.raw, null],
                                         pointRadius: 15,
                                         pointHoverRadius: 15,
-                                        borderDash: [10, 5],
                                         fill: false,
-
+                                        showLine:false
                                     },
                                     {
                                         label: 'Low',
-                                        backgroundColor: `rgba(255, 0, 0, 1)`,
+                                        pointBackgroundColor: `rgba(255, 0, 0, 1)`,
                                         borderWidth: 1,
-                                        hoverBackgroundColor: `rgba(255, 0, 0, 0.6)`,
-                                        hoverBorderColor: `rgba(255, 0, 0, 0.6)`,
+                                        pointHoverBackgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                        pointHoverBorderColor: `rgba(255, 0, 0, 0.6)`,
                                         data: [null, priceTargets.targetLow],
                                         pointRadius: 15,
                                         pointHoverRadius: 15,
-                                        borderDash: [10, 5],
                                         fill: false,
-
+                                        showLine:false
                                     },
                                     {
                                         label: 'Mean',
-                                        backgroundColor: `rgba(255, 255, 0, 1)`,
+                                        pointBackgroundColor: `rgba(255, 255, 0, 1)`,
                                         borderWidth: 1,
-                                        hoverBackgroundColor: `rgba(255, 255, 0, 0.6)`,
-                                        hoverBorderColor: `rgba(255, 255, 0, 0.6)`,
+                                        pointHoverBackgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                        pointHoverBorderColor: `rgba(255, 255, 0, 0.6)`,
                                         data: [null, priceTargets.targetMean],
                                         pointRadius: 15,
                                         pointHoverRadius: 15,
-                                        borderDash: [10, 5],
                                         fill: false,
+                                        showLine:false
                                     },
                                     {
                                         label: 'High',
-                                        backgroundColor: `rgba(0, 222, 41, 1)`,
+                                        pointBackgroundColor: `rgba(0, 222, 41, 1)`,
                                         borderWidth: 1,
-                                        hoverBackgroundColor: `rgba(0, 222, 41, 0.6)`,
-                                        hoverBorderColor: `rgba(0, 222, 41, 0.6)`,
+                                        pointHoverBackgroundColor: `rgba(0, 222, 41, 0.6)`,
+                                        pointHoverBorderColor: `rgba(0, 222, 41, 0.6)`,
                                         data: [null, priceTargets.targetHigh],
                                         pointRadius: 15,
                                         pointHoverRadius: 15,
-                                        borderDash: [10, 5],
                                         fill: false,
+                                        showLine:false
                                     }
                                 ]
                             }}
