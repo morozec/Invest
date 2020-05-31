@@ -16,7 +16,7 @@ namespace Invest.Controllers
         {
             var url =
                 $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=" +
-                "summaryProfile,summaryDetail,quoteType,defaultKeyStatistics,assetProfile,financialData,earnings";
+                "summaryProfile,summaryDetail,quoteType,defaultKeyStatistics,assetProfile,financialData,earnings,upgradeDowngradeHistory";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             var response = client.Execute(request);

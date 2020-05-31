@@ -7,7 +7,7 @@ import { Bar, Line } from 'react-chartjs-2';
 export function Summary(props) {
     const [logo, setLogo] = useState(null);
 
-    const { ticker, profile, recommendations, upgradeDowngrade,
+    const { ticker, profile, recommendations, 
         comparingCompanies, addComparingCompany, removeComparingCompany } = props;
 
     useEffect(() => {
@@ -141,27 +141,22 @@ export function Summary(props) {
                     />
                 </div>
 
-                {upgradeDowngrade.length > 0 &&
-
-                    <Table bordered hover variant='dark' className='table-sm upgradeDowngradeContainer'>
-                        <caption>Upgrade/Downgrade</caption>
-                        <thead>
-                            <tr>
-                                <th>Grade</th>
-                                <th>Company</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {upgradeDowngrade.map((ud, i) =>
-                                <tr className={ud.action} key={i}>
-                                    <td>{ud.fromGrade ? `${ud.fromGrade} → ${ud.toGrade}` : ud.toGrade}</td>
-                                    <td>{ud.company}</td>
-                                    <td>{getDateStringFromUnixTime(ud.gradeTime)}</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </Table>
+                {profile.upgradeDowngradeHistory &&
+                    <div className='upgradeDowngradeContainer'>                       
+                        <Table bordered hover variant='dark' className='table-sm'>
+                            <caption>{'Upgrades & Downgrades'}</caption>                       
+                            <tbody>
+                                {profile.upgradeDowngradeHistory.history.slice(0, 10).map((ud, i) =>
+                                    <tr className={ud.action} key={i}>
+                                        <td>{ud.action}</td>
+                                        <td>{ud.fromGrade ? `${ud.fromGrade} → ${ud.toGrade}` : ud.toGrade}</td>
+                                        <td>{ud.firm}</td>
+                                        <td>{getDateStringFromUnixTime(ud.epochGradeDate)}</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </Table>
+                    </div>
                 }
                 {recommendations.length > 0 &&
                     <div className='recommendationsContainer'>

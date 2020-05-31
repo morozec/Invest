@@ -22,7 +22,6 @@ function Company(props) {
 
   // const [ratios, setRatios] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
-  const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
 
   const [sharesAggregatedBasicData, setSharesAggregatedBasicData] = useState(null);
   const [sharesAggregatedDilutedData, setSharesAggregatedDilutedData] = useState(null);
@@ -54,11 +53,6 @@ function Company(props) {
       return recommendations;
     }
 
-    const getUpgradeDowngrade = async (companySymbol) => {
-      const response = await fetch(`api/finnhub/upgradeDowngrade/${companySymbol}`);
-      const data = await response.json();
-      return data;
-    }
 
     // const getSharesAggregated = async (companyId) => {
     //   const response = await fetch(`api/simfin/sharesAggregated/${companyId}`);
@@ -78,14 +72,12 @@ function Company(props) {
       promises = [
         getProfile(ticker),
         getRecommendations(ticker),
-        getUpgradeDowngrade(ticker),
       ];
       let result = await Promise.all(promises);
 
       console.log('one step', result);
       setProfile(result[0]);
       setRecommendations(result[1].reverse());
-      setUpgradeDowngrade(result[2].slice(0, 10));
 
       setIsLoading(false);
     })();
@@ -264,7 +256,6 @@ function Company(props) {
             ticker={ticker}
             profile={profile}
             recommendations={recommendations}
-            upgradeDowngrade={upgradeDowngrade}
 
             comparingCompanies={comparingCompanies}
             addComparingCompany={addComparingCompany}
