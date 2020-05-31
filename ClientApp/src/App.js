@@ -7,7 +7,7 @@ import NavMenu from './components/NavMenu'
 
 import './custom.css'
 import Company from './components/company/Company';
-import { SearchList } from './components/SearchList';
+import SearchList from './components/SearchList';
 import { Comparing } from './components/Comparing';
 
 export default function App() {
@@ -18,8 +18,8 @@ export default function App() {
     setComparingCompanies([...comparingCompanies, company]);
   }
 
-  const removeComparingCompany = (companySimId) => {
-    setComparingCompanies(comparingCompanies.filter(c => c.simId !== companySimId))
+  const removeComparingCompany = (companySymbol) => {
+    setComparingCompanies(comparingCompanies.filter(c => c.profile.quoteType.symbol !== companySymbol))
   }
 
   return (

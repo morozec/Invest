@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using RestSharp;
+using RestSharp.Deserializers;
 
 namespace Invest.Controllers
 {
@@ -12,22 +11,96 @@ namespace Invest.Controllers
     [ApiController]
     public class YahooFinanceController : ControllerBase
     {
-        [HttpGet("balanceSheet")]
-        public IActionResult GetBalanceSheet()
+        [HttpGet("info/{companySymbol}")]
+        public IActionResult GetInfo(string companySymbol)
         {
-            var ibmFile = @"C:\Users\andre\Documents\ibm.txt";
-            //var client = new RestClient("https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-balance-sheet?symbol=IBM");
-            //var request = new RestRequest(Method.GET);
-            //request.AddHeader("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
-            //request.AddHeader("x-rapidapi-key", "0b4cd80286msh853ffa4af8bdab2p170732jsnb807240dce12");
-            //IRestResponse response = client.Execute(request);
-
-            //System.IO.File.WriteAllText(@"C:\Users\andre\Documents\ibm.txt", response.Content);
-            //return Ok(response.Content);
-
-            var content = System.IO.File.ReadAllText(ibmFile);
-            return Ok(content);
-
+            var url =
+                $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=" +
+                "summaryProfile,summaryDetail,quoteType,defaultKeyStatistics,assetProfile,financialData,earnings,upgradeDowngradeHistory";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+            return Ok(response.Content);
         }
+
+        [HttpGet("financials/{companySymbol}/{statementType}")]
+        public IActionResult GetFinancials(string companySymbol, string statementType)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules={statementType}";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+            return Ok(response.Content);
+        }
+
+        [HttpGet("dividends/{companySymbol}")]
+        public IActionResult GetDividends(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{companySymbol}?period1=0&period2=9999999999&interval=1d&events=div";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var events = obj.chart.result[0].events;
+            if (events == null) return NoContent();
+            
+            var dividends = events.dividends;
+            return Ok(dividends.ToString());
+        }
+
+        [HttpGet("secFilings/{companySymbol}")]
+        public IActionResult GetSecFillings(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=secFilings";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var result = obj.quoteSummary.result;
+            if (result == null) return NoContent();
+
+            var secFilings = result[0].secFilings.filings;
+            return Ok(secFilings.ToString());
+        }
+
+        [HttpGet("ownership/{companySymbol}")]
+        public IActionResult GetOwnership(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=institutionOwnership,fundOwnership,majorHoldersBreakdown,insiderHolders,netSharePurchaseActivity,insiderTransactions";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var ownership = obj.quoteSummary.result[0];
+            return Ok(ownership.ToString());
+        }
+
+        [HttpGet("earnings/{companySymbol}")]
+        public IActionResult GetEarnings(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=earningsHistory,earningsTrend";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var result = obj.quoteSummary.result;
+            if (result == null) return NoContent();
+
+            return Ok(result[0].ToString());
+        }
+
     }
 }

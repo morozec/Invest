@@ -10,17 +10,11 @@ function NavMenu(props) {
   const [companies, setCompanies] = useState([])
   const { comparingCompanies } = props;
 
-  const getCompanyByTicker = async (ticker) => {
-    const response = await fetch(`api/simfin/id/${ticker}`);
+  const getCompanyFromDb = async (searchText) => {
+    const response = await fetch(`api/search/${searchText}`);
     const data = await response.json();
     return data;
   }
-  const getCompanyByName = async (name) => {
-    const response = await fetch(`api/simfin/name/${name}`);
-    const data = await response.json();
-    return data;
-  }
-
 
   const handleSearchChange = (e) => {
 
@@ -30,35 +24,36 @@ function NavMenu(props) {
 
     let selectedOption = document.querySelector(`#stocks option[value="${t}"]`);
     if (selectedOption !== null) {
-      const simId = selectedOption.dataset.simid;
-      const ticker = selectedOption.dataset.ticker;
-      const name = selectedOption.dataset.name;
-      console.log('value to send', simId, ticker, name);
+      let ticker = selectedOption.dataset.ticker;
+      const exchange = selectedOption.dataset.exchange;
+      if (exchange === 'MOEX') ticker += '.ME';
+      console.log('value to send', ticker);
       props.history.push({
         pathname: '/stock',
         search: `t=${ticker}`,
-        state: {
-          simId: simId,
-          name: name
-        }
       });
     } else {
       console.log('update list', t);
-      const promises = [getCompanyByTicker(t), getCompanyByName(t)];
-      Promise.all(promises).then(result => {
-        let companies = [];
-        let id = -1;
-        if (result[0].length > 0) {
-          companies.push(result[0][0]);
-          id = result[0][0].simId;
-        }
-        let i = 0;
-        while (companies.length < 10 && i < result[1].length) {
-          if (result[1][i].simId !== id) {
-            companies.push(result[1][i]);
-          }
-          i++;
-        }
+      // const promises = [getCompanyByTicker(t), getCompanyByName(t)];
+      // Promise.all(promises).then(result => {
+      //   let companies = [];
+      //   let id = -1;
+      //   if (result[0].length > 0) {
+      //     companies.push(result[0][0]);
+      //     id = result[0][0].simId;
+      //   }
+      //   let i = 0;
+      //   while (companies.length < 10 && i < result[1].length) {
+      //     if (result[1][i].simId !== id) {
+      //       companies.push(result[1][i]);
+      //     }
+      //     i++;
+      //   }
+      //   console.log(companies);
+      //   setCompanies(companies);
+      // })
+      getCompanyFromDb(t).then(result => {
+        let companies = result.slice(0, 10);
         console.log(companies);
         setCompanies(companies);
       })
@@ -92,10 +87,10 @@ function NavMenu(props) {
                 <datalist id='stocks'>
                   {companies.map((c, i) =>
                     <option key={i}
-                      value={c.ticker !== null ? `${c.name} (${c.ticker})` : c.name}
-                      data-simid={c.simId}
+                      value={`${c.shortName} (${c.ticker}) - ${c.exchange}`}
                       data-ticker={c.ticker}
-                      data-name={c.name}
+                      data-name={c.shortName}
+                      data-exchange={c.exchange}
                     >
                     </option>)}
                 </datalist>

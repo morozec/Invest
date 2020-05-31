@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 
 export function Comparing(props) {
     const { comparingCompanies, removeComparingCompany } = props;
-    const groupedRatios = comparingCompanies.map(c => (new RatioHelper(c.ratios)).getGroupedRatios());
     const EPS = 1E-3;
 
     const [visibility, setVisibility] = useState({});
@@ -16,10 +15,10 @@ export function Comparing(props) {
 
     useEffect(() => {
         let startVisibility = {};
-        for (let groupName of Object.keys(GROUPS)) {
-            startVisibility[groupName] = true;
-            for (let ratioName of GROUPS[groupName]) {
-                startVisibility[ratioName] = true;
+        for (let group of GROUPS) {
+            startVisibility[group.name] = true;
+            for (let index of group.indexes) {
+                startVisibility[index.name] = true;
             }
         }
         startVisibility.Recommendations = true;
@@ -31,30 +30,30 @@ export function Comparing(props) {
         setVisibilityTmp(startVisibility);
     }, [])
 
-    const getRatioClass = (companyRatio, allCompaniesValues) => {
+    const getIndexClass = (companyIndex, companyValue, allCompaniesValues) => {
         const min = Math.min(...allCompaniesValues);
         const max = Math.max(...allCompaniesValues);
 
-        if (companyRatio.comparingCoeff === 0 || allCompaniesValues.length === 1) return 'value';
-        if (companyRatio.comparingCoeff === 1) {
-            if (companyRatio.value === max) {
+        if (companyIndex.comparingCoeff === 0 || allCompaniesValues.length === 1) return 'value';
+        if (companyIndex.comparingCoeff === 1) {
+            if (companyValue === max) {
                 return `value best`;
-            } else if (companyRatio.value === min) {
+            } else if (companyValue === min) {
                 return 'value worst';
             } else {
                 return 'value';
             }
         }
 
-        if (companyRatio.value === min) {
-            if (companyRatio.value >= 0) return 'value best';
-            if (companyRatio.value === min) return 'value worst';
-            if (companyRatio.value === max) return 'value best';
+        if (companyValue === min) {
+            if (companyValue >= 0) return 'value best';
+            if (companyValue === min) return 'value worst';
+            if (companyValue === max) return 'value best';
             return 'value';
-        } else if (companyRatio.value === max) {
-            if (companyRatio.value < 0) return 'value best';
+        } else if (companyValue === max) {
+            if (companyValue < 0) return 'value best';
             if (min >= 0) return 'value worst';
-            if (allCompaniesValues.every(v => v < 0 || v === companyRatio.value)) return 'value best';
+            if (allCompaniesValues.every(v => v < 0 || v === companyValue)) return 'value best';
             return 'value';
         } else {
             return 'value';
@@ -106,13 +105,9 @@ export function Comparing(props) {
     }
 
     const getUpside = (company) => {
-        const targetMean = company.priceTargets.targetMean;
-        const lastClosingPrice = + company.ratios.filter(r => r.indicatorName === 'Last Closing Price')[0].value;
-        return ((targetMean - lastClosingPrice) / lastClosingPrice * 100).toFixed(2);
-    }
-
-    const handleDelete = (companySimId) => {
-        removeComparingCompany(companySimId);
+        const targetMean = company.profile.financialData.targetMeanPrice.raw;
+        const currentPrice = company.profile.financialData.currentPrice.raw; //TODO: rub
+        return ((targetMean - currentPrice) / currentPrice * 100).toFixed(2);
     }
 
     const handleShowSettings = () => {
@@ -123,14 +118,15 @@ export function Comparing(props) {
         setShowSettings(false);
     }
 
-    const isGroup = (name) => name === 'Recommendations' || GROUPS.hasOwnProperty(name);
+    const isGroup = (name) => name === 'Recommendations' || GROUPS.some(g => g.name === name);
 
     const handleVisibilityChanged = (name, e) => {
         let vt = { ...visibilityTmp};
         vt[name] = e.target.checked;
-        if (GROUPS.hasOwnProperty(name)){
-            for (let ratioName of GROUPS[name]){
-                vt[ratioName] = e.target.checked;
+        let group = GROUPS.filter(g => g.name === name)[0];
+        if (group !== undefined){
+            for (let index of group.indexes){
+                vt[index.name] = e.target.checked;
             }
         }else if (name === 'Recommendations'){
             for (let rn of recommendationsNames){
@@ -138,9 +134,9 @@ export function Comparing(props) {
             }
         }else{
             if (!recommendationsNames.some(rn => rn === name)){
-                let groupName = Object.keys(GROUPS).filter(g => GROUPS[g].some(rn => rn === name))[0];
-                if (GROUPS[groupName].every(rn => vt[rn] === e.target.checked)){
-                    vt[groupName] = e.target.checked;
+                let group = GROUPS.filter(g => g.indexes.some(index => index.name === name))[0];
+                if (group.indexes.every(index => vt[index.name] === e.target.checked)){
+                    vt[group.name] = e.target.checked;
                 }
             }else{
                 if (recommendationsNames.every(rn => vt[rn] === e.target.checked)){
@@ -164,7 +160,7 @@ export function Comparing(props) {
                 <Button variant='outline-primary' className='ml-auto' onClick={handleShowSettings}>Settings</Button>
             </div>
 
-            <Table bordered hover variant='light' className='table-sm comparingTable'>
+            <Table bordered hover variant='light' className='table-sm fixedTable'>
                 <thead>
                     <tr>
                         <th className='comparingTableCol0'>Company</th>
@@ -172,34 +168,33 @@ export function Comparing(props) {
 
                             <Link to={{
                                 pathname: '/stock',
-                                search: `t=${c.profile.ticker}`,
-                                state: {
-                                    simId: c.simId,
-                                    name: c.profile.name
-                                }
+                                search: `t=${c.profile.quoteType.symbol}`,
                             }}>
-                                {`${c.profile.name} (${c.profile.ticker}) `}
+                                {`${c.profile.quoteType.longName} (${c.profile.quoteType.symbol}) `}
                             </Link>
 
-                            <Button variant='outline-danger' onClick={() => handleDelete(c.simId)}>Delete</Button>
+                            <Button variant='outline-danger' onClick={() => removeComparingCompany(c.profile.quoteType.symbol)}>Delete</Button>
                         </th>)}
                     </tr>
                 </thead>
                 <tbody>
 
-                    {Object.keys(GROUPS).filter(groupName => visibility[groupName]).map(groupName =>
-                        <Fragment key={groupName}>
+                    {GROUPS.filter(g => visibility[g.name]).map(g =>
+                        <Fragment key={g.name}>
                             <tr className='groupName'>
-                                <th colSpan={comparingCompanies.length + 1} className='centered'>{groupName}</th>
+                                <th colSpan={comparingCompanies.length + 1} className='centered'>{g.name}</th>
                             </tr>
-                            {GROUPS[groupName].filter(ratioName => visibility[ratioName]).map((ratioName, i) =>
+                            {g.indexes.filter(index => visibility[index.name]).map((index, i) =>
                                 <tr key={i}>
                                     <td>
-                                        {ratioName}
+                                        {index.name}
                                     </td>
-                                    {groupedRatios.map((gr, j) => <td key={j}
-                                        className={getRatioClass(gr[groupName][ratioName], groupedRatios.map(gr => gr[groupName][ratioName].value))}>
-                                        {gr[groupName][ratioName].displayValue}
+                                    {comparingCompanies.map((c, j) => <td key={j}
+                                        className={getIndexClass(
+                                            index,
+                                            c.profile[index.profileGroup][index.name].raw, 
+                                            comparingCompanies.map(c => c.profile[index.profileGroup][index.name].raw))}>
+                                        {c.profile[index.profileGroup][index.name].fmt}
                                     </td>)}
                                 </tr>
                             )}
@@ -229,7 +224,7 @@ export function Comparing(props) {
                                 <Fragment>
                                     <tr>
                                         <td>Average Price Target</td>
-                                        {comparingCompanies.map((c, i) => <td key={i} className='value'>{`$${c.priceTargets.targetMean}`}</td>)}
+                                        {comparingCompanies.map((c, i) => <td key={i} className='value'>{`$${c.profile.financialData.targetMeanPrice.fmt}`}</td>)}
                                     </tr>
                                 </Fragment>
                             }

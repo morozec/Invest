@@ -6,18 +6,22 @@ import { Summary } from './Summary';
 import { News } from './News';
 import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
-import { AnalystEstimate } from './AnalystEstimate';
 import { withRouter } from 'react-router-dom';
+import { getDateStringFromUnixTime } from '../../helpers';
+import { IncomeTable } from './statement-data/IncomeTable';
+import { Financials } from './yahoo-financials/Financials';
+import { Dividends } from './Dividends';
+import {SecFilings} from './SecFilings'
+import { Holders } from './holders/Ownership';
+import { Analysis } from './Analysis';
 
 function Company(props) {
   const [key, setKey] = useState('summary');
 
-  const [simId, setSimId] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [ratios, setRatios] = useState(null);
+
+  // const [ratios, setRatios] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
-  const [priceTargets, setPriceTargets] = useState(null);
-  const [upgradeDowngrade, setUpgradeDowngrade] = useState(null);
 
   const [sharesAggregatedBasicData, setSharesAggregatedBasicData] = useState(null);
   const [sharesAggregatedDilutedData, setSharesAggregatedDilutedData] = useState(null);
@@ -30,39 +34,17 @@ function Company(props) {
   const useQuery = () => new URLSearchParams(useLocation().search);
   const query = useQuery();
   const ticker = query.get('t');
-
-  useEffect(() => {
-
-    if (props.location.state) {
-      setSimId(props.location.state.simId);
-    } else {
-
-      const getSimId = async (companySymbol) => {
-        const response = await fetch(`api/simfin/id/${companySymbol}`);
-        const json = await response.json();
-        return json[0].simId;
-      }
-
-      getSimId(ticker).then(result => setSimId(result));
-    }
-
-  }, [ticker])
+ 
 
   const loadData = () => {
-    if (simId === null) return;
-
     setIsLoading(true);
 
     const getProfile = async (companySymbol) => {
-      const response = await fetch(`api/finnhub/profile/${companySymbol}`);
-      const profile = await response.json();
-      return profile;
-    }
-
-    const getRatios = async (companyId) => {
-      const response = await fetch(`api/simfin/ratios/${companyId}`);
-      const ratios = await response.json();
-      return ratios;
+      const response = await fetch(`api/yahoofinance/info/${companySymbol}`);
+      const data = await response.json();
+      const result = data.quoteSummary.result;
+      if (result === null) return null;
+      return result[0];
     }
 
     const getRecommendations = async (companySymbol) => {
@@ -71,56 +53,197 @@ function Company(props) {
       return recommendations;
     }
 
-    const getPriceTargets = async (companySymbol) => {
-      const response = await fetch(`api/finnhub/priceTargets/${companySymbol}`);
-      const data = await response.json();
-      return data;
-    }
 
-    const getUpgradeDowngrade = async (companySymbol) => {
-      const response = await fetch(`api/finnhub/upgradeDowngrade/${companySymbol}`);
-      const data = await response.json();
-      return data;
-    }
+    // const getSharesAggregated = async (companyId) => {
+    //   const response = await fetch(`api/simfin/sharesAggregated/${companyId}`);
+    //   const data = await response.json();
+    //   return data;
+    // }
 
-    const getSharesAggregated = async (companyId) => {
-      const response = await fetch(`api/simfin/sharesAggregated/${companyId}`);
-      const data = await response.json();
-      return data;
-    }
-
-    const handleSharesAggregated = (sharesAggregatedResult) => {
-      const saBasicData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-basic');
-      const saDilutedData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-diluted');
-      setSharesAggregatedBasicData(saBasicData);
-      setSharesAggregatedDilutedData(saDilutedData);
-    }
+    // const handleSharesAggregated = (sharesAggregatedResult) => {
+    //   const saBasicData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-basic');
+    //   const saDilutedData = sharesAggregatedResult.filter(d => d.figure === 'common-outstanding-diluted');
+    //   setSharesAggregatedBasicData(saBasicData);
+    //   setSharesAggregatedDilutedData(saDilutedData);
+    // }
 
     (async () => {
       let promises;
       promises = [
         getProfile(ticker),
         getRecommendations(ticker),
-        getPriceTargets(ticker),
-        getUpgradeDowngrade(ticker),
-        getRatios(simId),
-        getSharesAggregated(simId)
       ];
       let result = await Promise.all(promises);
 
-      console.log('one step', simId, result);
+      console.log('one step', result);
       setProfile(result[0]);
       setRecommendations(result[1].reverse());
-      setPriceTargets(result[2]);
-      setUpgradeDowngrade(result[3].slice(0, 10));
-      setRatios(result[4]);
-      handleSharesAggregated(result[5]);
 
       setIsLoading(false);
     })();
   }
 
-  useEffect(loadData, [simId])
+  useEffect(loadData, [ticker])
+
+
+  let incomeIndexes = [
+    { name: 'totalRevenue', children: [] },
+    { name: 'costOfRevenue', children: [] },
+    { name: 'grossProfit', children: [] },
+    {
+      name: 'totalOperatingExpenses', children: [
+        { name: 'researchDevelopment', children: [] },
+        { name: 'sellingGeneralAdministrative', children: [] },
+        { name: 'otherOperatingExpenses', children: [] },
+      ]
+    },
+    { name: 'operatingIncome', children: [] },
+    { name: 'interestExpense', children: [] },
+    { name: 'totalOtherIncomeExpenseNet', children: [] },
+    { name: 'incomeBeforeTax', children: [] },
+    { name: 'incomeTaxExpense', children: [] },
+    { name: 'netIncomeFromContinuingOps', children: [] },
+    { name: "netIncome", children: [] },
+    { name: 'netIncomeApplicableToCommonShares', children: [] },
+    { name: 'ebit', children: [] },
+  ];
+
+  let balanceSheetIndexes = [
+    {
+      name: "totalAssets", children: [
+        {
+          name: "totalCurrentAssets", children: [
+            { name: "cash", children: [] },
+            { name: "shortTermInvestments", children: [] },
+            { name: "netReceivables", children: [] },
+            { name: "inventory", children: [] },
+            { name: "otherCurrentAssets", children: [] },
+          ]
+        },
+        {
+          name: 'Non-current assets', children: [//!!!
+            { name: "propertyPlantEquipment", children: [] },
+            { name: "longTermInvestments", children: [] },
+            { name: "goodWill", children: [] },
+            { name: "intangibleAssets", children: [] },
+            { name: "otherAssets", children: [] }
+          ]
+        },
+
+      ]
+    },
+
+    {
+      name: "Liabilities and stockholders' equity", children: [//!!!
+        {
+          name: "totalLiab", children: [
+            {
+              name: "totalCurrentLiabilities", children: [
+                { name: "shortLongTermDebt", children: [] },
+                { name: "accountsPayable", children: [] },
+                { name: "otherCurrentLiab", children: [] }
+              ]
+            },
+            {
+              name: "Non-current liabilities", children: [//!!!
+                { name: "longTermDebt", children: [] },
+
+              ]
+            },
+            { name: "minorityInterest", children: [] },
+            { name: "otherLiab", children: [] }
+          ]
+        },
+        {
+          name: "totalStockholderEquity", children: [
+            { name: "commonStock", children: [] },
+            { name: "retainedEarnings", children: [] },
+            { name: "treasuryStock", children: [] },
+            { name: "otherStockholderEquity", children: [] }
+          ]
+        },
+      ]
+    }
+
+  ];
+
+
+  let cashflowIndexes = [
+    {
+      name: "totalCashFromOperatingActivities", children: [
+        { name: "netIncome", children: [] },
+        { name: "depreciation", children: [] },
+        { name: "changeToAccountReceivables", children: [] },
+        { name: "changeToInventory", children: [] },
+
+      ]
+    },
+
+    {
+      name: "totalCashflowsFromInvestingActivities", children: [
+        {name: "capitalExpenditures", children: []},
+        {name: "otherCashflowsFromInvestingActivities", children:[]},
+
+      ]
+    },
+
+    {
+      name: "totalCashFromFinancingActivities", children: [
+        {name: "netBorrowings", children: []},
+        {name: "issuanceOfStock", children: []},
+        {name: "repurchaseOfStock", children: []},
+        {name: "dividendsPaid", children: []},
+        {name: "otherCashflowsFromFinancingActivities", children:[]},
+
+      ]
+    },
+
+    {name: "changeInCash", children: []},
+    {name: "effectOfExchangeRate", children: []}
+
+  ];
+
+  const parseFinancials = (indexes, statementType1) => {
+
+    return (statementData, statementType0) => {
+      let data = statementData[statementType0][statementType1];
+
+      let dates = data.map(v => v.endDate.fmt);
+      // let data = {};
+      // for (let i = 0; i < statementData.index.length; ++i) {
+      //   let index = statementData.index[i];
+      //   data[index] = statementData.data[i];
+      // }
+
+      // let indexesSet = new Set();
+      // const fillSet = (arr) => {
+      //   for (let index of arr) {
+      //     let name = index.name;
+      //     indexesSet.add(name);
+      //     fillSet(index.children);
+      //   }
+      // }
+      // fillSet(indexes);
+
+      // for (let i = 0; i < statementData.index.length; ++i) {
+      //   if (!indexesSet.has(statementData.index[i])) {
+      //     indexesSet.add(statementData.index[i]);
+      //     indexes.push({
+      //       name: statementData.index[i],
+      //       children: []
+      //     })
+      //   }
+      // }
+
+      return {
+        dates,
+        indexes,
+        data
+      };
+    }
+
+  }
+
 
   let content;
   if (isLoading) {
@@ -130,12 +253,9 @@ function Company(props) {
       <Tabs activeKey={key} onSelect={(k) => setKey(k)} className='mb-2'>
         <Tab eventKey="summary" title="Summary">
           <Summary
-            simId={simId}
+            ticker={ticker}
             profile={profile}
-            ratios={ratios}
             recommendations={recommendations}
-            priceTargets={priceTargets}
-            upgradeDowngrade={upgradeDowngrade}
 
             comparingCompanies={comparingCompanies}
             addComparingCompany={addComparingCompany}
@@ -143,33 +263,31 @@ function Company(props) {
           />
         </Tab>
 
-        <Tab eventKey="income" title="Income" >
-          <StatementData
-            ticker={profile.ticker}
-            simId={simId}
-            statementType='income'
-            statementTitle='Income'
+        <Tab eventKey='income' title='Income'>
+          <Financials
             isActive={key === 'income'}
-
-            sharesAggregatedBasicData={sharesAggregatedBasicData}
-            sharesAggregatedDilutedData={sharesAggregatedDilutedData}
+            yearStatementType='incomeStatementHistory'
+            quarterStatementType='incomeStatementHistoryQuarterly'
+            statementTitle='Income'
+            companySymbol={profile.quoteType.symbol}
+            parseFinancials={parseFinancials(incomeIndexes, 'incomeStatementHistory')}
 
             chartInfos={
               [
                 {
                   bars: [
                     {
-                      uid: '1',
-                      stack: 'revenue',
+                      name: 'totalRevenue',
+                      stack: 'totalRevenue',
                       color: [200, 200, 200]
                     },
                     {
-                      uid: '19',
+                      name: 'operatingIncome',
                       stack: 'operatingIncome',
                       color: [0, 110, 30]
                     },
                     {
-                      uid: '55',
+                      name: 'netIncome',
                       stack: 'netIncome',
                       color: [156, 255, 174]
                     }
@@ -177,38 +295,41 @@ function Company(props) {
                   isMillions: true
                 },
 
-                {
-                  bars: [
-                    {
-                      uid: 'dilutedEps',
-                      stack: 'eps',
-                      color: [200, 200, 200]
-                    },
-                  ],
-                  isMillions: false
-                }
+                // {
+                //   bars: [
+                //     {
+                //       uid: 'dilutedEps',
+                //       stack: 'eps',
+                //       color: [200, 200, 200]
+                //     },
+                //   ],
+                //   isMillions: false
+                // }
               ]
             }
           />
         </Tab>
-        <Tab eventKey="balanceSheet" title="Balance Sheet">
-          <StatementData
-            ticker={profile.ticker}
-            simId={simId}
-            statementType='balanceSheet'
-            statementTitle='Balance Sheet'
+
+        <Tab eventKey='balanceSheet' title='Balance Sheet'>
+          <Financials
             isActive={key === 'balanceSheet'}
+            yearStatementType='balanceSheetHistory'
+            quarterStatementType='balanceSheetHistoryQuarterly'
+            statementTitle='Balance Sheet'
+            companySymbol={profile.quoteType.symbol}
+            parseFinancials={parseFinancials(balanceSheetIndexes, 'balanceSheetStatements')}
+
             chartInfos={
               [
                 {
                   bars: [
                     {
-                      uid: '84',
+                      name: 'totalStockholderEquity',
                       stack: 'assets',
                       color: [74, 74, 74]
                     },
                     {
-                      uid: '73',
+                      name: 'totalLiab',
                       stack: 'assets',
                       color: [191, 191, 191]
                     }
@@ -219,17 +340,17 @@ function Company(props) {
                 {
                   bars: [
                     {
-                      uid: '1',
+                      name: 'cash',
                       stack: 'cash',
                       color: [0, 222, 41]
                     },
                     {
-                      uid: '47',
+                      name: 'shortLongTermDebt',
                       stack: 'debt',
                       color: [255, 0, 0]
                     },
                     {
-                      uid: '58',
+                      name: 'longTermDebt',
                       stack: 'debt',
                       color: [255, 150, 150]
                     }
@@ -240,70 +361,96 @@ function Company(props) {
             }
           />
         </Tab>
-        <Tab eventKey="cashFlow" title="Cash Flow">
-          <StatementData
-            ticker={profile.ticker}
-            simId={simId}
-            statementType='cashFlow'
+
+        <Tab eventKey='cashflow' title='Cash Flow'>
+          <Financials
+            isActive={key === 'cashflow'}
+            yearStatementType='cashflowStatementHistory'
+            quarterStatementType='cashflowStatementHistoryQuarterly'
             statementTitle='Cash Flow'
-            isActive={key === 'cashFlow'}
-            chartInfos={[
-              {
-                bars: [
-                  {
-                    uid: '13',
-                    stack: 'Cash from Operating Activities',
-                    color: [0, 110, 30]
-                  },
-                  {
-                    uid: '31',
-                    stack: 'Cash from Investing Activities',
-                    color: [0, 222, 41]
-                  },
-                  {
-                    uid: '43',
-                    stack: 'Cash from Financing Activities',
-                    color: [156, 255, 174]
-                  },
-                  {
-                    uid: 'fcf',
-                    stack: 'Free Cash Flow',
-                    color: [0, 0, 0]
-                  }
-                ],
-                isMillions: true
-              },
-            ]}
+            companySymbol={profile.quoteType.symbol}
+            parseFinancials={parseFinancials(cashflowIndexes, 'cashflowStatements')}
+
+            chartInfos={
+              [
+                {
+                  bars: [
+                    {
+                      name: 'totalCashFromOperatingActivities',
+                      stack: 'totalCashFromOperatingActivities',
+                      color: [0, 110, 30]
+                    },
+                    {
+                      name: 'totalCashflowsFromInvestingActivities',
+                      stack: 'totalCashflowsFromInvestingActivities',
+                      color: [0, 222, 41]
+                    },
+                    {
+                      name: 'totalCashFromFinancingActivities',
+                      stack: 'totalCashFromFinancingActivities',
+                      color: [156, 255, 174]
+                    },
+                    // {
+                    //   uid: 'fcf',
+                    //   stack: 'Free Cash Flow',
+                    //   color: [0, 0, 0]
+                    // }
+                  ],
+                },                
+              ]
+            }
+          />
+        </Tab>
+      
+        <Tab eventKey="ratios" title="Ratios">
+          <Ratios
+            profile={profile}
           />
         </Tab>
 
-        <Tab eventKey="ratios" title="Ratios">
-          <Ratios
-            ticker={profile.ticker}
-            ratios={ratios}
+        <Tab eventKey="dividends" title="Dividends">
+          <Dividends
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'dividends'}
+          />
+        </Tab>
+
+        <Tab eventKey="secFillings" title="SEC Filings">
+          <SecFilings
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'secFillings'}
+          />
+        </Tab>
+
+        <Tab eventKey="ownership" title="Ownership">
+          <Holders
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'ownership'}
           />
         </Tab>
 
         <Tab eventKey="news" title="News">
           <News
-            ticker={profile.ticker}
+            ticker={profile.quoteType.symbol}
             isActive={key === 'news'}
           />
         </Tab>
 
-        <Tab eventKey="sharesAggregated" title="Shares Outstanding">
+        
+
+        {/* <Tab eventKey="sharesAggregated" title="Shares Outstanding">
           <SharesAggregated
-            ticker={profile.ticker}
+            ticker={profile.symbol}
 
             sharesAggregatedBasicData={sharesAggregatedBasicData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
             sharesAggregatedDilutedData={sharesAggregatedDilutedData.filter(d => d.period === 'Q1' || d.period === 'Q2' || d.period === 'Q3' || d.period === 'Q4')}
           />
-        </Tab>
+        </Tab> */}
 
-        <Tab eventKey="analystEstimate" title="Analyst Estimate">
-          <AnalystEstimate
-            ticker={profile.ticker}
-            isActive={key === 'analystEstimate'}
+        <Tab eventKey="analysis" title="Analysis">
+          <Analysis
+            ticker={profile.quoteType.symbol}
+            isActive={key === 'analysis'}
           />
         </Tab>
       </Tabs>
