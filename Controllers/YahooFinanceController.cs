@@ -16,7 +16,7 @@ namespace Invest.Controllers
         {
             var url =
                 $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=" +
-                "summaryProfile,summaryDetail,quoteType,defaultKeyStatistics,assetProfile,financialData";
+                "summaryProfile,summaryDetail,quoteType,defaultKeyStatistics,assetProfile,financialData,earnings";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             var response = client.Execute(request);
@@ -88,7 +88,7 @@ namespace Invest.Controllers
         [HttpGet("earnings/{companySymbol}")]
         public IActionResult GetEarnings(string companySymbol)
         {
-            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=earnings,earningsHistory,earningsTrend";
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=earningsHistory,earningsTrend";
 
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);

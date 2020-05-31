@@ -81,8 +81,8 @@ export function Summary(props) {
                                 <td>{`${profile.summaryDetail.dayLow.fmt} - ${profile.summaryDetail.dayHigh.fmt}`}</td>
                             </tr>
                             <tr>
-                                <td>52 Week Change</td>
-                                <td>{profile.defaultKeyStatistics['52WeekChange'].fmt}</td>
+                                <td>52 Week Range</td>
+                                <td>{`${profile.summaryDetail.fiftyTwoWeekLow.fmt} - ${profile.summaryDetail.fiftyTwoWeekHigh.fmt}`}</td>
                             </tr>
                             <tr>
                                 <td>Volume</td>
@@ -115,7 +115,7 @@ export function Summary(props) {
                             </tr>
                             <tr>
                                 <td>Earnings Date</td>
-                                <td>-</td>
+                                <td>{profile.earnings.earningsChart.earningsDate[0].fmt}</td>
                             </tr>
                             <tr>
                                 <td>{`Forward Dividend & Yield`}</td>
@@ -127,7 +127,7 @@ export function Summary(props) {
                             </tr>
                             <tr>
                                 <td>1y Target Est</td>
-                                <td>-</td>
+                                <td>{profile.financialData.targetMeanPrice.fmt}</td>
                             </tr>
                         </tbody>
                     </Table>
