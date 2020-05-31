@@ -6,7 +6,6 @@ import { Summary } from './Summary';
 import { News } from './News';
 import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
-import { AnalystEstimate } from './AnalystEstimate';
 import { withRouter } from 'react-router-dom';
 import { getDateStringFromUnixTime } from '../../helpers';
 import { IncomeTable } from './statement-data/IncomeTable';
