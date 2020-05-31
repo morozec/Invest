@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -102,5 +103,18 @@ namespace Invest.Controllers
             return Ok(result[0].ToString());
         }
 
+        [Authorize]
+        [HttpGet("login")]
+        public IActionResult GetLogin()
+        {
+            return Ok($"Ваш логин: {User.Identity.Name}");
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("role")]
+        public IActionResult GetRole()
+        {
+            return Ok("Ваша роль: администратор");
+        }
     }
 }

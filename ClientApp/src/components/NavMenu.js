@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Navbar, Nav, Form, Button } from 'react-bootstrap';
+import { Container, Navbar, Nav, Form, Button, NavDropdown } from 'react-bootstrap';
 import { Link, withRouter } from 'react-router-dom';
 import './NavMenu.css';
 import LinkButton from '../LinkButton';
@@ -8,7 +8,7 @@ import { DebounceInput } from 'react-debounce-input';
 function NavMenu(props) {
   const [ticker, setTicker] = useState('')
   const [companies, setCompanies] = useState([])
-  const { comparingCompanies } = props;
+  const { comparingCompanies, userData, setUserData } = props;
 
   const getCompanyFromDb = async (searchText) => {
     const response = await fetch(`api/search/${searchText}`);
@@ -60,6 +60,11 @@ function NavMenu(props) {
     }
   }
 
+  const handleLogout = () => {
+    setUserData(null);
+    props.history.push('/');
+  }
+
   return (
     <header>
       <Navbar bg='dark' variant='dark' expand="sm" className='mb-3'>
@@ -74,6 +79,14 @@ function NavMenu(props) {
               <Nav.Link as={Link} to="/">Home</Nav.Link>
               <Nav.Link as={Link} to="/counter">Counter</Nav.Link>
               <Nav.Link as={Link} to="/yahoo">Yahoo</Nav.Link>
+              {userData && <NavDropdown title={userData.username}>
+                <NavDropdown.Item href="#action/3.1">Watch List</NavDropdown.Item>
+                <NavDropdown.Item href="#action/3.2">Portfolios</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item as='button' onClick={handleLogout}>Logout</NavDropdown.Item>
+              </NavDropdown>}
+              {!userData && <Nav.Link as={Link} to="/login">Login</Nav.Link>}
+
 
               <Form inline>
                 {/* <FormControl type="text" placeholder="Search" className="mr-sm-2" value={ticker} onChange={handleSearchChange} /> */}
