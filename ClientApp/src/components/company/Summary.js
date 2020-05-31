@@ -7,7 +7,7 @@ import { Bar, Line } from 'react-chartjs-2';
 export function Summary(props) {
     const [logo, setLogo] = useState(null);
 
-    const { ticker, profile, recommendations, priceTargets, upgradeDowngrade,
+    const { ticker, profile, recommendations, upgradeDowngrade,
         comparingCompanies, addComparingCompany, removeComparingCompany } = props;
 
     useEffect(() => {
@@ -25,7 +25,6 @@ export function Summary(props) {
         addComparingCompany({
             profile: profile,
             recommendations: recommendations,
-            priceTargets: priceTargets
         });
     }
 
@@ -240,79 +239,78 @@ export function Summary(props) {
                     </div>
                 }
 
-                {priceTargets.symbol !== '' &&
 
-                    <div className='priceTragetsContainer'>
-                        <Line
-                            legend={{
-                                labels: {
-                                    usePointStyle: true
-                                }
-                            }}
-                            data={{
-                                labels: ['Current Price', 'Price Targets'],
-                                datasets: [
-                                    {
-                                        label: 'Current',
-                                        pointBackgroundColor: `rgba(0, 0, 0, 1)`,
-                                        borderWidth: 1,
-                                        pointHoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
-                                        pointHoverBorderColor: `rgba(0, 0, 0, 0.6)`,
-                                        data: [profile.summaryDetail.previousClose.raw, null],
-                                        pointRadius: 15,
-                                        pointHoverRadius: 15,
-                                        fill: false,
-                                        showLine:false
-                                    },
-                                    {
-                                        label: 'Low',
-                                        pointBackgroundColor: `rgba(255, 0, 0, 1)`,
-                                        borderWidth: 1,
-                                        pointHoverBackgroundColor: `rgba(255, 0, 0, 0.6)`,
-                                        pointHoverBorderColor: `rgba(255, 0, 0, 0.6)`,
-                                        data: [null, priceTargets.targetLow],
-                                        pointRadius: 15,
-                                        pointHoverRadius: 15,
-                                        fill: false,
-                                        showLine:false
-                                    },
-                                    {
-                                        label: 'Mean',
-                                        pointBackgroundColor: `rgba(255, 255, 0, 1)`,
-                                        borderWidth: 1,
-                                        pointHoverBackgroundColor: `rgba(255, 255, 0, 0.6)`,
-                                        pointHoverBorderColor: `rgba(255, 255, 0, 0.6)`,
-                                        data: [null, priceTargets.targetMean],
-                                        pointRadius: 15,
-                                        pointHoverRadius: 15,
-                                        fill: false,
-                                        showLine:false
-                                    },
-                                    {
-                                        label: 'High',
-                                        pointBackgroundColor: `rgba(0, 222, 41, 1)`,
-                                        borderWidth: 1,
-                                        pointHoverBackgroundColor: `rgba(0, 222, 41, 0.6)`,
-                                        pointHoverBorderColor: `rgba(0, 222, 41, 0.6)`,
-                                        data: [null, priceTargets.targetHigh],
-                                        pointRadius: 15,
-                                        pointHoverRadius: 15,
-                                        fill: false,
-                                        showLine:false
-                                    }
-                                ]
-                            }}
-                            options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                title: {
-                                    display: true,
-                                    text: 'Price Target'
+                <div className='priceTragetsContainer'>
+                    <Line
+                        legend={{
+                            labels: {
+                                usePointStyle: true
+                            }
+                        }}
+                        data={{
+                            labels: ['Current Price', 'Price Targets'],
+                            datasets: [
+                                {
+                                    label: 'Current',
+                                    pointBackgroundColor: `rgba(0, 0, 0, 1)`,
+                                    borderWidth: 1,
+                                    pointHoverBackgroundColor: `rgba(0, 0, 0, 0.6)`,
+                                    pointHoverBorderColor: `rgba(0, 0, 0, 0.6)`,
+                                    data: [profile.financialData.currentPrice.raw, null],//TODO: rub
+                                    pointRadius: 15,
+                                    pointHoverRadius: 15,
+                                    fill: false,
+                                    showLine: false
                                 },
-                            }}
-                        />
-                    </div>
-                }
+                                {
+                                    label: 'Low',
+                                    pointBackgroundColor: `rgba(255, 0, 0, 1)`,
+                                    borderWidth: 1,
+                                    pointHoverBackgroundColor: `rgba(255, 0, 0, 0.6)`,
+                                    pointHoverBorderColor: `rgba(255, 0, 0, 0.6)`,
+                                    data: [null, profile.financialData.targetLowPrice.raw],
+                                    pointRadius: 15,
+                                    pointHoverRadius: 15,
+                                    fill: false,
+                                    showLine: false
+                                },
+                                {
+                                    label: 'Mean',
+                                    pointBackgroundColor: `rgba(255, 255, 0, 1)`,
+                                    borderWidth: 1,
+                                    pointHoverBackgroundColor: `rgba(255, 255, 0, 0.6)`,
+                                    pointHoverBorderColor: `rgba(255, 255, 0, 0.6)`,
+                                    data: [null, profile.financialData.targetMeanPrice.raw],
+                                    pointRadius: 15,
+                                    pointHoverRadius: 15,
+                                    fill: false,
+                                    showLine: false
+                                },
+                                {
+                                    label: 'High',
+                                    pointBackgroundColor: `rgba(0, 222, 41, 1)`,
+                                    borderWidth: 1,
+                                    pointHoverBackgroundColor: `rgba(0, 222, 41, 0.6)`,
+                                    pointHoverBorderColor: `rgba(0, 222, 41, 0.6)`,
+                                    data: [null, profile.financialData.targetHighPrice.raw],
+                                    pointRadius: 15,
+                                    pointHoverRadius: 15,
+                                    fill: false,
+                                    showLine: false
+                                }
+                            ]
+                        }}
+                        options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            title: {
+                                display: true,
+                                text: `Analyst Price Target (${profile.financialData.numberOfAnalystOpinions.fmt})`
+                            },
+                        }}
+                    />
+                </div>
+
 
             </div>
 

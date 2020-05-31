@@ -105,9 +105,9 @@ export function Comparing(props) {
     }
 
     const getUpside = (company) => {
-        const targetMean = company.priceTargets.targetMean;
-        const lastClosingPrice = company.profile.summaryDetail.previousClose.raw;
-        return ((targetMean - lastClosingPrice) / lastClosingPrice * 100).toFixed(2);
+        const targetMean = company.profile.financialData.targetMeanPrice.raw;
+        const currentPrice = company.profile.financialData.currentPrice.raw; //TODO: rub
+        return ((targetMean - currentPrice) / currentPrice * 100).toFixed(2);
     }
 
     const handleShowSettings = () => {
@@ -224,7 +224,7 @@ export function Comparing(props) {
                                 <Fragment>
                                     <tr>
                                         <td>Average Price Target</td>
-                                        {comparingCompanies.map((c, i) => <td key={i} className='value'>{`$${c.priceTargets.targetMean}`}</td>)}
+                                        {comparingCompanies.map((c, i) => <td key={i} className='value'>{`$${c.profile.financialData.targetMeanPrice.fmt}`}</td>)}
                                     </tr>
                                 </Fragment>
                             }
