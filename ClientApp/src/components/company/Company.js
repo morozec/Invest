@@ -14,6 +14,7 @@ import { Financials } from './yahoo-financials/Financials';
 import { Dividends } from './Dividends';
 import {SecFilings} from './SecFilings'
 import { Holders } from './holders/Ownership';
+import { Analysis } from './Analysis';
 
 function Company(props) {
   const [key, setKey] = useState('summary');
@@ -466,10 +467,10 @@ function Company(props) {
           />
         </Tab> */}
 
-        <Tab eventKey="analystEstimate" title="Analyst Estimate">
-          <AnalystEstimate
+        <Tab eventKey="analysis" title="Analysis">
+          <Analysis
             ticker={profile.quoteType.symbol}
-            isActive={key === 'analystEstimate'}
+            isActive={key === 'analysis'}
           />
         </Tab>
       </Tabs>

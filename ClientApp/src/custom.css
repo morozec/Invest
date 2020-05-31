@@ -268,10 +268,6 @@ td.worst{
   width: 250px;
 }
 
-.tableColAutoWidth{
-  width: auto;
-}
-
 .dividendsContainer{
   display: grid;
   grid-template-columns: minmax(200px, auto) 1fr;

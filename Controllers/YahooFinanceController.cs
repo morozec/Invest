@@ -85,5 +85,22 @@ namespace Invest.Controllers
             return Ok(ownership.ToString());
         }
 
+        [HttpGet("earnings/{companySymbol}")]
+        public IActionResult GetEarnings(string companySymbol)
+        {
+            var url = $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=earnings,earningsHistory,earningsTrend";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            var result = obj.quoteSummary.result;
+            if (result == null) return NoContent();
+
+            return Ok(result[0].ToString());
+        }
+
     }
 }
