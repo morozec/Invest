@@ -103,6 +103,23 @@ namespace Invest.Controllers
             return Ok(result[0].ToString());
         }
 
+
+        [HttpGet("price/{companySymbol}")]
+        public IActionResult GetPrice(string companySymbol)
+        {
+            var url =
+                $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=financialData";
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+            var result = obj.quoteSummary.result;
+            if (result == null) return NoContent();
+
+            return Ok(result[0].financialData.currentPrice);
+        }
+
         [Authorize]
         [HttpGet("login")]
         public IActionResult GetLogin()

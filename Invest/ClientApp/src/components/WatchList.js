@@ -6,84 +6,111 @@ export function WatchList(props) {
     const { userData } = props;
     const [isLoading, setIsLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
-   
+
+
+
     const loadCompanies = useCallback(() => {
         if (userData === null) return;
         setIsLoading(true);
 
-        fetch('api/account/watchList', {
-            method: 'GET',
-            headers: {
-                "Accept": "application/json",
-                'Authorization': 'Bearer ' + userData.access_token
-            }
-        })
-            .then(response => response.json())
-            .then(companies => setCompanies(companies))
-            .catch(err => console.error(err))
-            .finally(() => {
-                setIsLoading(false);
-            })
-    }, [userData]);
+        const loadPrice = async (company) => {
+            let response = await fetch(`api/yahoofinance/price/${company.ticker}`, {
+                method: 'GET',
+                headers: {
+                    "Accept": "application/json",
+                }
+            });
+            let result = await response.json();
+            company.price = result.raw;
+        }
 
-    useEffect(() => {
-        loadCompanies();
-    }, [loadCompanies])
-
-    const handleDeleteFromWatchListClick = (ticker) => {
-        setIsLoading(true);
-        fetch('api/account/deleteFromWatchList', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.access_token
-            },
-            body: JSON.stringify({ ticker })
-        }).then(response => {
-            if (response.ok){
-                loadCompanies();
-            }else{
-                console.error('error while deleting company from watch list')
-            }
-        }).finally(() => {
+        (async () => {
+            let response = await fetch('api/account/watchList', {
+                method: 'GET',
+                headers: {
+                    "Accept": "application/json",
+                    'Authorization': 'Bearer ' + userData.access_token
+                }
+            });
+            let companies = await response.json();
+            let promises = companies.map(c => loadPrice(c));
+            await Promise.all(promises);
+            setCompanies(companies);
             setIsLoading(false);
-        })
-    }
+        })();
 
-    let content = isLoading
-        ? <p><em>Loading...</em></p>
-        : companies.length === 0
-            ? <p>Watch list is empty</p>
-            : <Table className='table-sm' bordered hover variant='light'>
-                <caption>Watch List</caption>
-                <thead>
-                    <tr>
-                        <th className='centered'>Ticker</th>
-                        <th>Name</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {companies.map(c =>
-                        <tr key={c.ticker}>
-                            <td className='centered'>
-                                <Link to={{
-                                    pathname: '/stock',
-                                    search: `t=${c.ticker}`,
-                                }}>
-                                    {c.ticker}
-                                </Link>
-                            </td>
-                            <td>{c.shortName}</td>
-                            <td><Button variant='outline-danger'
-                                onClick={() => handleDeleteFromWatchListClick(c.ticker)}>Delete</Button></td>
-                        </tr>)}
-                </tbody>
-            </Table>
+        
+        //     .then(response => response.json())
+        // .then(companies => {
+        //     setCompanies(companies);
+            
+        //     return Promise.all(promises);
+        // })
+        // .catch(err => console.error(err))
+        // .finally(() => {
+            
+        // })
+}, [userData]);
 
-    return (
-        <div>
-            {content}
-        </div>
-    )
+useEffect(() => {
+    loadCompanies();
+}, [loadCompanies])
+
+const handleDeleteFromWatchListClick = (ticker) => {
+    setIsLoading(true);
+    fetch('api/account/deleteFromWatchList', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + userData.access_token
+        },
+        body: JSON.stringify({ ticker })
+    }).then(response => {
+        if (response.ok) {
+            loadCompanies();
+        } else {
+            console.error('error while deleting company from watch list');
+            setIsLoading(false);
+        }
+    })
+}
+
+let content = isLoading
+    ? <p><em>Loading...</em></p>
+    : companies.length === 0
+        ? <p>Watch list is empty</p>
+        : <Table className='table-sm' bordered hover variant='light'>
+            <caption>Watch List</caption>
+            <thead>
+                <tr>
+                    <th className='centered'>Ticker</th>
+                    <th>Name</th>
+                    <th className='centered'>Price</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {companies.map(c =>
+                    <tr key={c.ticker}>
+                        <td className='centered'>
+                            <Link to={{
+                                pathname: '/stock',
+                                search: `t=${c.ticker}`,
+                            }}>
+                                {c.ticker}
+                            </Link>
+                        </td>
+                        <td>{c.shortName}</td>
+                        <td className='centered'>{c.price}</td>
+                        <td><Button variant='outline-danger'
+                            onClick={() => handleDeleteFromWatchListClick(c.ticker)}>Delete</Button></td>
+                    </tr>)}
+            </tbody>
+        </Table>
+
+return (
+    <div>
+        {content}
+    </div>
+)
 }
