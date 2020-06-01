@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 export function WatchList(props) {
     const { userData } = props;
@@ -40,7 +41,14 @@ export function WatchList(props) {
                 <tbody>
                     {companies.map(c =>
                         <tr key={c.ticker}>
-                            <td className='centered'>{c.ticker}</td>
+                            <td className='centered'>
+                                <Link to={{
+                                    pathname: '/stock',
+                                    search: `t=${c.ticker}`,
+                                }}>
+                                    {c.ticker}
+                                </Link>
+                            </td>
                             <td>{c.shortName}</td>
                         </tr>)}
                 </tbody>
