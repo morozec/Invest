@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Table } from 'react-bootstrap';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Table, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 export function WatchList(props) {
     const { userData } = props;
     const [isLoading, setIsLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
-
-    useEffect(() => {
+   
+    const loadCompanies = useCallback(() => {
         if (userData === null) return;
         setIsLoading(true);
 
@@ -24,7 +24,31 @@ export function WatchList(props) {
             .finally(() => {
                 setIsLoading(false);
             })
-    }, [userData])
+    }, [userData]);
+
+    useEffect(() => {
+        loadCompanies();
+    }, [loadCompanies])
+
+    const handleDeleteFromWatchListClick = (ticker) => {
+        setIsLoading(true);
+        fetch('api/account/deleteFromWatchList', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userData.access_token
+            },
+            body: JSON.stringify({ ticker })
+        }).then(response => {
+            if (response.ok){
+                loadCompanies();
+            }else{
+                console.error('error while deleting company from watch list')
+            }
+        }).finally(() => {
+            setIsLoading(false);
+        })
+    }
 
     let content = isLoading
         ? <p><em>Loading...</em></p>
@@ -36,6 +60,7 @@ export function WatchList(props) {
                     <tr>
                         <th className='centered'>Ticker</th>
                         <th>Name</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,6 +75,8 @@ export function WatchList(props) {
                                 </Link>
                             </td>
                             <td>{c.shortName}</td>
+                            <td><Button variant='outline-danger'
+                                onClick={() => handleDeleteFromWatchListClick(c.ticker)}>Delete</Button></td>
                         </tr>)}
                 </tbody>
             </Table>
