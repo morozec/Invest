@@ -24,9 +24,8 @@ function SearchList(props) {
         })
     }, [search])
 
-    const handleRowClick = (ticker, exchange) => {
-        let resTicker = exchange === 'MOEX' ? ticker + '.ME' : ticker;
-        props.history.push(`/stock?t=${resTicker}`)
+    const handleRowClick = (ticker) => {
+        props.history.push(`/stock?t=${ticker}`)
     }
 
     let content = isLoading
@@ -42,7 +41,7 @@ function SearchList(props) {
             </thead>
             <tbody>
                 {companies.map(c =>
-                    <tr key={c.ticker} onClick = {() => handleRowClick(c.ticker, c.exchange)} className='pointer'>
+                    <tr key={c.ticker} onClick = {() => handleRowClick(c.ticker)} className='pointer'>
                         <td>{c.ticker}</td>
                         <td>{c.shortName}</td>
                         <td>{c.exchange}</td>

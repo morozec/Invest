@@ -25,8 +25,6 @@ function NavMenu(props) {
     let selectedOption = document.querySelector(`#stocks option[value="${t}"]`);
     if (selectedOption !== null) {
       let ticker = selectedOption.dataset.ticker;
-      const exchange = selectedOption.dataset.exchange;
-      if (exchange === 'MOEX') ticker += '.ME';
       console.log('value to send', ticker);
       props.history.push({
         pathname: '/stock',
@@ -102,8 +100,6 @@ function NavMenu(props) {
                     <option key={i}
                       value={`${c.shortName} (${c.ticker}) - ${c.exchange}`}
                       data-ticker={c.ticker}
-                      data-name={c.shortName}
-                      data-exchange={c.exchange}
                     >
                     </option>)}
                 </datalist>

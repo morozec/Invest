@@ -2,7 +2,7 @@
 {
     public class CompanyWatchList
     {
-        public int CompanyId { get; set; }
+        public string CompanyTicker { get; set; }
         public Company Company { get; set; }
 
         public int WatchListId { get; set; }

@@ -22,11 +22,11 @@ namespace DbRepository
                 .HasForeignKey<WatchList>(p => p.PersonId);
 
             modelBuilder.Entity<CompanyWatchList>()
-                .HasKey(t => new {t.CompanyId, t.WatchListId});
+                .HasKey(t => new {t.CompanyTicker, t.WatchListId});
             modelBuilder.Entity<CompanyWatchList>()
                 .HasOne(cwl => cwl.Company)
                 .WithMany(c => c.CompanyWatchLists)
-                .HasForeignKey(cwl => cwl.CompanyId);
+                .HasForeignKey(cwl => cwl.CompanyTicker);
             modelBuilder.Entity<CompanyWatchList>()
                 .HasOne(cwl => cwl.WatchList)
                 .WithMany(wl => wl.CompanyWatchLists)

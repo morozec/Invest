@@ -39,7 +39,7 @@ export function WatchList(props) {
                 </thead>
                 <tbody>
                     {companies.map(c =>
-                        <tr key={c.id}>
+                        <tr key={c.ticker}>
                             <td className='centered'>{c.ticker}</td>
                             <td>{c.shortName}</td>
                         </tr>)}

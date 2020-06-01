@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Model
 {
     public class Company
     {
-        public int Id { get; set; }
+        [Key]
         public string Ticker { get; set; }
         public string ShortName { get; set; }
         public string LongName { get; set; }

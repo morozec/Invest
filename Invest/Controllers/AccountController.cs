@@ -98,16 +98,12 @@ namespace Invest.Controllers
         {
             var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var watchList = _companyContext.WatchLists.SingleOrDefault(wl => wl.PersonId == personId);
-            var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == addingCompanyViewModel.Ticker);
-            if (watchList != null && company != null)
-            {
-                watchList.CompanyWatchLists.Add(new CompanyWatchList()
-                    {WatchListId = watchList.WatchListId, CompanyId = company.Id});
-                _companyContext.SaveChanges();
-                return Ok("Company added to watch list");
-            }
-
-            return BadRequest("Adding company to watch list error");
+            if (watchList == null)
+                throw new Exception("Watch list not found");
+            watchList.CompanyWatchLists.Add(new CompanyWatchList()
+                {WatchListId = watchList.WatchListId, CompanyTicker = addingCompanyViewModel.Ticker});
+            _companyContext.SaveChanges();
+            return Ok("Company added to watch list");
         }
 
         [Authorize]
@@ -117,13 +113,10 @@ namespace Invest.Controllers
             var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
                 .SingleOrDefault(wl => wl.PersonId == personId);
-            var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == companySymbol);
             if (watchList == null) 
                 throw new Exception("Watch list not found");
-            if (company == null)
-                throw new Exception("Company not found");
 
-            return watchList.CompanyWatchLists.Any(cwl => cwl.CompanyId == company.Id);
+            return watchList.CompanyWatchLists.Any(cwl => cwl.CompanyTicker == companySymbol);
         }
 
         [Authorize]
@@ -133,12 +126,9 @@ namespace Invest.Controllers
             var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
                 .SingleOrDefault(wl => wl.PersonId == personId);
-            var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == addingCompanyViewModel.Ticker);
             if (watchList == null)
                 throw new Exception("Watch list not found");
-            if (company == null)
-                throw new Exception("Company not found");
-            watchList.CompanyWatchLists.RemoveAll(c => c.CompanyId == company.Id);
+            watchList.CompanyWatchLists.RemoveAll(c => c.CompanyTicker == addingCompanyViewModel.Ticker);
             _companyContext.SaveChanges();
 
             return Ok("Company deleted from watch list");
