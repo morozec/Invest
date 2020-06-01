@@ -4,9 +4,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using DbRepository;
 using Invest.Helpers;
+using Invest.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Model;
 using Newtonsoft.Json;
@@ -18,6 +22,12 @@ namespace Invest.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
+        private readonly CompanyContext _companyContext;
+        public AccountController(CompanyContext context)
+        {
+            _companyContext = context;
+        }
+
         // тестовые данные вместо использования базы данных
         private List<Person> people = new List<Person>
         {
@@ -69,5 +79,45 @@ namespace Invest.Controllers
             // если пользователя не найдено
             return null;
         }
+
+        [Authorize]
+        [HttpGet("watchList")]
+        public IEnumerable<Company> GetWatchList()
+        {
+            var watchList = _companyContext.WatchLists
+                .Include(wl => wl.CompanyWatchLists)
+                .ThenInclude(cwl => cwl.Company)
+                .SingleOrDefault(wl => wl.PersonId == 1);
+            if (watchList != null)
+            {
+                //return new List<Company>()
+                //{
+                //    new Company("aapl", "aa", "apple", "nyse"),
+                //    new Company("aapl1", "aa", "apple", "nyse"),
+                //};
+                var companies = watchList.CompanyWatchLists.Select(cwl => cwl.Company).ToList();
+                return companies;
+            }
+
+            throw new Exception("Watch list not found");
+        }
+
+        [Authorize]
+        [HttpPost("addToWatchList")]
+        public IActionResult AddToWatchList(AddingCompanyViewModel addingCompanyViewModel)
+        {
+            var watchList = _companyContext.WatchLists.SingleOrDefault(wl => wl.PersonId == 1);
+            var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == addingCompanyViewModel.Ticker);
+            if (watchList != null && company != null)
+            {
+                watchList.CompanyWatchLists.Add(new CompanyWatchList()
+                    {WatchListId = watchList.WatchListId, CompanyId = company.Id});
+                _companyContext.SaveChanges();
+                return Ok("Company added to watch list");
+            }
+
+            return BadRequest("Adding company to watch list error");
+        }
+
     }
 }

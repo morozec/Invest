@@ -8,6 +8,11 @@ namespace Model
 
         public int PersonId { get; set; }
         public Person Person { get; set; }
-        public List<Company> Companies { get; set; }
+        public List<CompanyWatchList> CompanyWatchLists { get; set; }
+
+        public WatchList()
+        {
+            CompanyWatchLists = new List<CompanyWatchList>();
+        }
     }
 }

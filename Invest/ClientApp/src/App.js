@@ -10,6 +10,7 @@ import Company from './components/company/Company';
 import SearchList from './components/SearchList';
 import { Comparing } from './components/Comparing';
 import Login from './components/Login';
+import { WatchList } from './components/WatchList';
 
 export default function App() {
 
@@ -36,11 +37,13 @@ export default function App() {
             comparingCompanies={comparingCompanies}
             addComparingCompany={addComparingCompany}
             removeComparingCompany={removeComparingCompany}
+            userData={userData} 
             {...props} />} />
         <Route path='/search' component={SearchList} />
         <Route path='/comparing' render={props =>
           <Comparing comparingCompanies={comparingCompanies} removeComparingCompany={removeComparingCompany} {...props} />} />
         <Route path='/login' render={props => <Login userData={userData} setUserData={setUserData} {...props} />} />
+        <Route path='/watchList' render={props => <WatchList userData={userData} {...props} />} />
       </div>
     </div>
   );

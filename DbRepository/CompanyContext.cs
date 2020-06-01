@@ -20,6 +20,17 @@ namespace DbRepository
                 .HasOne(p => p.WatchList)
                 .WithOne(wl => wl.Person)
                 .HasForeignKey<WatchList>(p => p.PersonId);
+
+            modelBuilder.Entity<CompanyWatchList>()
+                .HasKey(t => new {t.CompanyId, t.WatchListId});
+            modelBuilder.Entity<CompanyWatchList>()
+                .HasOne(cwl => cwl.Company)
+                .WithMany(c => c.CompanyWatchLists)
+                .HasForeignKey(cwl => cwl.CompanyId);
+            modelBuilder.Entity<CompanyWatchList>()
+                .HasOne(cwl => cwl.WatchList)
+                .WithMany(wl => wl.CompanyWatchLists)
+                .HasForeignKey(cwl => cwl.WatchListId);
         }
     }
 }

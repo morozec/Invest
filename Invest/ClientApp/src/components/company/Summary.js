@@ -8,7 +8,7 @@ export function Summary(props) {
     const [logo, setLogo] = useState(null);
 
     const { ticker, profile, recommendations, 
-        comparingCompanies, addComparingCompany, removeComparingCompany } = props;
+        comparingCompanies, addComparingCompany, removeComparingCompany, userData } = props;
 
     useEffect(() => {
         let webUrl = profile.assetProfile.website;
@@ -32,6 +32,17 @@ export function Summary(props) {
         removeComparingCompany(profile.quoteType.symbol);
     }
 
+    const handleAddToWatchListClick = () => {
+        fetch('api/account/addToWatchList', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userData.access_token
+            },
+            body:JSON.stringify({ticker:profile.quoteType.symbol})
+        }).then(response => console.log(response.ok));
+    }
+
     let content = (
         <Fragment>
             <div className='companyHeader mb-2'>
@@ -40,6 +51,7 @@ export function Summary(props) {
                         {comparingCompanies.some(c => c.profile.quoteType.symbol === profile.quoteType.symbol)
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
+                        {userData && <Button variant='outline-success' onClick={handleAddToWatchListClick}>Add to watch list</Button>}
 
                     </h1>
                 </div>

@@ -80,7 +80,7 @@ function NavMenu(props) {
               <Nav.Link as={Link} to="/counter">Counter</Nav.Link>
               <Nav.Link as={Link} to="/yahoo">Yahoo</Nav.Link>
               {userData && <NavDropdown title={userData.username}>
-                <NavDropdown.Item href="#action/3.1">Watch List</NavDropdown.Item>
+                <NavDropdown.Item as={Link} to='/watchList'>Watch List</NavDropdown.Item>
                 <NavDropdown.Item href="#action/3.2">Portfolios</NavDropdown.Item>
                 <NavDropdown.Divider />
                 <NavDropdown.Item as='button' onClick={handleLogout}>Logout</NavDropdown.Item>
