@@ -28,13 +28,6 @@ namespace Invest.Controllers
             _companyContext = context;
         }
 
-        // тестовые данные вместо использования базы данных
-        private List<Person> people = new List<Person>
-        {
-            new Person {Login="admin@gmail.com", Password="12345", Role = "admin" },
-            new Person { Login="qwerty@gmail.com", Password="55555", Role = "user" }
-        };
-
         [HttpPost("token")]
         public IActionResult Token(Person person)
         {
@@ -62,17 +55,18 @@ namespace Invest.Controllers
 
         private ClaimsIdentity GetIdentity(string username, string password)
         {
-            Person person = people.FirstOrDefault(x => x.Login == username && x.Password == password);
+            Person person = _companyContext.Persons.FirstOrDefault(x => x.Login == username && x.Password == password);
             if (person != null)
             {
                 var claims = new List<Claim>
                 {
+                    new Claim(ClaimTypes.NameIdentifier, person.PersonId.ToString()),
                     new Claim(ClaimsIdentity.DefaultNameClaimType, person.Login),
                     new Claim(ClaimsIdentity.DefaultRoleClaimType, person.Role)
                 };
                 ClaimsIdentity claimsIdentity =
-                new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
-                    ClaimsIdentity.DefaultRoleClaimType);
+                    new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
+                        ClaimsIdentity.DefaultRoleClaimType);
                 return claimsIdentity;
             }
 
@@ -84,17 +78,13 @@ namespace Invest.Controllers
         [HttpGet("watchList")]
         public IEnumerable<Company> GetWatchList()
         {
+            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var watchList = _companyContext.WatchLists
                 .Include(wl => wl.CompanyWatchLists)
                 .ThenInclude(cwl => cwl.Company)
-                .SingleOrDefault(wl => wl.PersonId == 1);
+                .SingleOrDefault(wl => wl.PersonId == personId);
             if (watchList != null)
             {
-                //return new List<Company>()
-                //{
-                //    new Company("aapl", "aa", "apple", "nyse"),
-                //    new Company("aapl1", "aa", "apple", "nyse"),
-                //};
                 var companies = watchList.CompanyWatchLists.Select(cwl => cwl.Company).ToList();
                 return companies;
             }
@@ -106,7 +96,8 @@ namespace Invest.Controllers
         [HttpPost("addToWatchList")]
         public IActionResult AddToWatchList(AddingCompanyViewModel addingCompanyViewModel)
         {
-            var watchList = _companyContext.WatchLists.SingleOrDefault(wl => wl.PersonId == 1);
+            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var watchList = _companyContext.WatchLists.SingleOrDefault(wl => wl.PersonId == personId);
             var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == addingCompanyViewModel.Ticker);
             if (watchList != null && company != null)
             {
@@ -117,6 +108,40 @@ namespace Invest.Controllers
             }
 
             return BadRequest("Adding company to watch list error");
+        }
+
+        [Authorize]
+        [HttpGet("isInWatchList/{companySymbol}")]
+        public bool IsInWatchList(string companySymbol)
+        {
+            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
+                .SingleOrDefault(wl => wl.PersonId == personId);
+            var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == companySymbol);
+            if (watchList == null) 
+                throw new Exception("Watch list not found");
+            if (company == null)
+                throw new Exception("Company not found");
+
+            return watchList.CompanyWatchLists.Any(cwl => cwl.CompanyId == company.Id);
+        }
+
+        [Authorize]
+        [HttpPost("deleteFromWatchList")]
+        public IActionResult DeleteFromWatchList(AddingCompanyViewModel addingCompanyViewModel)
+        {
+            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
+                .SingleOrDefault(wl => wl.PersonId == personId);
+            var company = _companyContext.Companies.SingleOrDefault(c => c.Ticker == addingCompanyViewModel.Ticker);
+            if (watchList == null)
+                throw new Exception("Watch list not found");
+            if (company == null)
+                throw new Exception("Company not found");
+            watchList.CompanyWatchLists.RemoveAll(c => c.CompanyId == company.Id);
+            _companyContext.SaveChanges();
+
+            return Ok("Company deleted from watch list");
         }
 
     }

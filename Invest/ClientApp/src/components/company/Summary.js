@@ -6,20 +6,50 @@ import { Bar, Line } from 'react-chartjs-2';
 
 export function Summary(props) {
     const [logo, setLogo] = useState(null);
+    const [isInWatchList, setIsInWatchList] = useState(false);
+    const [isInWatchListChecking, setIsInWatchListChecking] = useState(true);
 
-    const { ticker, profile, recommendations, 
+    const { ticker, profile, recommendations,
         comparingCompanies, addComparingCompany, removeComparingCompany, userData } = props;
 
     useEffect(() => {
-        let webUrl = profile.assetProfile.website;
-        const startRegexp = /^((https?:\/\/)?www\.)/;
-        let shortWebUrl = webUrl.replace(startRegexp, "");
+        const getLogo = () => {
+            let webUrl = profile.assetProfile.website;
+            const startRegexp = /^((https?:\/\/)?www\.)/;
+            let shortWebUrl = webUrl.replace(startRegexp, "");
 
-        const endRegexp = /(\/)$/;
-        shortWebUrl = shortWebUrl.replace(endRegexp, "");
-        let logoUrl = `https://logo.clearbit.com/${shortWebUrl}`;
-        setLogo(logoUrl)
+            const endRegexp = /(\/)$/;
+            shortWebUrl = shortWebUrl.replace(endRegexp, "");
+            let logoUrl = `https://logo.clearbit.com/${shortWebUrl}`;
+            return logoUrl;
+        }
+
+        let logo = getLogo();
+        setLogo(logo);
     }, [profile])
+
+   
+    useEffect(() => {
+        if (!userData) return;
+
+        setIsInWatchListChecking(true);
+        const checkIsInWatchList = async () => {
+            setIsInWatchListChecking(true);
+            let response = await fetch(`api/account/isInWatchList/${profile.quoteType.symbol}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + userData.access_token
+                },
+            });
+            let result = await response.json();
+            return result;
+        }
+
+        checkIsInWatchList().then(result => {
+            setIsInWatchList(result);
+            setIsInWatchListChecking(false);
+        })
+    }, [profile, userData])
 
     const handleCompareClick = () => {
         addComparingCompany({
@@ -33,14 +63,35 @@ export function Summary(props) {
     }
 
     const handleAddToWatchListClick = () => {
+        setIsInWatchListChecking(true);
         fetch('api/account/addToWatchList', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + userData.access_token
             },
-            body:JSON.stringify({ticker:profile.quoteType.symbol})
-        }).then(response => console.log(response.ok));
+            body: JSON.stringify({ ticker: profile.quoteType.symbol })
+        }).then(response => {
+            console.log(response.ok);
+            setIsInWatchList(true);
+            setIsInWatchListChecking(false);
+        });
+    }
+
+    const handleDeleteFromWatchListClick = () => {
+        setIsInWatchListChecking(true);
+        fetch('api/account/deleteFromWatchList', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userData.access_token
+            },
+            body: JSON.stringify({ ticker: profile.quoteType.symbol })
+        }).then(response => {
+            console.log(response.ok);
+            setIsInWatchList(false);
+            setIsInWatchListChecking(false);
+        });
     }
 
     let content = (
@@ -51,7 +102,14 @@ export function Summary(props) {
                         {comparingCompanies.some(c => c.profile.quoteType.symbol === profile.quoteType.symbol)
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
-                        {userData && <Button variant='outline-success' onClick={handleAddToWatchListClick}>Add to watch list</Button>}
+                        {userData && !isInWatchList &&
+                            <Button variant='outline-success' onClick={handleAddToWatchListClick} disabled={isInWatchListChecking}>
+                                Add to watch list
+                            </Button>}
+                        {userData && isInWatchList &&
+                            <Button variant='outline-danger' onClick={handleDeleteFromWatchListClick} disabled={isInWatchListChecking}>
+                                Delete from watch list
+                            </Button>}
 
                     </h1>
                 </div>
@@ -154,9 +212,9 @@ export function Summary(props) {
                 </div>
 
                 {profile.upgradeDowngradeHistory &&
-                    <div className='upgradeDowngradeContainer'>                       
+                    <div className='upgradeDowngradeContainer'>
                         <Table bordered hover variant='dark' className='table-sm'>
-                            <caption>{'Upgrades & Downgrades'}</caption>                       
+                            <caption>{'Upgrades & Downgrades'}</caption>
                             <tbody>
                                 {profile.upgradeDowngradeHistory.history.slice(0, 10).map((ud, i) =>
                                     <tr className={ud.action} key={i}>
