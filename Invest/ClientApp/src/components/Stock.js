@@ -13,14 +13,14 @@ export function YahooFinance(props) {
           method: 'GET',
           headers: {
             "Accept": "application/json",
-            'Authorization': 'Bearer ' + userData.access_token
+            'Authorization': 'Bearer ' + userData.token
           }
         }
-        console.log(init)
+      console.log(init)
       const response = await fetch('api/yahoofinance/login', init);
-      if (response.ok){
+      if (response.ok) {
         console.log('test ok');
-      }else{
+      } else {
         console.log('test not ok')
       }
 

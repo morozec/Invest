@@ -1,40 +1,44 @@
 ﻿using System;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Model;
 
 namespace DbRepository
 {
-    public sealed class CompanyContext : DbContext
+    public sealed class CompanyContext : IdentityDbContext<InvestUser>
     {
-        public DbSet<Company> Companies { get; set; }
-        public DbSet<Person> Persons { get; set; }
-        public DbSet<WatchList> WatchLists { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<Company> Companies { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<InvestUser> Persons { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<WatchList> WatchLists { get; set; }
 
-        public DbSet<Portfolio> Portfolios { get; set; }
-        public DbSet<TransactionType> TransactionTypes { get; set; }
-        public DbSet<Transaction> Transactions { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<Portfolio> Portfolios { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<TransactionType> TransactionTypes { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<Transaction> Transactions { get; set; }
+
         public CompanyContext(DbContextOptions<CompanyContext> options) : base(options)
         {
-            //Database.EnsureCreated();
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder) 
         {
-            modelBuilder.Entity<Person>()
+            base.OnModelCreating(builder);
+
+            builder.Entity<InvestUser>()
                 .HasOne(p => p.WatchList)
                 .WithOne(wl => wl.Person)
                 .HasForeignKey<WatchList>(p => p.PersonId);
 
-            modelBuilder.Entity<CompanyWatchList>()
-                .HasKey(t => new {t.CompanyTicker, t.WatchListId});
-            modelBuilder.Entity<CompanyWatchList>()
+            builder.Entity<CompanyWatchList>()
+                .HasKey(t => new { t.CompanyTicker, t.WatchListId });
+            builder.Entity<CompanyWatchList>()
                 .HasOne(cwl => cwl.Company)
                 .WithMany(c => c.CompanyWatchLists)
                 .HasForeignKey(cwl => cwl.CompanyTicker);
-            modelBuilder.Entity<CompanyWatchList>()
+            builder.Entity<CompanyWatchList>()
                 .HasOne(cwl => cwl.WatchList)
                 .WithMany(wl => wl.CompanyWatchLists)
                 .HasForeignKey(cwl => cwl.WatchListId);
         }
+
     }
 }

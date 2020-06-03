@@ -13,9 +13,14 @@
     <Compile Remove="Migrations\20200603152621_UserUpdate.Designer.cs" />
     <Compile Remove="Migrations\20200603152819_AddRole.cs" />
     <Compile Remove="Migrations\20200603152819_AddRole.Designer.cs" />
+    <Compile Remove="Migrations\20200603161412_IndentityContext.cs" />
+    <Compile Remove="Migrations\20200603161412_IndentityContext.Designer.cs" />
+    <Compile Remove="Migrations\20200603163405_Test.cs" />
+    <Compile Remove="Migrations\20200603163405_Test.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

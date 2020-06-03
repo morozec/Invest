@@ -38,7 +38,7 @@ export function Summary(props) {
             let response = await fetch(`api/account/isInWatchList/${profile.quoteType.symbol}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + userData.access_token
+                    'Authorization': 'Bearer ' + userData.token
                 },
             });
             let result = await response.json();
@@ -68,7 +68,7 @@ export function Summary(props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.access_token
+                'Authorization': 'Bearer ' + userData.token
             },
             body: JSON.stringify({ ticker: profile.quoteType.symbol })
         }).then(response => {
@@ -84,7 +84,7 @@ export function Summary(props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.access_token
+                'Authorization': 'Bearer ' + userData.token
             },
             body: JSON.stringify({ ticker: profile.quoteType.symbol })
         }).then(response => {

@@ -77,13 +77,14 @@ function NavMenu(props) {
               <Nav.Link as={Link} to="/">Home</Nav.Link>
               <Nav.Link as={Link} to="/counter">Counter</Nav.Link>
               <Nav.Link as={Link} to="/yahoo">Yahoo</Nav.Link>
-              {userData && <NavDropdown title={userData.username}>
+              {userData && <NavDropdown title={userData.email}>
                 <NavDropdown.Item as={Link} to='/watchList'>Watch List</NavDropdown.Item>
                 <NavDropdown.Item href="#action/3.2">Portfolios</NavDropdown.Item>
                 <NavDropdown.Divider />
                 <NavDropdown.Item as='button' onClick={handleLogout}>Logout</NavDropdown.Item>
               </NavDropdown>}
-              {!userData && <Nav.Link as={Link} to="/login">Login</Nav.Link>}
+              {!userData && <Nav.Link as={Link} to={{ pathname: '/login', state: { type: 'login' } }}>Login</Nav.Link>}
+              {!userData && <Nav.Link as={Link} to={{ pathname: '/login', state: { type: 'register' } }}>Register</Nav.Link>}
 
 
               <Form inline>

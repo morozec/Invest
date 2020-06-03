@@ -4,47 +4,56 @@ import { Form, Button } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 
 function Login(props) {
-    const { userData, setUserData } = props;
-    const [login, setLogin] = useState("");
+    const { userData, setUserData} = props;
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleLoginChanged = (e) => setLogin(e.target.value);
+    let type;
+    if (props.location.state){
+        type = props.location.state.type;
+    }else{
+        type = 'login';
+    }
+
+    const handleEmailChanged = (e) => setEmail(e.target.value);
     const handlePasswordChanged = (e) => setPassword(e.target.value);
     const handleLogin = () => {
 
         const getUserData = async () => {
-            let isOkLogin = false;
             try{
                 setShowError(false);
                 setErrorMessage(false);
                 setIsLoading(true);
 
-                let response = await fetch('api/account/token', {
+                let response = await fetch(`api/account/${type}`, {
                     method: 'POST',
                     headers: {
                         "Content-Type": "application/json;charset=utf-8"
                     },
                     body: JSON.stringify({
-                        login,
+                        email,
                         password
                     })
                 })
-                let data = await response.json();
-                if (response.ok) {
-                    setUserData(data);
-                    isOkLogin = true;
-                } else {
-                    setShowError(true);
-                    setErrorMessage(data.errorText);
-                }
+                let token = await response.text();
+                setUserData({
+                    token,
+                    email
+                })
+                // if (response.ok) {
+                //     setUserData(data);
+                //     isOkLogin = true;
+                // } else {
+                //     setShowError(true);
+                //     setErrorMessage(data.errorText);
+                // }
             }
             finally{
                 setIsLoading(false);
             }
-            return isOkLogin;
         }
 
         getUserData().then(result => {
@@ -55,8 +64,8 @@ function Login(props) {
     return (
         <Form>
             <Form.Group controlId="formBasicEmail">
-                <Form.Label>Login</Form.Label>
-                <Form.Control type="" placeholder="Enter login" value={login} onChange={handleLoginChanged} />
+                <Form.Label>Email</Form.Label>
+                <Form.Control type="" placeholder="Enter email" value={email} onChange={handleEmailChanged} />
             </Form.Group>
 
             <Form.Group controlId="formBasicPassword">

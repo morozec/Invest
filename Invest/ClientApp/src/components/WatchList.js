@@ -28,7 +28,7 @@ export function WatchList(props) {
                 method: 'GET',
                 headers: {
                     "Accept": "application/json",
-                    'Authorization': 'Bearer ' + userData.access_token
+                    'Authorization': 'Bearer ' + userData.token
                 }
             });
             let companies = await response.json();            
@@ -53,7 +53,7 @@ export function WatchList(props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.access_token
+                'Authorization': 'Bearer ' + userData.token
             },
             body: JSON.stringify({ ticker })
         }).then(response => {
