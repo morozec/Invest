@@ -184,12 +184,12 @@ namespace Invest.Controllers
             return Ok("Company deleted from watch list");
         }
 
-        //[Authorize]
-        //[HttpPost("addPortfolio")]
-        //public IActionResult AddPortfolio(string name)
-        //{
-        //    var portfolio = new Portfolio() { Name = name, User = User };
-        //}
+        [Authorize]
+        [HttpGet("addPortfolio")]
+        public async Task AddPortfolio()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+        }
 
     }
 }

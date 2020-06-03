@@ -12,12 +12,11 @@ export function YahooFinance(props) {
         : {
           method: 'GET',
           headers: {
-            "Accept": "application/json",
             'Authorization': 'Bearer ' + userData.token
           }
         }
       console.log(init)
-      const response = await fetch('api/yahoofinance/login', init);
+      const response = await fetch('api/account/addPortfolio', init);
       if (response.ok) {
         console.log('test ok');
       } else {

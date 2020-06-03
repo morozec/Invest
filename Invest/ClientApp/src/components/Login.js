@@ -56,9 +56,7 @@ function Login(props) {
             }
         }
 
-        getUserData().then(result => {
-            if (result) props.history.push('/');
-        })
+        getUserData().then(() => props.history.push('/'));
     }
 
     return (
