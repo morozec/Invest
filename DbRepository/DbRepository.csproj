@@ -7,6 +7,12 @@
   <ItemGroup>
     <Compile Remove="Migrations\20200531163924_Test.cs" />
     <Compile Remove="Migrations\20200531163924_Test.Designer.cs" />
+    <Compile Remove="Migrations\20200603151207_IdentityUser.cs" />
+    <Compile Remove="Migrations\20200603151207_IdentityUser.Designer.cs" />
+    <Compile Remove="Migrations\20200603152621_UserUpdate.cs" />
+    <Compile Remove="Migrations\20200603152621_UserUpdate.Designer.cs" />
+    <Compile Remove="Migrations\20200603152819_AddRole.cs" />
+    <Compile Remove="Migrations\20200603152819_AddRole.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

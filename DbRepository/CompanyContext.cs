@@ -9,6 +9,10 @@ namespace DbRepository
         public DbSet<Company> Companies { get; set; }
         public DbSet<Person> Persons { get; set; }
         public DbSet<WatchList> WatchLists { get; set; }
+
+        public DbSet<Portfolio> Portfolios { get; set; }
+        public DbSet<TransactionType> TransactionTypes { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
         public CompanyContext(DbContextOptions<CompanyContext> options) : base(options)
         {
             //Database.EnsureCreated();

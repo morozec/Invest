@@ -6,7 +6,7 @@ namespace Model
     {
         public int WatchListId { get; set; }
 
-        public int PersonId { get; set; }
+        public string PersonId { get; set; }
         public Person Person { get; set; }
         public List<CompanyWatchList> CompanyWatchLists { get; set; }
 

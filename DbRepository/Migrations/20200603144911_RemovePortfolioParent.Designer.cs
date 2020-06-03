@@ -4,14 +4,16 @@ using DbRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DbRepository.Migrations
 {
     [DbContext(typeof(CompanyContext))]
-    partial class CompanyContextModelSnapshot : ModelSnapshot
+    [Migration("20200603144911_RemovePortfolioParent")]
+    partial class RemovePortfolioParent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,19 +57,21 @@ namespace DbRepository.Migrations
 
             modelBuilder.Entity("Model.Person", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PersonId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Email")
+                    b.Property<string>("Login")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("PersonId");
 
                     b.ToTable("Persons");
                 });
@@ -82,12 +86,12 @@ namespace DbRepository.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int?>("UserPersonId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserPersonId");
 
                     b.ToTable("Portfolios");
                 });
@@ -153,14 +157,13 @@ namespace DbRepository.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("PersonId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PersonId")
+                        .HasColumnType("int");
 
                     b.HasKey("WatchListId");
 
                     b.HasIndex("PersonId")
-                        .IsUnique()
-                        .HasFilter("[PersonId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("WatchLists");
                 });
@@ -183,8 +186,8 @@ namespace DbRepository.Migrations
             modelBuilder.Entity("Model.Portfolio", b =>
                 {
                     b.HasOne("Model.Person", "User")
-                        .WithMany("Portfolios")
-                        .HasForeignKey("UserId");
+                        .WithMany()
+                        .HasForeignKey("UserPersonId");
                 });
 
             modelBuilder.Entity("Model.Transaction", b =>
@@ -206,7 +209,9 @@ namespace DbRepository.Migrations
                 {
                     b.HasOne("Model.Person", "Person")
                         .WithOne("WatchList")
-                        .HasForeignKey("Model.WatchList", "PersonId");
+                        .HasForeignKey("Model.WatchList", "PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

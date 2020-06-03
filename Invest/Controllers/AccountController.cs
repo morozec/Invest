@@ -31,7 +31,7 @@ namespace Invest.Controllers
         [HttpPost("token")]
         public IActionResult Token(Person person)
         {
-            var identity = GetIdentity(person.Login, person.Password);
+            var identity = GetIdentity(person.Email, person.PasswordHash);
             if (identity == null)
             {
                 return BadRequest(new { errorText = "Invalid username or password." });
@@ -53,16 +53,15 @@ namespace Invest.Controllers
             return Content(obj.ToString(), "application/json");
         }
 
-        private ClaimsIdentity GetIdentity(string username, string password)
+        private ClaimsIdentity GetIdentity(string email, string password)
         {
-            Person person = _companyContext.Persons.FirstOrDefault(x => x.Login == username && x.Password == password);
+            Person person = _companyContext.Persons.FirstOrDefault(x => x.Email == email && x.PasswordHash == password);
             if (person != null)
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, person.PersonId.ToString()),
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, person.Login),
-                    new Claim(ClaimsIdentity.DefaultRoleClaimType, person.Role)
+                    new Claim(ClaimTypes.NameIdentifier, person.Id),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, person.Email),
                 };
                 ClaimsIdentity claimsIdentity =
                     new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
@@ -78,7 +77,7 @@ namespace Invest.Controllers
         [HttpGet("watchList")]
         public IEnumerable<Company> GetWatchList()
         {
-            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var watchList = _companyContext.WatchLists
                 .Include(wl => wl.CompanyWatchLists)
                 .ThenInclude(cwl => cwl.Company)
@@ -96,7 +95,7 @@ namespace Invest.Controllers
         [HttpPost("addToWatchList")]
         public IActionResult AddToWatchList(AddingCompanyViewModel addingCompanyViewModel)
         {
-            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var watchList = _companyContext.WatchLists.SingleOrDefault(wl => wl.PersonId == personId);
             if (watchList == null)
                 throw new Exception("Watch list not found");
@@ -110,7 +109,7 @@ namespace Invest.Controllers
         [HttpGet("isInWatchList/{companySymbol}")]
         public bool IsInWatchList(string companySymbol)
         {
-            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
                 .SingleOrDefault(wl => wl.PersonId == personId);
             if (watchList == null) 
@@ -123,7 +122,7 @@ namespace Invest.Controllers
         [HttpPost("deleteFromWatchList")]
         public IActionResult DeleteFromWatchList(AddingCompanyViewModel addingCompanyViewModel)
         {
-            var personId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
                 .SingleOrDefault(wl => wl.PersonId == personId);
             if (watchList == null)
@@ -133,6 +132,13 @@ namespace Invest.Controllers
 
             return Ok("Company deleted from watch list");
         }
+
+        //[Authorize]
+        //[HttpPost("addPortfolio")]
+        //public IActionResult AddPortfolio(string name)
+        //{
+        //    var portfolio = new Portfolio() { Name = name, User = User };
+        //}
 
     }
 }

@@ -127,11 +127,11 @@ namespace Invest.Controllers
             return Ok($"Ваш логин: {User.Identity.Name}");
         }
 
-        [Authorize(Roles = "admin")]
-        [HttpGet("role")]
-        public IActionResult GetRole()
-        {
-            return Ok("Ваша роль: администратор");
-        }
+        //[Authorize(Roles = "admin")]
+        //[HttpGet("role")]
+        //public IActionResult GetRole()
+        //{
+        //    return Ok("Ваша роль: администратор");
+        //}
     }
 }

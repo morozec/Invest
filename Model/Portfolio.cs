@@ -2,8 +2,8 @@
 {
     public class Portfolio
     {
+        public int Id { get; set; }
         public string Name { get; set; }
-        public Portfolio Parent { get; set; }
         public Person User { get; set; }
     }
 }
