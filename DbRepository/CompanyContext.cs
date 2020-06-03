@@ -8,7 +8,6 @@ namespace DbRepository
     public sealed class CompanyContext : IdentityDbContext<InvestUser>
     {
         public Microsoft.EntityFrameworkCore.DbSet<Company> Companies { get; set; }
-        public Microsoft.EntityFrameworkCore.DbSet<InvestUser> Persons { get; set; }
         public Microsoft.EntityFrameworkCore.DbSet<WatchList> WatchLists { get; set; }
 
         public Microsoft.EntityFrameworkCore.DbSet<Portfolio> Portfolios { get; set; }

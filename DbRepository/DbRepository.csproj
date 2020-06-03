@@ -17,6 +17,8 @@
     <Compile Remove="Migrations\20200603161412_IndentityContext.Designer.cs" />
     <Compile Remove="Migrations\20200603163405_Test.cs" />
     <Compile Remove="Migrations\20200603163405_Test.Designer.cs" />
+    <Compile Remove="Migrations\20200603172116_Test.cs" />
+    <Compile Remove="Migrations\20200603172116_Test.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

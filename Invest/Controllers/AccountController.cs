@@ -66,10 +66,16 @@ namespace Invest.Controllers
                 UserName = model.Email,
                 Email = model.Email
             };
+            var watchList = new WatchList() { Person = user };
+            user.WatchList = watchList;
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
+                
+                //_companyContext.WatchLists.Add(new WatchList() { Person = user });
+                //_companyContext.SaveChanges();
                 await _signInManager.SignInAsync(user, false);
                 return await GenerateJwtToken(model.Email, user);
             }
@@ -126,13 +132,11 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpGet("watchList")]
-        public IEnumerable<Company> GetWatchList()
+        public async Task<IEnumerable<Company>> GetWatchList()
         {
-            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var watchList = _companyContext.WatchLists
-                .Include(wl => wl.CompanyWatchLists)
-                .ThenInclude(cwl => cwl.Company)
-                .SingleOrDefault(wl => wl.PersonId == personId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
+                .ThenInclude(cwl => cwl.Company).Single(wl => wl.PersonId == userId);
             if (watchList != null)
             {
                 var companies = watchList.CompanyWatchLists.Select(cwl => cwl.Company).ToList();
@@ -144,12 +148,10 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpPost("addToWatchList")]
-        public IActionResult AddToWatchList(AddingCompanyViewModel addingCompanyViewModel)
+        public async Task<IActionResult> AddToWatchList(AddingCompanyViewModel addingCompanyViewModel)
         {
-            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var watchList = _companyContext.WatchLists.SingleOrDefault(wl => wl.PersonId == personId);
-            if (watchList == null)
-                throw new Exception("Watch list not found");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var watchList = _companyContext.WatchLists.Single(wl => wl.PersonId == userId);
             watchList.CompanyWatchLists.Add(new CompanyWatchList()
                 {WatchListId = watchList.WatchListId, CompanyTicker = addingCompanyViewModel.Ticker});
             _companyContext.SaveChanges();
@@ -158,11 +160,11 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpGet("isInWatchList/{companySymbol}")]
-        public bool IsInWatchList(string companySymbol)
+        public async Task<bool> IsInWatchList(string companySymbol)
         {
-            var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var watchList = _companyContext.WatchLists.Include(wl => wl.CompanyWatchLists)
-                .SingleOrDefault(wl => wl.PersonId == personId);
+                .Single(wl => wl.PersonId == userId);
             if (watchList == null) 
                 throw new Exception("Watch list not found");
 

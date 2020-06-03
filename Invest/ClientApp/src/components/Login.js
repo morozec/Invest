@@ -4,7 +4,7 @@ import { Form, Button } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 
 function Login(props) {
-    const { userData, setUserData} = props;
+    const { userData, setUserData } = props;
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showError, setShowError] = useState(false);
@@ -12,9 +12,9 @@ function Login(props) {
     const [isLoading, setIsLoading] = useState(false);
 
     let type;
-    if (props.location.state){
+    if (props.location.state) {
         type = props.location.state.type;
-    }else{
+    } else {
         type = 'login';
     }
 
@@ -23,7 +23,7 @@ function Login(props) {
     const handleLogin = () => {
 
         const getUserData = async () => {
-            try{
+            try {
                 setShowError(false);
                 setErrorMessage(false);
                 setIsLoading(true);
@@ -38,25 +38,24 @@ function Login(props) {
                         password
                     })
                 })
-                let token = await response.text();
-                setUserData({
-                    token,
-                    email
-                })
-                // if (response.ok) {
-                //     setUserData(data);
-                //     isOkLogin = true;
-                // } else {
-                //     setShowError(true);
-                //     setErrorMessage(data.errorText);
-                // }
+                if (response.ok) {
+                    let token = await response.text();
+                    setUserData({
+                        token,
+                        email
+                    })
+                } 
+
+                return response.ok;
             }
-            finally{
+            finally {
                 setIsLoading(false);
             }
         }
 
-        getUserData().then(() => props.history.push('/'));
+        getUserData().then((result) =>{
+            if (result) props.history.push('/');
+        });
     }
 
     return (
@@ -73,7 +72,7 @@ function Login(props) {
 
             <Form.Group>
                 <Button variant="primary" type="button" onClick={handleLogin} disabled={isLoading}>
-                    Login
+                    {type === 'login' ? 'Login' : 'Register'}
              </Button>
             </Form.Group>
 
