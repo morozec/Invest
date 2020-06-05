@@ -187,11 +187,45 @@ namespace Invest.Controllers
         }
 
         [Authorize]
-        [HttpGet("addPortfolio")]
-        public async Task AddPortfolio()
+        [HttpGet("portfolios")]
+        public async Task<IEnumerable<Portfolio>> GetPortfolios()
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
+            //var personId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var portfolios = _companyContext.Portfolios.Where(p => p.User == user);
+            return portfolios;
         }
 
+
+        [Authorize]
+        [HttpPost("addPortfolio")]
+        public async Task<IActionResult> AddPortfolio(AddPortfolioDto addPortfolioDto)
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var portfolio = new Portfolio() {Name = addPortfolioDto.Name, User = user};
+            _companyContext.Portfolios.Add(portfolio);
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpDelete("deletePortfolio")]
+        public IActionResult DeletePortfolio(DeletePortfolioDto deletePortfolioDto)
+        {
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == deletePortfolioDto.Id);
+            _companyContext.Portfolios.Remove(portfolio);
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        public class AddPortfolioDto
+        {
+            public string Name { get; set; }
+        }
+
+        public class DeletePortfolioDto
+        {
+            public int Id { get; set; }
+        }
     }
 }

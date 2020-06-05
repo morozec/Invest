@@ -93,7 +93,7 @@ export function WatchList(props) {
                             </td>
                             <td>{c.shortName}</td>
                             <td className='centered'>{c.price !== undefined ? c.price : <em>Loading...</em>}</td>
-                            <td><Button variant='outline-danger'
+                            <td className='centered'><Button variant='outline-danger'
                                 onClick={() => handleDeleteFromWatchListClick(c.ticker)}>Delete</Button></td>
                         </tr>)}
                 </tbody>
