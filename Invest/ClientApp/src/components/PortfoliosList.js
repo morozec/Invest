@@ -89,12 +89,14 @@ export function PortfoliosList(props) {
         })();
     }
 
+    let addButton = <Button onClick={handleShow} variant='success'>Add portfolio</Button>
+
     let content = isLoading
         ? <p><em>Loading...</em></p>
         : portfolios.length === 0
             ? <div>
                 <p>Portfolios list is empty</p>
-                <Button onClick={handleShow}>Add portfolio</Button>
+                {addButton}
             </div>
             : <div>
                 <Table className='table-sm' bordered hover variant='light'>
@@ -124,7 +126,7 @@ export function PortfoliosList(props) {
                             </tr>)}
                     </tbody>
                 </Table>
-                <Button onClick={handleShow}>Add portfolio</Button>
+                {addButton}
             </div>
 
     return (
@@ -148,7 +150,7 @@ export function PortfoliosList(props) {
                     <Button variant="secondary" onClick={handleClose}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleAddPortfolio}>
+                    <Button variant="primary" onClick={handleAddPortfolio} disabled={newPortfolioName === ''}>
                         Ok
                     </Button>
                 </Modal.Footer>

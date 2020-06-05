@@ -247,7 +247,7 @@ export function Comparing(props) {
                 </tbody>
             </Table>
 
-            <Modal show={showSettings} onHide={handleHideSettings}>
+            <Modal show={showSettings} onHide={handleHideSettings} className='comparisonSettings'>
                 <Modal.Header closeButton>
                     <Modal.Title>Comparison settings</Modal.Title>
                 </Modal.Header>

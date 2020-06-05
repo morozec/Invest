@@ -249,15 +249,15 @@ td.worst{
   background-color: lightcoral;
 }
 
-.modal-dialog{
+.comparisonSettings .modal-dialog{
   height: 80%;
 }
 
-.modal-content{
+.comparisonSettings .modal-content{
   height: 100%;
 }
 
-.modal-body{
+.comparisonSettings .modal-body{
   overflow-y: auto;
 }
 
