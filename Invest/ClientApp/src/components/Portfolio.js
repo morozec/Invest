@@ -12,7 +12,7 @@ export function Portfolio(props) {
     const [addHoldingsPrice, setAddHoldingsPrice] = useState(0);
     const [addHoldingsQuantity, setAddHoldingsQuantity] = useState(1);
     const [addHoldingsCommission, setAddHoldingsCommission] = useState(0);
-    const [addHoldingsDate, setAddHoldingsDate] = useState(new Date());
+    const [addHoldingsDate, setAddHoldingsDate] = useState(new Date().toISOString().substring(0, 10));
 
     const portfolioId = props.location.state.id
 
@@ -97,12 +97,14 @@ export function Portfolio(props) {
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
-                        <Form.Group>
+                        <Form.Group className='d-flex'>
                             <Form.Label>Side</Form.Label>
-                            <ToggleButtonGroup type='radio' value={addHoldingsType} name='periodType' onChange={(v) => setAddHoldingsType(v)}>
-                                <ToggleButton value='Buy' variant='outline-success'>Buy</ToggleButton>
-                                <ToggleButton value='Sell' variant='outline-danger'>Sell</ToggleButton>
-                            </ToggleButtonGroup>
+                            <div className='ml-auto'>
+                                <ToggleButtonGroup type='radio' value={addHoldingsType} name='periodType' onChange={(v) => setAddHoldingsType(v)}>
+                                    <ToggleButton value='Buy' variant='outline-success'>Buy</ToggleButton>
+                                    <ToggleButton value='Sell' variant='outline-danger'>Sell</ToggleButton>
+                                </ToggleButtonGroup>
+                            </div>
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Symbol</Form.Label>
@@ -111,17 +113,17 @@ export function Portfolio(props) {
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Price</Form.Label>
-                            <Form.Control type='number'
+                            <Form.Control type='number' min={0} step='any'
                                 value={addHoldingsPrice} onChange={(e) => setAddHoldingsPrice(e.target.value)} />
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Quantity</Form.Label>
-                            <Form.Control type='number'
+                            <Form.Control type='number' min={1}
                                 value={addHoldingsQuantity} onChange={(e) => setAddHoldingsQuantity(e.target.value)} />
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Commission</Form.Label>
-                            <Form.Control type='number'
+                            <Form.Control type='number' min={0} step='any'
                                 value={addHoldingsCommission} onChange={(e) => setAddHoldingsCommission(e.target.value)} />
                         </Form.Group>
                         <Form.Group>
