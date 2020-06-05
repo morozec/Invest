@@ -210,9 +210,9 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpDelete("deletePortfolio")]
-        public IActionResult DeletePortfolio(DeletePortfolioDto deletePortfolioDto)
+        public IActionResult DeletePortfolio(PortfolioIdDto portfolioIdDto)
         {
-            var portfolio = _companyContext.Portfolios.Single(p => p.Id == deletePortfolioDto.Id);
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == portfolioIdDto.Id);
             _companyContext.Portfolios.Remove(portfolio);
             _companyContext.SaveChanges();
             return Ok();
@@ -223,9 +223,52 @@ namespace Invest.Controllers
             public string Name { get; set; }
         }
 
-        public class DeletePortfolioDto
+        public class PortfolioIdDto
         {
             public int Id { get; set; }
+        }
+
+
+        [Authorize]
+        [HttpPost("addTransaction")]
+        public IActionResult AddTransaction(AddTransactionDto addTransactionDto)
+        {
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == addTransactionDto.PortfolioId);
+            var company = _companyContext.Companies.Single(c => c.Ticker == addTransactionDto.CompanyTicker);
+            var type = _companyContext.TransactionTypes.Single(t => t.Type == addTransactionDto.Type);
+            var transaction = new Transaction()
+            {
+                Portfolio = portfolio,
+                Company = company,
+                Quantity = addTransactionDto.Quantity,
+                Price = addTransactionDto.Price,
+                Commission = addTransactionDto.Commission,
+                Date = addTransactionDto.Date,
+                TransactionType = type
+            };
+            _companyContext.Transactions.Add(transaction);
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        public class AddTransactionDto
+        {
+            public int PortfolioId { get; set; }
+            public string CompanyTicker { get; set; }
+            public int Quantity { get; set; }
+            public double Price { get; set; }
+            public double Commission { get; set; }
+            public DateTime Date { get; set; }
+            public string Type { get; set; }
+        }
+
+        [Authorize]
+        [HttpGet("portfolio/{id}")]
+        public Portfolio GetPortfolio(int id)
+        {
+            var portfolio = _companyContext.Portfolios.Include(p => p.Transactions)
+                .Single(p => p.Id == id);
+            return portfolio;
         }
     }
 }

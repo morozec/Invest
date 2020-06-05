@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button, Modal, Table, Form } from 'react-bootstrap'
+import { Link } from 'react-router-dom';
 
 export function PortfoliosList(props) {
     const { userData } = props;
@@ -25,21 +26,21 @@ export function PortfoliosList(props) {
         //     company.price = result.raw;
         // }
 
-      
-            let response = await fetch('api/account/portfolios', {
-                method: 'GET',
-                headers: {
-                    "Accept": "application/json",
-                    'Authorization': 'Bearer ' + userData.token
-                }
-            });
-            let portfolios = await response.json();
-            setPortfolios(portfolios);
 
-            // let pricedCompanies = [...companies];
-            // let promises = pricedCompanies.map(c => loadPrice(c));
-            // await Promise.all(promises);
-            // setCompanies(pricedCompanies);
+        let response = await fetch('api/account/portfolios', {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Authorization': 'Bearer ' + userData.token
+            }
+        });
+        let portfolios = await response.json();
+        setPortfolios(portfolios);
+
+        // let pricedCompanies = [...companies];
+        // let promises = pricedCompanies.map(c => loadPrice(c));
+        // await Promise.all(promises);
+        // setCompanies(pricedCompanies);
 
     }, [userData]);
 
@@ -114,8 +115,8 @@ export function PortfoliosList(props) {
                     </thead>
                     <tbody>
                         {portfolios.map(p =>
-                            <tr key={p.id}>
-                                <td>{p.name}</td>
+                            <tr key={p.id} className='pointer'>
+                                <td> <Link to={{ pathname: '/portfolio', state: { id: p.id } }}> {p.name} </Link></td>
                                 <td className='centered'>{p.marketValue !== undefined ? p.marketValue : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.dayChange !== undefined ? p.dayChange : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.dayChangePercent !== undefined ? p.dayChangePercent : <em>Loading...</em>}</td>

@@ -12,6 +12,7 @@ import { Comparing } from './components/Comparing';
 import Login from './components/Login';
 import { WatchList } from './components/WatchList';
 import { PortfoliosList } from './components/PortfoliosList';
+import { Portfolio } from './components/Portfolio';
 
 export default function App() {
 
@@ -46,6 +47,7 @@ export default function App() {
         <Route path='/login' render={props => <Login userData={userData} setUserData={setUserData} {...props} />} />
         <Route path='/watchList' render={props => <WatchList userData={userData} {...props} />} />
         <Route path='/portfolios' render={props => <PortfoliosList userData={userData} {...props} />} />
+        <Route path='/portfolio' render={props => <Portfolio userData={userData} {...props} />} />
       </div>
     </div>
   );
