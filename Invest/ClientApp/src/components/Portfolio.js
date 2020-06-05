@@ -32,9 +32,26 @@ export function Portfolio(props) {
         let portfolio = await response.json();
         console.log(portfolio);
         setPortfolio(portfolio);
-
-
     }, [userData]);
+
+    const addHoldings = async (name) => {
+        let response = await fetch('api/account/addTransaction', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                'Authorization': 'Bearer ' + userData.token
+            },
+            body: JSON.stringify({
+                portfolioId: portfolioId,
+                companyTicker: addHoldingsSymbol,
+                quantity: addHoldingsQuantity,
+                price: addHoldingsPrice,
+                commission: addHoldingsCommission,
+                data: addHoldingsDate,
+                type: addHoldingsType
+            })
+        });
+    }
 
 
     useEffect(() => {
@@ -43,7 +60,13 @@ export function Portfolio(props) {
     }, [loadPortfolio])
 
     const handleAddHoldings = () => {
-
+        (async () => {
+            setIsLoading(true);
+            await addHoldings();
+            await loadPortfolio();
+            setIsLoading(false);
+            handleClose();
+        })();
     }
 
 
@@ -137,7 +160,7 @@ export function Portfolio(props) {
                     <Button variant="secondary" onClick={handleClose}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleAddHoldings} disabled={true}>
+                    <Button variant="primary" onClick={handleAddHoldings} disabled={addHoldingsSymbol === ''}>
                         Ok
                     </Button>
                 </Modal.Footer>

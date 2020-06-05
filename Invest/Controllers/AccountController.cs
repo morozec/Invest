@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Model;
@@ -234,7 +235,8 @@ namespace Invest.Controllers
         public IActionResult AddTransaction(AddTransactionDto addTransactionDto)
         {
             var portfolio = _companyContext.Portfolios.Single(p => p.Id == addTransactionDto.PortfolioId);
-            var company = _companyContext.Companies.Single(c => c.Ticker == addTransactionDto.CompanyTicker);
+            var company = _companyContext.Companies
+                .Single(c => c.Ticker.ToLower() == addTransactionDto.CompanyTicker.ToLower());
             var type = _companyContext.TransactionTypes.Single(t => t.Type == addTransactionDto.Type);
             var transaction = new Transaction()
             {
@@ -264,11 +266,38 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpGet("portfolio/{id}")]
-        public Portfolio GetPortfolio(int id)
+        public IDictionary<string, IEnumerable<GetTransactionDto>> GetPortfolio(int id)
         {
-            var portfolio = _companyContext.Portfolios.Include(p => p.Transactions)
+            var portfolio = _companyContext.Portfolios
+                .Include(p => p.Transactions).ThenInclude(t => t.Company)
+                .Include(p => p.Transactions).ThenInclude(t => t.TransactionType)
                 .Single(p => p.Id == id);
-            return portfolio;
+            var grouped = portfolio.Transactions.GroupBy(t => t.Company.Ticker)
+                .Select(g => new
+                {
+                    Ticker = g.Key,
+                    Transactions = g.Select(x => new GetTransactionDto()
+                    {
+                        Id = x.Id,
+                        Quantity = x.Quantity,
+                        Price = x.Price,
+                        Commission = x.Commission,
+                        Date = x.Date,
+                        Type = x.TransactionType.Type
+                    })
+                })
+                .ToDictionary(g => g.Ticker, g => g.Transactions);
+            return grouped;
+        }
+
+        public class GetTransactionDto
+        {
+            public int Id { get; set; }
+            public int Quantity { get; set; }
+            public double Price { get; set; }
+            public double Commission { get; set; }
+            public DateTime Date { get; set; }
+            public string Type { get; set; }
         }
     }
 }
