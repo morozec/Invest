@@ -282,3 +282,11 @@ td.worst{
 .error{
   color: red;
 }
+
+.portfolioTable td.up{
+  color: rgb(0, 110, 30);
+}
+
+.portfolioTable td.down{
+  color: rgb(255, 0, 0);
+}

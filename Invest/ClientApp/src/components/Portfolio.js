@@ -119,7 +119,7 @@ export function Portfolio(props) {
                 <h1>name TODO!!!</h1>
             </div>
             {addHoldingsButton}
-            <Table className='table-sm' bordered hover variant='light'>
+            <Table className='table-sm portfolioTable' bordered hover variant='light'>
                 <caption>Holdings</caption>
                 <thead>
                     <tr>
@@ -142,13 +142,31 @@ export function Portfolio(props) {
                             <td className='centered'>{item.ticker}</td>
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
                             <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
-                            <td className='centered'>{item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}</td>
+                            <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                ? 'up'
+                                : item.price && item.price.regularMarketChange.raw < 0
+                                    ? 'down'
+                                    : ''}`}>
+                                {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
+                            </td>
                             <td className='centered'>{item.price ? getMarketValue(item) : <em>Loading...</em>}</td>
                             <td className='centered'>{getAvgPrice(item)}</td>
                             <td className='centered'>{item.quantity}</td>
                             <td className='centered'>{item.amount}</td>
-                            <td className='centered'>{item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}</td>
-                            <td className='centered'>{item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}</td>
+                            <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                ? 'up'
+                                : item.price && item.price.regularMarketChange.raw < 0
+                                    ? 'down'
+                                    : ''}`}>
+                                {item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}
+                            </td>
+                            <td className={`centered ${item.price && getUnrealizedPL(item) > 0
+                                ? 'up'
+                                : item.price && getUnrealizedPL(item) < 0
+                                    ? 'down'
+                                    : ''}`}>
+                                {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
+                            </td>
                         </tr>)}
                 </tbody>
             </Table>
