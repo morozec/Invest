@@ -20,7 +20,7 @@ export function WatchList(props) {
                 }
             });
             let result = await response.json();
-            company.price = result.raw;
+            company.price = result.regularMarketPrice.raw;
         }
 
         (async () => {

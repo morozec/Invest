@@ -108,7 +108,7 @@ namespace Invest.Controllers
         public IActionResult GetPrice(string companySymbol)
         {
             var url =
-                $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=financialData";
+                $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{companySymbol}?modules=price";
             var client = new RestClient(url);
             var request = new RestRequest(Method.GET);
             var response = client.Execute(request);
@@ -117,7 +117,7 @@ namespace Invest.Controllers
             var result = obj.quoteSummary.result;
             if (result == null) return NoContent();
 
-            return Ok(result[0].financialData.currentPrice);
+            return Ok(result[0].price);
         }
 
         [Authorize]

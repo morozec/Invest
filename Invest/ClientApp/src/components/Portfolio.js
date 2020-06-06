@@ -19,6 +19,17 @@ export function Portfolio(props) {
     const handleClose = () => setShowNewDialog(false);
     const handleShow = () => setShowNewDialog(true);
 
+    const loadPrice = async (company) => {
+        let response = await fetch(`api/yahoofinance/price/${company.ticker}`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+            }
+        });
+        let price = await response.json();
+        company.price = price;
+    }
+
     const loadPortfolio = useCallback(async () => {
         if (userData === null) return;
 
@@ -31,7 +42,7 @@ export function Portfolio(props) {
         });
         let portfolio = await response.json();
         console.log(portfolio);
-        setPortfolio(portfolio);
+        return portfolio;
     }, [userData]);
 
     const addHoldings = async (name) => {
@@ -56,19 +67,42 @@ export function Portfolio(props) {
 
 
     useEffect(() => {
-        setIsLoading(true);
-        loadPortfolio().then(() => setIsLoading(false));
+        (async () => {
+            setIsLoading(true);
+            let portfolio = await loadPortfolio();
+            setPortfolio(portfolio);
+            setIsLoading(false);
+
+            let pricedPortfolio = [...portfolio];
+            let promises = pricedPortfolio.map(item => loadPrice(item));
+            await Promise.all(promises);
+            setPortfolio(pricedPortfolio);
+        })()
     }, [loadPortfolio])
 
     const handleAddHoldings = () => {
         (async () => {
             setIsLoading(true);
             await addHoldings();
-            await loadPortfolio();
+            let portfolio = await loadPortfolio();
+            setPortfolio(portfolio);
             setIsLoading(false);
             handleClose();
         })();
     }
+
+    const getAvgPrice = (item) => item.avgPrice.toFixed(2);
+
+    const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.fmt} (${item.price.regularMarketChangePercent.fmt})`
+
+    const getMarketValue = (item) => item.price.regularMarketPrice.raw * item.quantity;
+
+    const getDaysPL = (item) => item.price.regularMarketChange.raw * item.quantity;
+    const getDaysPLPlusPerncet = (item) => `${getDaysPL(item).toFixed(2)} (${item.price.regularMarketChangePercent.fmt})`;
+
+    const getUnrealizedPL = (item) => (item.price.regularMarketPrice.raw - item.avgPrice) * item.quantity;
+    const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
+    const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
     let addHoldingsButton = <Button variant='success' onClick={handleShow}>Add Holdings</Button>
@@ -101,15 +135,15 @@ export function Portfolio(props) {
                     {portfolio.map(item =>
                         <tr key={item.ticker}>
                             <td className='centered'>{item.ticker}</td>
-                            <td></td>
-                            <td className='centered'></td>
-                            <td className='centered'></td>
-                            <td className='centered'></td>
-                            <td className='centered'>{item.avgPrice}</td>
+                            <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.price ? getMarketValue(item) : <em>Loading...</em>}</td>
+                            <td className='centered'>{getAvgPrice(item)}</td>
                             <td className='centered'>{item.quantity}</td>
                             <td className='centered'>{item.amount}</td>
-                            <td className='centered'></td>
-                            <td className='centered'></td>
+                            <td className='centered'>{item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}</td>
                         </tr>)}
                 </tbody>
             </Table>
