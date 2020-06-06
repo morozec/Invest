@@ -262,7 +262,7 @@ export function Portfolio(props) {
                             <td className='centered'>{item.price ? getMarketValue(item) : <em>Loading...</em>}</td>
                             <td className='centered'>{getAvgPrice(item)}</td>
                             <td className='centered'>{item.quantity}</td>
-                            <td className='centered'>{item.amount}</td>
+                            <td className='centered'>{item.amount.toFixed(2)}</td>
                             <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
                                 ? 'up'
                                 : item.price && item.price.regularMarketChange.raw < 0
@@ -284,7 +284,7 @@ export function Portfolio(props) {
             <Doughnut data={{
                 labels: portfolio.map(p => p.ticker),
                 datasets: [{
-                    data: portfolio.map(p => p.amount)
+                    data: portfolio.map(p => p.price ? getMarketValue(p) : 0)
                 }]
             }}
             options={{
@@ -384,7 +384,7 @@ export function Portfolio(props) {
                                                 <td className='centered fit'>{t.transactionType.type}</td>
                                                 <td className='centered fit'>{t.price}</td>
                                                 <td className='centered fit'>{t.quantity}</td>
-                                                <td className='centered fit'>{t.price * t.quantity}</td>
+                                                <td className='centered fit'>{(t.price * t.quantity).toFixed(2)}</td>
                                                 <td className='centered fit'>{t.commission}</td>
                                                 <td className='centered fit'>
                                                     <Button variant='outline-warning mr-1' onClick={() => handleEditTransaction(t)}>Edit</Button>
