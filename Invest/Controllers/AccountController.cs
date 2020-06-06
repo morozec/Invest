@@ -287,13 +287,14 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpGet("portfolio/{id}")]
-        public IList<PortfolioTickerDto> GetPortfolio(int id)
+        public PortfolioDto GetPortfolio(int id)
         {
-            var grouped = _companyContext
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == id);
+            var holdings = _companyContext
                 .Transactions
                 .Where(t => t.Portfolio.Id == id)
                 .GroupBy(t => t.Company.Ticker)
-                .Select(g => new PortfolioTickerDto()
+                .Select(g => new PortfolioHoldingsDto()
                 {
                     Ticker = g.Key,
                     AvgPrice = g.Average(t => t.Price),
@@ -301,10 +302,20 @@ namespace Invest.Controllers
                     Amount = g.Sum(t => t.Price * t.Quantity)
                 })
                 .ToList();
-            return grouped;
+            return new PortfolioDto()
+            {
+                Name = portfolio.Name,
+                Holdings = holdings
+            };
         }
 
-        public class PortfolioTickerDto
+        public class PortfolioDto
+        {
+            public string Name { get; set; }
+            public IList<PortfolioHoldingsDto> Holdings { get; set; }
+        }
+
+        public class PortfolioHoldingsDto
         {
             public string Ticker { get; set; }
             public double AvgPrice { get; set; }

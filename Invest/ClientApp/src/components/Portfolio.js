@@ -7,7 +7,8 @@ import 'chartjs-plugin-colorschemes';
 export function Portfolio(props) {
     const { userData } = props;
     const [isLoading, setIsLoading] = useState(true);
-    const [portfolio, setPortfolio] = useState(null);
+    const [portfolioName, setPortfolioName] = useState(null);
+    const [portfolioHoldings, setPortfolioHoldings] = useState(null);
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
 
@@ -69,7 +70,7 @@ export function Portfolio(props) {
             },
         });
         let portfolio = await response.json();
-        console.log(portfolio);
+        console.log('portfolio', portfolio);
         return portfolio;
     }, [userData]);
 
@@ -99,13 +100,14 @@ export function Portfolio(props) {
         (async () => {
             setIsLoading(true);
             let portfolio = await loadPortfolio();
-            setPortfolio(portfolio);
+            setPortfolioName(portfolio.name);
+            setPortfolioHoldings(portfolio.holdings);
             setIsLoading(false);
 
-            let pricedPortfolio = [...portfolio];
-            let promises = pricedPortfolio.map(item => loadPrice(item));
+            let pricedHoldings = [...portfolio.holdings];
+            let promises = pricedHoldings.map(item => loadPrice(item));
             await Promise.all(promises);
-            setPortfolio(pricedPortfolio);
+            setPortfolioHoldings(pricedHoldings);
         })()
     }, [loadPortfolio])
 
@@ -124,12 +126,13 @@ export function Portfolio(props) {
 
 
                 let portfolio = await loadPortfolio();
-                setPortfolio(portfolio);
+                setPortfolioName(portfolio.name);
+                setPortfolioHoldings(portfolio.holdings);
 
-                let pricedPortfolio = [...portfolio];
-                let promises = pricedPortfolio.map(item => loadPrice(item));
+                let pricedHoldings = [...portfolio.holdings];
+                let promises = pricedHoldings.map(item => loadPrice(item));
                 await Promise.all(promises);
-                setPortfolio(pricedPortfolio);
+                setPortfolioHoldings(pricedHoldings);
 
                 return;
             }
@@ -137,13 +140,14 @@ export function Portfolio(props) {
             setIsLoading(true);
             await addUpdateHoldings(id);
             let portfolio = await loadPortfolio();
-            setPortfolio(portfolio);
+            setPortfolioName(portfolio.name);
+            setPortfolioHoldings(portfolio.holdings);
             setIsLoading(false);
 
-            let pricedPortfolio = [...portfolio];
-            let promises = pricedPortfolio.map(item => loadPrice(item));
+            let pricedHoldings = [...portfolio.holdings];
+            let promises = pricedHoldings.map(item => loadPrice(item));
             await Promise.all(promises);
-            setPortfolio(pricedPortfolio);
+            setPortfolioHoldings(pricedHoldings);
         })();
     }
 
@@ -198,12 +202,13 @@ export function Portfolio(props) {
 
 
         let portfolio = await loadPortfolio();
-        setPortfolio(portfolio);
+        setPortfolioName(portfolio.name);
+        setPortfolioHoldings(portfolio.holdings);
 
-        let pricedPortfolio = [...portfolio];
-        let promises = pricedPortfolio.map(item => loadPrice(item));
+        let pricedHoldings = [...portfolio.holdings];
+        let promises = pricedHoldings.map(item => loadPrice(item));
         await Promise.all(promises);
-        setPortfolio(pricedPortfolio);
+        setPortfolioHoldings(pricedHoldings);
     }
 
     const getAvgPrice = (item) => item.avgPrice.toFixed(2);
@@ -226,7 +231,7 @@ export function Portfolio(props) {
         ? <p><em>Loading...</em></p>
         : <div>
             <div className='statementHeader'>
-                <h1>name TODO!!!</h1>
+                <h1>{portfolioName}</h1>
             </div>
             {addHoldingsButton}
             <Table className='table-sm portfolioTable' bordered hover variant='light'>
@@ -247,7 +252,7 @@ export function Portfolio(props) {
                     </tr>
                 </thead>
                 <tbody>
-                    {portfolio.map(item =>
+                    {portfolioHoldings.map(item =>
                         <tr key={item.ticker} className='pointer' onClick={() => handleShowTransactions(item)}>
                             <td className='centered'>{item.ticker}</td>
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
@@ -282,9 +287,9 @@ export function Portfolio(props) {
             </Table>
 
             <Doughnut data={{
-                labels: portfolio.map(p => p.ticker),
+                labels: portfolioHoldings.map(p => p.ticker),
                 datasets: [{
-                    data: portfolio.map(p => p.price ? getMarketValue(p) : 0)
+                    data: portfolioHoldings.map(p => p.price ? getMarketValue(p) : 0)
                 }]
             }}
             options={{
