@@ -6,18 +6,43 @@ export function Portfolio(props) {
     const [isLoading, setIsLoading] = useState(true);
     const [portfolio, setPortfolio] = useState(null);
     const [showNewDialog, setShowNewDialog] = useState(false);
+    const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
 
     const [addHoldingsType, setAddHoldingsType] = useState('Buy');
     const [addHoldingsSymbol, setAddHoldingsSymbol] = useState('');
     const [addHoldingsPrice, setAddHoldingsPrice] = useState(0);
     const [addHoldingsQuantity, setAddHoldingsQuantity] = useState(1);
     const [addHoldingsCommission, setAddHoldingsCommission] = useState(0);
-    const [addHoldingsDate, setAddHoldingsDate] = useState(new Date().toISOString().substring(0, 10));
+    const [addHoldingsDate, setAddHoldingsDate] = useState(getYYYYMMDDDate(new Date()));
+
+    const [trascationsTicker, setTransactionsTicker] = useState('');
+    const [transactions, setTransactions] = useState(null);
+    const [curTransactionId, setCurTransactionId] = useState(null);
 
     const portfolioId = props.location.state.id
 
-    const handleClose = () => setShowNewDialog(false);
-    const handleShow = () => setShowNewDialog(true);
+    const handleNewClose = () =>{
+        setShowNewDialog(false);
+        setAddHoldingsSymbol('');
+        setCurTransactionId(null);
+    } 
+    const handleNewShow = (id = null) => {
+        setShowNewDialog(true);
+        setAddHoldingsSymbol(trascationsTicker);
+        if (id !== null) setCurTransactionId(id);
+    }
+
+    const [isTransactionsLoading, setIsTransactionsLoading] = useState(true);
+
+    const handleHoldingsClose = () => {
+        setShowHoldingsDialog(false);
+        setTransactionsTicker('');
+    }
+    const handleHoldingsShow = () => setShowHoldingsDialog(true);
+
+    function getYYYYMMDDDate(date) {
+        return date.toISOString().substring(0, 10);
+    }
 
     const loadPrice = async (company) => {
         let response = await fetch(`api/yahoofinance/price/${company.ticker}`, {
@@ -45,15 +70,16 @@ export function Portfolio(props) {
         return portfolio;
     }, [userData]);
 
-    const addHoldings = async (name) => {
+    const addUpdateHoldings = async (id) => {
         console.log(addHoldingsDate, new Date(addHoldingsDate));
-        let response = await fetch('api/account/addTransaction', {
+        let response = await fetch('api/account/addUpdateTransaction', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
                 'Authorization': 'Bearer ' + userData.token
             },
             body: JSON.stringify({
+                id:id,
                 portfolioId: portfolioId,
                 companyTicker: addHoldingsSymbol,
                 quantity: addHoldingsQuantity,
@@ -80,15 +106,37 @@ export function Portfolio(props) {
         })()
     }, [loadPortfolio])
 
-    const handleAddHoldings = () => {
+    const handleAddUpdateHoldings = () => {
         (async () => {
+            
+            let id = curTransactionId;
+            handleNewClose();
+
+            if (showHoldingsDialog) {
+                setIsTransactionsLoading(true);
+                await addUpdateHoldings(id);
+                let transactions = await loadTransactions(trascationsTicker);
+                setTransactions(transactions);
+                setIsTransactionsLoading(false);
+
+
+                let portfolio = await loadPortfolio();
+                setPortfolio(portfolio);
+
+                let pricedPortfolio = [...portfolio];
+                let promises = pricedPortfolio.map(item => loadPrice(item));
+                await Promise.all(promises);
+                setPortfolio(pricedPortfolio);
+
+                return;
+            }
+
             setIsLoading(true);
-            await addHoldings();
+            await addUpdateHoldings(id);
             let portfolio = await loadPortfolio();
             setPortfolio(portfolio);
             setIsLoading(false);
-            handleClose();
-
+            
             let pricedPortfolio = [...portfolio];
             let promises = pricedPortfolio.map(item => loadPrice(item));
             await Promise.all(promises);
@@ -96,11 +144,70 @@ export function Portfolio(props) {
         })();
     }
 
+    const loadTransactions = async (ticker) => {
+        let response = await fetch(`api/account/portfolio/${portfolioId}/${ticker}`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Authorization': 'Bearer ' + userData.token
+            },
+        });
+        let transactions = await response.json();
+        console.log('trans', transactions)
+        return transactions;
+    }
+
+    const handleShowTransactions = (item) => {
+        (async () => {
+            handleHoldingsShow(true);
+            setIsTransactionsLoading(true);
+            setTransactionsTicker(item.ticker);
+            let transactions = await loadTransactions(item.ticker);
+            setTransactions(transactions);
+            setIsTransactionsLoading(false);
+        })()
+    }
+
+    const handleEditTransaction = (t) => {
+        handleNewShow(t.id);
+
+        setAddHoldingsType(t.transactionType.type)
+        setAddHoldingsPrice(t.price);
+        setAddHoldingsQuantity(t.quantity);
+        setAddHoldingsCommission(t.commission);
+        setAddHoldingsDate(t.date.substring(0, 10))
+    }
+
+    const handleDeleteTransaction = async (t) => {
+        console.log(t);
+        setIsTransactionsLoading(true);
+        let response = await fetch(`api/account/deleteTransaction`, {
+            method: 'DELETE',
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                'Authorization': 'Bearer ' + userData.token
+            },
+            body: JSON.stringify({ id: t.id })
+        });
+        let transactions = await loadTransactions(trascationsTicker);
+        setTransactions(transactions);
+        setIsTransactionsLoading(false);
+
+
+        let portfolio = await loadPortfolio();
+        setPortfolio(portfolio);
+
+        let pricedPortfolio = [...portfolio];
+        let promises = pricedPortfolio.map(item => loadPrice(item));
+        await Promise.all(promises);
+        setPortfolio(pricedPortfolio);
+    }
+
     const getAvgPrice = (item) => item.avgPrice.toFixed(2);
 
     const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.fmt} (${item.price.regularMarketChangePercent.fmt})`
 
-    const getMarketValue = (item) => item.price.regularMarketPrice.raw * item.quantity;
+    const getMarketValue = (item) => (item.price.regularMarketPrice.raw * item.quantity).toFixed(2);
 
     const getDaysPL = (item) => item.price.regularMarketChange.raw * item.quantity;
     const getDaysPLPlusPerncet = (item) => `${getDaysPL(item).toFixed(2)} (${item.price.regularMarketChangePercent.fmt})`;
@@ -110,7 +217,7 @@ export function Portfolio(props) {
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
-    let addHoldingsButton = <Button variant='success' onClick={handleShow}>Add Holdings</Button>
+    let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
     let content = isLoading
         ? <p><em>Loading...</em></p>
@@ -138,7 +245,7 @@ export function Portfolio(props) {
                 </thead>
                 <tbody>
                     {portfolio.map(item =>
-                        <tr key={item.ticker}>
+                        <tr key={item.ticker} className='pointer' onClick={() => handleShowTransactions(item)}>
                             <td className='centered'>{item.ticker}</td>
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
                             <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
@@ -178,7 +285,7 @@ export function Portfolio(props) {
 
             {content}
 
-            <Modal show={showNewDialog} onHide={handleClose}>
+            <Modal show={showNewDialog} onHide={handleNewClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Add Holdings</Modal.Title>
                 </Modal.Header>
@@ -221,11 +328,63 @@ export function Portfolio(props) {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
+                    <Button variant="secondary" onClick={handleNewClose}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleAddHoldings} disabled={addHoldingsSymbol === ''}>
+                    <Button variant="primary" onClick={handleAddUpdateHoldings} disabled={addHoldingsSymbol === ''}>
                         Ok
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showHoldingsDialog} onHide={handleHoldingsClose} className='transactionsModal'>
+                <Modal.Header closeButton>
+                    <Modal.Title>{`${trascationsTicker} Holdings`}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {
+                        isTransactionsLoading
+                            ? <p><em>Loading...</em></p>
+                            : <div>
+                                {addHoldingsButton}
+                                <Table className='table-sm' bordered hover variant='light'>
+                                    <thead>
+                                        <tr>
+                                            <th className='centered'>Date</th>
+                                            <th className='centered'>Side</th>
+                                            <th className='centered'>Price</th>
+                                            <th className='centered'>Quantity</th>
+                                            <th className='centered'>Amount</th>
+                                            <th className='centered'>Commission</th>
+                                            <th className='centered'></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {transactions.map(t =>
+                                            <tr key={t.id}>
+                                                <td className='centered fit'>{t.date.substring(0, 10)}</td>
+                                                <td className='centered fit'>{t.transactionType.type}</td>
+                                                <td className='centered fit'>{t.price}</td>
+                                                <td className='centered fit'>{t.quantity}</td>
+                                                <td className='centered fit'>{t.price * t.quantity}</td>
+                                                <td className='centered fit'>{t.commission}</td>
+                                                <td className='centered fit'>
+                                                    <Button variant='outline-warning mr-1' onClick={() => handleEditTransaction(t)}>Edit</Button>
+                                                    <Button variant='outline-danger ml-1'
+                                                        onClick={() => handleDeleteTransaction(t)}>
+                                                        Delete
+                                                    </Button>
+                                                </td>
+                                            </tr>)}
+                                    </tbody>
+                                </Table>
+                            </div>
+                    }
+
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleHoldingsClose}>
+                        Close
                     </Button>
                 </Modal.Footer>
             </Modal>

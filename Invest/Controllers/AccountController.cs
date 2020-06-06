@@ -231,30 +231,51 @@ namespace Invest.Controllers
 
 
         [Authorize]
-        [HttpPost("addTransaction")]
-        public IActionResult AddTransaction(AddTransactionDto addTransactionDto)
+        [HttpPost("addUpdateTransaction")]
+        public IActionResult AddUpdateTransaction(AddUpdateTransactionDto addUpdateTransactionDto)
         {
-            var portfolio = _companyContext.Portfolios.Single(p => p.Id == addTransactionDto.PortfolioId);
+            var transaction = addUpdateTransactionDto.Id != null
+                ? _companyContext.Transactions.Single(t => t.Id == addUpdateTransactionDto.Id)
+                : new Transaction();
+
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdateTransactionDto.PortfolioId);
             var company = _companyContext.Companies
-                .Single(c => c.Ticker.ToLower() == addTransactionDto.CompanyTicker.ToLower());
-            var type = _companyContext.TransactionTypes.Single(t => t.Type == addTransactionDto.Type);
-            var transaction = new Transaction()
-            {
-                Portfolio = portfolio,
-                Company = company,
-                Quantity = addTransactionDto.Quantity,
-                Price = addTransactionDto.Price,
-                Commission = addTransactionDto.Commission,
-                Date = addTransactionDto.Date,
-                TransactionType = type
-            };
-            _companyContext.Transactions.Add(transaction);
+                .Single(c => c.Ticker.ToLower() == addUpdateTransactionDto.CompanyTicker.ToLower());
+            var type = _companyContext.TransactionTypes.Single(t => t.Type == addUpdateTransactionDto.Type);
+
+            transaction.Portfolio = portfolio;
+            transaction.Company = company;
+            transaction.Quantity = addUpdateTransactionDto.Quantity;
+            transaction.Price = addUpdateTransactionDto.Price;
+            transaction.Commission = addUpdateTransactionDto.Commission;
+            transaction.Date = addUpdateTransactionDto.Date;
+            transaction.TransactionType = type;
+
+            if (addUpdateTransactionDto.Id != null) _companyContext.Update(transaction);
+            else _companyContext.Transactions.Add(transaction);
+
             _companyContext.SaveChanges();
             return Ok();
         }
 
-        public class AddTransactionDto
+        [Authorize]
+        [HttpDelete("deleteTransaction")]
+        public IActionResult DeleteTransaction(DeleteTransactionDto deleteTransactionDto)
         {
+            var transaction = _companyContext.Transactions.Single(t => t.Id == deleteTransactionDto.Id);
+            _companyContext.Transactions.Remove(transaction);
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        public class DeleteTransactionDto
+        {
+            public int Id { get; set; }
+        }
+
+        public class AddUpdateTransactionDto
+        {
+            public int? Id { get; set; }
             public int PortfolioId { get; set; }
             public string CompanyTicker { get; set; }
             public int Quantity { get; set; }
@@ -291,14 +312,18 @@ namespace Invest.Controllers
             public double Amount { get; set; }
         }
 
-        public class GetTransactionDto
+        [Authorize]
+        [HttpGet("portfolio/{id}/{symbol}")]
+        public IEnumerable<Transaction> GetPortfolioCompanyTransactions(int id, string symbol)
         {
-            public int Id { get; set; }
-            public int Quantity { get; set; }
-            public double Price { get; set; }
-            public double Commission { get; set; }
-            public DateTime Date { get; set; }
-            public string Type { get; set; }
+            var transactions = _companyContext
+                .Transactions
+                .Include(t => t.TransactionType)
+                .Where(t => t.Portfolio.Id == id && t.Company.Ticker == symbol)
+                .OrderBy(t => t.Date)
+                .ToList();
+            return transactions;
         }
+
     }
 }

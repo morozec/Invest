@@ -290,3 +290,13 @@ td.worst{
 .portfolioTable td.down{
   color: rgb(255, 0, 0);
 }
+
+.transactionsModal .modal-dialog{
+  display: table;
+}
+
+.table td.fit, 
+.table th.fit {
+    white-space: nowrap;
+    width: 1%;
+}
