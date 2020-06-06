@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Button, ToggleButtonGroup, ToggleButton, Modal, Form } from 'react-bootstrap';
+import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'react-bootstrap';
 
 export function Portfolio(props) {
     const { userData } = props;
@@ -35,6 +35,7 @@ export function Portfolio(props) {
     }, [userData]);
 
     const addHoldings = async (name) => {
+        console.log(addHoldingsDate, new Date(addHoldingsDate));
         let response = await fetch('api/account/addTransaction', {
             method: 'POST',
             headers: {
@@ -47,7 +48,7 @@ export function Portfolio(props) {
                 quantity: addHoldingsQuantity,
                 price: addHoldingsPrice,
                 commission: addHoldingsCommission,
-                data: addHoldingsDate,
+                date: addHoldingsDate,
                 type: addHoldingsType
             })
         });
@@ -76,36 +77,42 @@ export function Portfolio(props) {
         ? <p><em>Loading...</em></p>
         : <div>
             <div className='statementHeader'>
-                <h1>{portfolio.name}</h1>
+                <h1>name TODO!!!</h1>
             </div>
             {addHoldingsButton}
-            {/* <Table className='table-sm' bordered hover variant='light'>
-                <caption>Portfolios</caption>
+            <Table className='table-sm' bordered hover variant='light'>
+                <caption>Holdings</caption>
                 <thead>
                     <tr>
-                        <th>Portfolio Name</th>
-                        <th className='centered'>Market Value</th>
-                        <th className='centered'>Day Change</th>
-                        <th className='centered'>Day Change %</th>
-                        <th className='centered'>Total Change</th>
-                        <th className='centered'>Total Change %</th>
+                        <th className='centered'>Symbol</th>
+                        <th>Name</th>
+                        <th className='centered'>Price</th>
+                        <th className='centered'>Day's Price Change</th>
+                        <th className='centered'>Mkt Value</th>
+                        <th className='centered'>Avg Price</th>
+                        <th className='centered'>Quantity</th>
+                        <th className='centered'>Amount</th>
+                        <th className='centered'>{"Day's P&L"}</th>
+                        <th className='centered'>{"Unrealized P&L"}</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {portfolios.map(p =>
-                        <tr key={p.id}>
-                            <td>{p.name}</td>
-                            <td className='centered'>{p.marketValue !== undefined ? p.marketValue : <em>Loading...</em>}</td>
-                            <td className='centered'>{p.dayChange !== undefined ? p.dayChange : <em>Loading...</em>}</td>
-                            <td className='centered'>{p.dayChangePercent !== undefined ? p.dayChangePercent : <em>Loading...</em>}</td>
-                            <td className='centered'>{p.totalChange !== undefined ? p.totalChange : <em>Loading...</em>}</td>
-                            <td className='centered'>{p.totalChangePercent !== undefined ? p.totalChangePercent : <em>Loading...</em>}</td>
-                            <td className='centered'><Button variant='outline-danger'
-                                onClick={() => handleDeletePortfolio(p.id)}>Delete</Button></td>
+                    {portfolio.map(item =>
+                        <tr key={item.ticker}>
+                            <td className='centered'>{item.ticker}</td>
+                            <td></td>
+                            <td className='centered'></td>
+                            <td className='centered'></td>
+                            <td className='centered'></td>
+                            <td className='centered'>{item.avgPrice}</td>
+                            <td className='centered'>{item.quantity}</td>
+                            <td className='centered'>{item.amount}</td>
+                            <td className='centered'></td>
+                            <td className='centered'></td>
                         </tr>)}
                 </tbody>
-            </Table> */}
+            </Table>
         </div>
 
 

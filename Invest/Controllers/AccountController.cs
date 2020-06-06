@@ -266,28 +266,29 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpGet("portfolio/{id}")]
-        public IDictionary<string, IEnumerable<GetTransactionDto>> GetPortfolio(int id)
+        public IList<PortfolioTickerDto> GetPortfolio(int id)
         {
-            var portfolio = _companyContext.Portfolios
-                .Include(p => p.Transactions).ThenInclude(t => t.Company)
-                .Include(p => p.Transactions).ThenInclude(t => t.TransactionType)
-                .Single(p => p.Id == id);
-            var grouped = portfolio.Transactions.GroupBy(t => t.Company.Ticker)
-                .Select(g => new
+            var grouped = _companyContext
+                .Transactions
+                .Where(t => t.Portfolio.Id == id)
+                .GroupBy(t => t.Company.Ticker)
+                .Select(g => new PortfolioTickerDto()
                 {
                     Ticker = g.Key,
-                    Transactions = g.Select(x => new GetTransactionDto()
-                    {
-                        Id = x.Id,
-                        Quantity = x.Quantity,
-                        Price = x.Price,
-                        Commission = x.Commission,
-                        Date = x.Date,
-                        Type = x.TransactionType.Type
-                    })
+                    AvgPrice = g.Average(t => t.Price),
+                    Quantity = g.Sum(t => t.Quantity),
+                    Amount = g.Sum(t => t.Price * t.Quantity)
                 })
-                .ToDictionary(g => g.Ticker, g => g.Transactions);
+                .ToList();
             return grouped;
+        }
+
+        public class PortfolioTickerDto
+        {
+            public string Ticker { get; set; }
+            public double AvgPrice { get; set; }
+            public int Quantity { get; set; }
+            public double Amount { get; set; }
         }
 
         public class GetTransactionDto
