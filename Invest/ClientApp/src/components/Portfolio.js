@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
+import { Doughnut } from 'react-chartjs-2';
+import 'chartjs-plugin-colorschemes';
 
 export function Portfolio(props) {
     const { userData } = props;
@@ -20,13 +22,13 @@ export function Portfolio(props) {
     const [transactions, setTransactions] = useState(null);
     const [curTransactionId, setCurTransactionId] = useState(null);
 
-    const {portfolioId} = useParams();
+    const { portfolioId } = useParams();
 
-    const handleNewClose = () =>{
+    const handleNewClose = () => {
         setShowNewDialog(false);
         setAddHoldingsSymbol('');
         setCurTransactionId(null);
-    } 
+    }
     const handleNewShow = (id = null) => {
         setShowNewDialog(true);
         setAddHoldingsSymbol(trascationsTicker);
@@ -80,7 +82,7 @@ export function Portfolio(props) {
                 'Authorization': 'Bearer ' + userData.token
             },
             body: JSON.stringify({
-                id:id,
+                id: id,
                 portfolioId: portfolioId,
                 companyTicker: addHoldingsSymbol,
                 quantity: addHoldingsQuantity,
@@ -109,7 +111,7 @@ export function Portfolio(props) {
 
     const handleAddUpdateHoldings = () => {
         (async () => {
-            
+
             let id = curTransactionId;
             handleNewClose();
 
@@ -137,7 +139,7 @@ export function Portfolio(props) {
             let portfolio = await loadPortfolio();
             setPortfolio(portfolio);
             setIsLoading(false);
-            
+
             let pricedPortfolio = [...portfolio];
             let promises = pricedPortfolio.map(item => loadPrice(item));
             await Promise.all(promises);
@@ -278,6 +280,21 @@ export function Portfolio(props) {
                         </tr>)}
                 </tbody>
             </Table>
+
+            <Doughnut data={{
+                labels: portfolio.map(p => p.ticker),
+                datasets: [{
+                    data: portfolio.map(p => p.amount)
+                }]
+            }}
+            options={{
+               plugins:{
+                   colorschemes:{
+                       scheme: 'brewer.Paired12'
+                   }
+               }
+            }}
+            />
         </div>
 
 
