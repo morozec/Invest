@@ -47,7 +47,7 @@ export default function App() {
         <Route path='/login' render={props => <Login userData={userData} setUserData={setUserData} {...props} />} />
         <Route path='/watchList' render={props => <WatchList userData={userData} {...props} />} />
         <Route path='/portfolios' render={props => <PortfoliosList userData={userData} {...props} />} />
-        <Route path='/portfolio' render={props => <Portfolio userData={userData} {...props} />} />
+        <Route path='/portfolio/:portfolioId' render={props => <Portfolio userData={userData} {...props} />} />
       </div>
     </div>
   );

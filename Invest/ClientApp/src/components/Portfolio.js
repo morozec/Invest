@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'react-bootstrap';
+import { useParams } from 'react-router-dom';
 
 export function Portfolio(props) {
     const { userData } = props;
@@ -19,7 +20,7 @@ export function Portfolio(props) {
     const [transactions, setTransactions] = useState(null);
     const [curTransactionId, setCurTransactionId] = useState(null);
 
-    const portfolioId = props.location.state.id
+    const {portfolioId} = useParams();
 
     const handleNewClose = () =>{
         setShowNewDialog(false);

@@ -116,7 +116,7 @@ export function PortfoliosList(props) {
                     <tbody>
                         {portfolios.map(p =>
                             <tr key={p.id} className='pointer'>
-                                <td> <Link to={{ pathname: '/portfolio', state: { id: p.id } }}> {p.name} </Link></td>
+                                <td> <Link to={{ pathname: `/portfolio/${p.id}` }}> {p.name} </Link></td>
                                 <td className='centered'>{p.marketValue !== undefined ? p.marketValue : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.dayChange !== undefined ? p.dayChange : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.dayChangePercent !== undefined ? p.dayChangePercent : <em>Loading...</em>}</td>
