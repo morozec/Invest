@@ -88,6 +88,11 @@ export function Portfolio(props) {
             setPortfolio(portfolio);
             setIsLoading(false);
             handleClose();
+
+            let pricedPortfolio = [...portfolio];
+            let promises = pricedPortfolio.map(item => loadPrice(item));
+            await Promise.all(promises);
+            setPortfolio(pricedPortfolio);
         })();
     }
 
