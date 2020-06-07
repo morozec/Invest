@@ -23,7 +23,57 @@ export function Portfolio(props) {
     const [transactions, setTransactions] = useState(null);
     const [curTransactionId, setCurTransactionId] = useState(null);
 
+    const [selectedCurrency, setSelectedCurrency] = useState('USD');
+    const [currencyRates, setCurrencyRates] = useState({})
+
     const { portfolioId } = useParams();
+
+    const currencies = ['USD', 'RUB', 'EUR'];
+
+
+    const loadCurrencyRate = async (from, to) => {
+        let response = await fetch(`api/currency/${from}/${to}`, {
+            method: 'GET',
+        })
+        let rate = await response.json();
+        return {
+            from: from,
+            to: to,
+            rate: rate
+        };
+    }
+
+    const loadCurrencyRates = useCallback(async () => {
+        let rates = {};
+        let promises = [];
+        for (let i = 0; i < currencies.length; ++i) {
+            let ci = currencies[i];
+            rates[ci] = {};
+            for (let j = i; j < currencies.length; ++j) {
+                let cj = currencies[j];
+                if (i === j) {
+                    rates[ci][cj] = 1;
+                } else {
+                    let promise = loadCurrencyRate(ci, cj);
+                    promises.push(promise);
+                }
+            }
+        }
+
+        let results = await Promise.all(promises);
+        for (let result of results){
+            const {from, to, rate} = result;
+            rates[from][to] = rate;
+            rates[to][from] = 1 / rate;
+        }
+
+        console.log(rates);
+        return rates;
+    }, [])
+
+    // useEffect(() => {
+    //     loadCurrencyRates();
+    // }, [loadCurrencyRates])
 
     const handleNewClose = () => {
         setShowNewDialog(false);
@@ -99,17 +149,19 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let portfolio = await loadPortfolio();
+            let promises = [loadPortfolio(), loadCurrencyRates()];
+            const [portfolio, rates] = await Promise.all(promises);
             setPortfolioName(portfolio.name);
             setPortfolioHoldings(portfolio.holdings);
+            setCurrencyRates(rates);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
-            let promises = pricedHoldings.map(item => loadPrice(item));
+            promises = pricedHoldings.map(item => loadPrice(item));
             await Promise.all(promises);
             setPortfolioHoldings(pricedHoldings);
         })()
-    }, [loadPortfolio])
+    }, [loadPortfolio, loadCurrencyRates])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -224,6 +276,15 @@ export function Portfolio(props) {
     const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
+    const handleCurrencyChanged = (e) => {
+        setSelectedCurrency(e.target.value);
+    }
+
+
+    const getSelectedCurrencyValue = (value, valueCurrency) => {
+        return (value * currencyRates[valueCurrency][selectedCurrency]).toFixed(2);
+    }
+
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
@@ -233,13 +294,28 @@ export function Portfolio(props) {
             <div className='statementHeader'>
                 <h1>{portfolioName}</h1>
             </div>
-            {addHoldingsButton}
+
+            <div className='portfilioSettings'>
+                {addHoldingsButton}
+                <Form>
+                    <Form.Group>
+                        <Form.Label>Currency</Form.Label>
+                        <Form.Control as='select' onChange={handleCurrencyChanged}>
+                            {currencies.map(c =>
+                                <option key={c}>{c}</option>
+                            )}
+                        </Form.Control>
+                    </Form.Group>
+                </Form>
+            </div>
+
             <Table className='table-sm portfolioTable' bordered hover variant='light'>
                 <caption>Holdings</caption>
                 <thead>
                     <tr>
                         <th className='centered'>Symbol</th>
                         <th>Name</th>
+                        <th className='centered'>Currency</th>
                         <th className='centered'>Price</th>
                         <th className='centered'>Day's Price Change</th>
                         <th className='centered'>Mkt Value</th>
@@ -256,6 +332,7 @@ export function Portfolio(props) {
                         <tr key={item.ticker} className='pointer' onClick={() => handleShowTransactions(item)}>
                             <td className='centered'>{item.ticker}</td>
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.price ? item.price.currency : <em>Loading...</em>}</td>
                             <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
                             <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
                                 ? 'up'
@@ -289,16 +366,18 @@ export function Portfolio(props) {
             <Doughnut data={{
                 labels: portfolioHoldings.map(p => p.ticker),
                 datasets: [{
-                    data: portfolioHoldings.map(p => p.price ? getMarketValue(p) : 0)
+                    data: portfolioHoldings.map(p => p.price 
+                        ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency)
+                        : 0)
                 }]
             }}
-            options={{
-               plugins:{
-                   colorschemes:{
-                       scheme: 'brewer.Paired12'
-                   }
-               }
-            }}
+                options={{
+                    plugins: {
+                        colorschemes: {
+                            scheme: 'brewer.Paired12'
+                        }
+                    }
+                }}
             />
         </div>
 

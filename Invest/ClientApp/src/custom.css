@@ -300,3 +300,9 @@ td.worst{
     white-space: nowrap;
     width: 1%;
 }
+
+.portfilioSettings{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
