@@ -292,7 +292,9 @@ namespace Invest.Controllers
             var portfolio = _companyContext.Portfolios.Single(p => p.Id == id);
             var holdings = _companyContext
                 .Transactions
-                .Where(t => t.Portfolio.Id == id && t.TransactionType.Type == "Buy")
+                .Include(t => t.Company)
+                .Include(t => t.TransactionType)
+                .Where(t => t.Portfolio.Id == id)
                 .OrderBy(t => t.Date)
                 .AsEnumerable()
                 .GroupBy(t => t.Company.Ticker)
@@ -384,13 +386,13 @@ namespace Invest.Controllers
                     {
                         openQuantity = buyHoldings.Sum(h => h.Quantity);
                         openAmount = buyHoldings.Sum(h => h.Price * h.Quantity);
-                        openAvgPrice = buyHoldings.Average(h => h.Price * h.Quantity);
+                        openAvgPrice = buyHoldings.Average(h => h.Price);
                     }
                     else if (sellHoldings.Count > 0)
                     {
                         openQuantity = sellHoldings.Sum(h => -h.Quantity);
                         openAmount = buyHoldings.Sum(h => -h.Price * h.Quantity);
-                        openAvgPrice = sellHoldings.Average(h => -h.Price * h.Quantity);
+                        openAvgPrice = sellHoldings.Average(h => -h.Price);
                     }
 
                     return new PortfolioHoldingsDto
