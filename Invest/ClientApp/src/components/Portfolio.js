@@ -109,6 +109,18 @@ export function Portfolio(props) {
         company.price = price;
     }
 
+    const loadDividends = async (company) => {
+        let response = await fetch(`api/yahoofinance/dividends/${company.ticker}`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+            }
+        });
+        let dividends = await response.json();
+        company.dividends = dividends;
+        console.log(dividends);
+    }
+
     const loadPortfolio = useCallback(async () => {
         if (userData === null) return;
 
@@ -283,7 +295,7 @@ export function Portfolio(props) {
 
     const getSelectedCurrencyValue = (value, valueCurrency) => {
         return (value * currencyRates[valueCurrency][selectedCurrency]).toFixed(2);
-    }
+    }   
 
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
