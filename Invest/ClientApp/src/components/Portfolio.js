@@ -288,11 +288,9 @@ export function Portfolio(props) {
     const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
-    const getClosedPLPercent = (item) => `${(item.closedAmount / item.amount * 100).toFixed(2)}%`;
-    const getClosedPLPlusPercent = (item) => `${item.closedAmount} (${getClosedPLPercent(item)})`
 
     const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount).toFixed(2)
-    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount) / item.amount * 100).toFixed(2)}%`;
+    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount) / item.totalAmount * 100).toFixed(2)}%`;
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item)} (${getOverallPLPercent(item)})`
 
 
@@ -388,7 +386,7 @@ export function Portfolio(props) {
                                 : item.closedAmount < 0
                                     ? 'down'
                                     : ''}`}>
-                                {getClosedPLPlusPercent(item)}
+                                {item.closedAmount}
                             </td>    
 
                             <td className={`centered ${item.price && getOverallPL(item) > 0

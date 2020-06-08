@@ -304,11 +304,13 @@ namespace Invest.Controllers
                     var buyHoldings = new List<Holding>();
                     var sellHoldings = new List<Holding>();
                     var closedAmount = 0d;
+                    var totalAmount = 0d;
 
                     foreach (var trans in g)
                     {
                         if (trans.TransactionType.Type == "Buy")
                         {
+                            totalAmount += trans.Price * trans.Quantity;
                             if (sellHoldings.Count == 0)
                             {
                                 buyHoldings.Add(new Holding()
@@ -401,7 +403,8 @@ namespace Invest.Controllers
                         Quantity = openQuantity,
                         Amount = openAmount,
                         AvgPrice = openAvgPrice,
-                        ClosedAmount = closedAmount
+                        ClosedAmount = closedAmount,
+                        TotalAmount = totalAmount
                     };
 
                 }).ToList();
@@ -442,6 +445,7 @@ namespace Invest.Controllers
             public int Quantity { get; set; }
             public double Amount { get; set; }
             public double ClosedAmount { get; set; }
+            public double TotalAmount { get; set; }
         }
 
         [Authorize]
