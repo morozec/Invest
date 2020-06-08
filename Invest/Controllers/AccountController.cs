@@ -299,7 +299,7 @@ namespace Invest.Controllers
                     Ticker = g.Key,
                     AvgPrice = g.Average(t => t.Price),
                     Quantity = g.Sum(t => t.Quantity),
-                    Amount = g.Sum(t => t.Price * t.Quantity)
+                    Amount = g.Sum(t => t.Price * t.Quantity + t.Commission)
                 })
                 .ToList();
             return new PortfolioDto()

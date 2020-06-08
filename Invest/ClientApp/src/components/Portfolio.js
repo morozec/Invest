@@ -272,7 +272,7 @@ export function Portfolio(props) {
     const getDaysPL = (item) => item.price.regularMarketChange.raw * item.quantity;
     const getDaysPLPlusPerncet = (item) => `${getDaysPL(item).toFixed(2)} (${item.price.regularMarketChangePercent.fmt})`;
 
-    const getUnrealizedPL = (item) => (item.price.regularMarketPrice.raw - item.avgPrice) * item.quantity;
+    const getUnrealizedPL = (item) => item.price.regularMarketPrice.raw * item.quantity - item.amount;
     const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
