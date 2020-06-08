@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
 
@@ -61,8 +61,8 @@ export function Portfolio(props) {
         }
 
         let results = await Promise.all(promises);
-        for (let result of results){
-            const {from, to, rate} = result;
+        for (let result of results) {
+            const { from, to, rate } = result;
             rates[from][to] = rate;
             rates[to][from] = 1 / rate;
         }
@@ -324,13 +324,13 @@ export function Portfolio(props) {
                         <th className='centered'>Amount</th>
                         <th className='centered'>{"Day's P&L"}</th>
                         <th className='centered'>{"Unrealized P&L"}</th>
-                        <th></th>
+                        <th className='centered'></th>
                     </tr>
                 </thead>
                 <tbody>
                     {portfolioHoldings.map(item =>
-                        <tr key={item.ticker} className='pointer' onClick={() => handleShowTransactions(item)}>
-                            <td className='centered'>{item.ticker}</td>
+                        <tr key={item.ticker} className='pointer'>
+                            <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
                             <td className='centered'>{item.price ? item.price.currency : <em>Loading...</em>}</td>
                             <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
@@ -359,6 +359,11 @@ export function Portfolio(props) {
                                     : ''}`}>
                                 {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
                             </td>
+                            <td className='centered'>
+                                <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
+                                    Holdings
+                                </Button>
+                            </td>
                         </tr>)}
                 </tbody>
             </Table>
@@ -366,7 +371,7 @@ export function Portfolio(props) {
             <Doughnut data={{
                 labels: portfolioHoldings.map(p => p.ticker),
                 datasets: [{
-                    data: portfolioHoldings.map(p => p.price 
+                    data: portfolioHoldings.map(p => p.price
                         ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency)
                         : 0)
                 }]
