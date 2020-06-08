@@ -292,21 +292,139 @@ namespace Invest.Controllers
             var portfolio = _companyContext.Portfolios.Single(p => p.Id == id);
             var holdings = _companyContext
                 .Transactions
-                .Where(t => t.Portfolio.Id == id)
+                .Where(t => t.Portfolio.Id == id && t.TransactionType.Type == "Buy")
+                .OrderBy(t => t.Date)
+                .AsEnumerable()
                 .GroupBy(t => t.Company.Ticker)
-                .Select(g => new PortfolioHoldingsDto()
+                .Select(g =>
                 {
-                    Ticker = g.Key,
-                    AvgPrice = g.Average(t => t.Price),
-                    Quantity = g.Sum(t => t.Quantity),
-                    Amount = g.Sum(t => t.Price * t.Quantity + t.Commission)
-                })
-                .ToList();
+                    var ticker = g.Key;
+                    var buyHoldings = new List<Holding>();
+                    var sellHoldings = new List<Holding>();
+                    var closedAmount = 0d;
+
+                    foreach (var trans in g)
+                    {
+                        if (trans.TransactionType.Type == "Buy")
+                        {
+                            if (sellHoldings.Count == 0)
+                            {
+                                buyHoldings.Add(new Holding()
+                                {
+                                    Quantity = trans.Quantity,
+                                    Price = trans.Price,
+                                });
+                            }
+                            else
+                            {
+                                var buyQuantity = trans.Quantity;
+                                var removeCount = 0;
+                                foreach (var sell in sellHoldings)
+                                {
+                                    if (buyQuantity == 0) break;
+                                    if (sell.Quantity <= buyQuantity)
+                                    {
+                                        closedAmount += (sell.Price * sell.Quantity - trans.Price * sell.Quantity);
+                                        removeCount++;
+                                        buyQuantity -= sell.Quantity;
+                                    }
+                                    else
+                                    {
+                                        closedAmount += (sell.Price * buyQuantity - trans.Price * buyQuantity);
+                                        sell.Quantity -= buyQuantity;
+                                        buyQuantity = 0;
+                                    }
+                                }
+                                sellHoldings.RemoveRange(0, removeCount);
+                            }
+                        }
+                        else
+                        {
+                            if (buyHoldings.Count > 0)
+                            {
+                                var sellQuantity = trans.Quantity;
+                                var removingCount = 0;
+                                foreach (var buy in buyHoldings)
+                                {
+                                    if (sellQuantity == 0) break;
+                                    if (buy.Quantity <= sellQuantity) //open полностью продается
+                                    {
+                                        closedAmount += (trans.Price * buy.Quantity - buy.Price * buy.Quantity);
+                                        removingCount++;
+                                        sellQuantity -= buy.Quantity;
+                                    }
+                                    else //open продается частично
+                                    {
+                                        closedAmount += (trans.Price * sellQuantity - buy.Price * sellQuantity);
+                                        buy.Quantity -= sellQuantity;
+                                        sellQuantity = 0;
+                                    }
+                                }
+                                buyHoldings.RemoveRange(0, removingCount);
+                            }
+                            else
+                            {
+                                sellHoldings.Add(new Holding()
+                                {
+                                    Price = trans.Price,
+                                    Quantity = trans.Quantity,
+                                });
+                            }
+                        }
+                        
+                    }
+
+                    closedAmount -= g.Sum(t => t.Commission);
+
+                    int openQuantity = 0;
+                    double openAmount = 0d;
+                    double openAvgPrice = 0d;
+                   
+                    if (buyHoldings.Count > 0)
+                    {
+                        openQuantity = buyHoldings.Sum(h => h.Quantity);
+                        openAmount = buyHoldings.Sum(h => h.Price * h.Quantity);
+                        openAvgPrice = buyHoldings.Average(h => h.Price * h.Quantity);
+                    }
+                    else if (sellHoldings.Count > 0)
+                    {
+                        openQuantity = sellHoldings.Sum(h => -h.Quantity);
+                        openAmount = buyHoldings.Sum(h => -h.Price * h.Quantity);
+                        openAvgPrice = sellHoldings.Average(h => -h.Price * h.Quantity);
+                    }
+
+                    return new PortfolioHoldingsDto
+                    {
+                        Ticker = ticker,
+                        Quantity = openQuantity,
+                        Amount = openAmount,
+                        AvgPrice = openAvgPrice,
+                        ClosedAmount = closedAmount
+                    };
+
+                }).ToList();
+            //        return new PortfolioHoldingsDto()
+            //        {
+            //            Ticker = g.Key,
+            //            AvgPrice = g.Average(t => t.Price),
+            //            //Quantity = g.Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity),
+            //            //Amount = g.Sum(t => t.Price * t.Quantity + t.Commission)
+            //        };
+            //    })
+            //    .ToList();
+
+
             return new PortfolioDto()
             {
                 Name = portfolio.Name,
                 Holdings = holdings
             };
+        }
+
+        private class Holding
+        {
+            public int Quantity { get; set; }
+            public double Price { get; set; }
         }
 
         public class PortfolioDto
@@ -321,6 +439,7 @@ namespace Invest.Controllers
             public double AvgPrice { get; set; }
             public int Quantity { get; set; }
             public double Amount { get; set; }
+            public double ClosedAmount { get; set; }
         }
 
         [Authorize]

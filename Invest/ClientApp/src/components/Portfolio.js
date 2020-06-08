@@ -288,9 +288,12 @@ export function Portfolio(props) {
     const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
+    const getOverallPL = (item) => (item.amount + item.closedAmount).toFixed(2)
+
     const handleCurrencyChanged = (e) => {
         setSelectedCurrency(e.target.value);
     }
+
 
 
     const getSelectedCurrencyValue = (value, valueCurrency) => {
@@ -336,6 +339,8 @@ export function Portfolio(props) {
                         <th className='centered'>Amount</th>
                         <th className='centered'>{"Day's P&L"}</th>
                         <th className='centered'>{"Unrealized P&L"}</th>
+                        <th className='centered'>{"Closed P&L"}</th>
+                        <th className='centered'>{"Overall P&L"}</th>
                         <th className='centered'></th>
                     </tr>
                 </thead>
@@ -371,6 +376,8 @@ export function Portfolio(props) {
                                     : ''}`}>
                                 {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
                             </td>
+                            <td className='centered'>{item.closedAmount.toFixed(2)}</td>
+                            <td className='centered'>{getOverallPL(item)}</td>
                             <td className='centered'>
                                 <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
                                     Holdings
