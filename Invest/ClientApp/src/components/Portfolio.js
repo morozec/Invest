@@ -19,7 +19,7 @@ export function Portfolio(props) {
     const [addHoldingsCommission, setAddHoldingsCommission] = useState(0);
     const [addHoldingsDate, setAddHoldingsDate] = useState(getYYYYMMDDDate(new Date()));
 
-    const [trascationsTicker, setTransactionsTicker] = useState('');
+    const [transactionsItem, setTransactionsItem] = useState(null);
     const [transactions, setTransactions] = useState(null);
     const [curTransactionId, setCurTransactionId] = useState(null);
 
@@ -78,11 +78,17 @@ export function Portfolio(props) {
     const handleNewClose = () => {
         setShowNewDialog(false);
         setAddHoldingsSymbol('');
+        setAddHoldingsPrice(0);
+        setAddHoldingsQuantity(1);
+        setAddHoldingsCommission(0);
         setCurTransactionId(null);
     }
     const handleNewShow = (id = null) => {
         setShowNewDialog(true);
-        setAddHoldingsSymbol(trascationsTicker);
+        if (transactionsItem){
+            setAddHoldingsSymbol(transactionsItem.ticker);
+            setAddHoldingsPrice(transactionsItem.price.regularMarketPrice.raw);
+        }
         if (id !== null) setCurTransactionId(id);
     }
 
@@ -90,7 +96,7 @@ export function Portfolio(props) {
 
     const handleHoldingsClose = () => {
         setShowHoldingsDialog(false);
-        setTransactionsTicker('');
+        setTransactionsItem(null);
     }
     const handleHoldingsShow = () => setShowHoldingsDialog(true);
 
@@ -184,7 +190,7 @@ export function Portfolio(props) {
             if (showHoldingsDialog) {
                 setIsTransactionsLoading(true);
                 await addUpdateHoldings(id);
-                let transactions = await loadTransactions(trascationsTicker);
+                let transactions = await loadTransactions(transactionsItem.ticker);
                 setTransactions(transactions);
                 setIsTransactionsLoading(false);
 
@@ -232,7 +238,7 @@ export function Portfolio(props) {
         (async () => {
             handleHoldingsShow(true);
             setIsTransactionsLoading(true);
-            setTransactionsTicker(item.ticker);
+            setTransactionsItem(item);
             let transactions = await loadTransactions(item.ticker);
             setTransactions(transactions);
             setIsTransactionsLoading(false);
@@ -260,7 +266,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({ id: t.id })
         });
-        let transactions = await loadTransactions(trascationsTicker);
+        let transactions = await loadTransactions(transactionsItem.ticker);
         setTransactions(transactions);
         setIsTransactionsLoading(false);
 
@@ -581,7 +587,7 @@ export function Portfolio(props) {
 
             <Modal show={showHoldingsDialog} onHide={handleHoldingsClose} className='transactionsModal'>
                 <Modal.Header closeButton>
-                    <Modal.Title>{`${trascationsTicker} Holdings`}</Modal.Title>
+                    <Modal.Title>{`${transactionsItem !== null ? transactionsItem.ticker : ''} Holdings`}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {
