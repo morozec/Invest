@@ -293,7 +293,7 @@ export function Portfolio(props) {
         setPortfolioHoldings(pricedHoldings);
     }
 
-    const getAvgPrice = (item) => item.avgPrice.toFixed(2);
+    const getAvgPrice = (item) => (item.amount / item.quantity).toFixed(2);
 
     const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.fmt} (${item.price.regularMarketChangePercent.fmt})`
 

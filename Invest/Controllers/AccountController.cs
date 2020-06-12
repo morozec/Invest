@@ -398,21 +398,18 @@ namespace Invest.Controllers
 
                     int openQuantity = 0;
                     double openAmount = 0d;
-                    double openAvgPrice = 0d;
                     double totalAmount = 0d;
                    
                     if (buyHoldings.Count > 0)
                     {
                         openQuantity = buyHoldings.Sum(h => h.Quantity);
                         openAmount = buyHoldings.Sum(h => h.Price * h.Quantity);
-                        openAvgPrice = buyHoldings.Average(h => h.Price);
                         totalAmount = totalBuyAmount;
                     }
                     else if (sellHoldings.Count > 0)
                     {
                         openQuantity = sellHoldings.Sum(h => -h.Quantity);
                         openAmount = sellHoldings.Sum(h => -h.Price * h.Quantity);
-                        openAvgPrice = sellHoldings.Average(h => h.Price);
                         totalAmount = totalSellAmount;
                     }
 
@@ -421,7 +418,6 @@ namespace Invest.Controllers
                         Ticker = g.Key.Ticker,
                         Quantity = openQuantity,
                         Amount = openAmount,
-                        AvgPrice = openAvgPrice,
                         ClosedAmount = closedAmount,
                         TotalAmount = totalAmount,
                         Sector = g.Key.Sector,
