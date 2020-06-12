@@ -22,6 +22,7 @@ export function Portfolio(props) {
     const [addHoldingsQuantity, setAddHoldingsQuantity] = useState(1);
     const [addHoldingsCommission, setAddHoldingsCommission] = useState(0);
     const [addHoldingsDate, setAddHoldingsDate] = useState(getYYYYMMDDDate(new Date()));
+    const [addHoldingsComment, setAddHoldingsComment] = useState('');
 
     const [transactionsItem, setTransactionsItem] = useState(null);
     const [transactions, setTransactions] = useState(null);
@@ -85,6 +86,7 @@ export function Portfolio(props) {
         setAddHoldingsPrice(0);
         setAddHoldingsQuantity(1);
         setAddHoldingsCommission(0);
+        setAddHoldingsComment('');
         setCurTransactionId(null);
     }
     const handleNewShow = (id = null) => {
@@ -166,7 +168,8 @@ export function Portfolio(props) {
                 price: addHoldingsPrice,
                 commission: addHoldingsCommission,
                 date: addHoldingsDate,
-                type: addHoldingsType
+                type: addHoldingsType,
+                comment: addHoldingsComment
             })
         });
     }
@@ -260,6 +263,7 @@ export function Portfolio(props) {
         setAddHoldingsPrice(t.price);
         setAddHoldingsQuantity(t.quantity);
         setAddHoldingsCommission(t.commission);
+        setAddHoldingsComment(t.comment);
         setAddHoldingsDate(t.date.substring(0, 10))
     }
 
@@ -601,6 +605,11 @@ export function Portfolio(props) {
                             <Form.Control type='date'
                                 value={addHoldingsDate} onChange={(e) => setAddHoldingsDate(e.target.value)} />
                         </Form.Group>
+                        <Form.Group>
+                            <Form.Label>Comment</Form.Label>
+                            <Form.Control type='text'
+                                value={addHoldingsComment} onChange={(e) => setAddHoldingsComment(e.target.value)} />
+                        </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -632,6 +641,7 @@ export function Portfolio(props) {
                                             <th className='centered'>Quantity</th>
                                             <th className='centered'>Amount</th>
                                             <th className='centered'>Commission</th>
+                                            <th className='centered'>Comment</th>
                                             <th className='centered'></th>
                                         </tr>
                                     </thead>
@@ -644,6 +654,7 @@ export function Portfolio(props) {
                                                 <td className='centered fit'>{t.quantity}</td>
                                                 <td className='centered fit'>{(t.price * t.quantity).toFixed(2)}</td>
                                                 <td className='centered fit'>{t.commission}</td>
+                                                <td className='centered fit'>{t.comment}</td>
                                                 <td className='centered fit'>
                                                     <Button variant='outline-warning mr-1' onClick={() => handleEditTransaction(t)}>Edit</Button>
                                                     <Button variant='outline-danger ml-1'

@@ -12,5 +12,6 @@ namespace Model
         public double Price { get; set; }
         public double Commission { get; set; }
         public DateTime Date { get; set; }
+        public string Comment { get; set; }
     }
 }

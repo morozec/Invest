@@ -252,6 +252,7 @@ namespace Invest.Controllers
             transaction.Commission = addUpdateTransactionDto.Commission;
             transaction.Date = addUpdateTransactionDto.Date;
             transaction.TransactionType = type;
+            transaction.Comment = addUpdateTransactionDto.Comment;
 
             if (addUpdateTransactionDto.Id != null) _companyContext.Update(transaction);
             else _companyContext.Transactions.Add(transaction);
@@ -285,6 +286,7 @@ namespace Invest.Controllers
             public double Commission { get; set; }
             public DateTime Date { get; set; }
             public string Type { get; set; }
+            public string Comment { get; set; }
         }
 
         [Authorize]
