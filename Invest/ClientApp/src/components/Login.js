@@ -2,14 +2,15 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 
 function Login(props) {
-    const { userData, setUserData } = props;
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [cookies, setCookie] = useCookies(['jwt', 'name']);
 
     let type;
     if (props.location.state) {
@@ -22,7 +23,7 @@ function Login(props) {
     const handlePasswordChanged = (e) => setPassword(e.target.value);
     const handleLogin = () => {
 
-        const getUserData = async () => {
+        const getJwt = async () => {
             try {
                 setShowError(false);
                 setErrorMessage(false);
@@ -40,10 +41,8 @@ function Login(props) {
                 })
                 if (response.ok) {
                     let token = await response.text();
-                    setUserData({
-                        token,
-                        email
-                    })
+                    setCookie('jwt', token);
+                    setCookie('name', email);
                 } 
 
                 return response.ok;
@@ -53,7 +52,7 @@ function Login(props) {
             }
         }
 
-        getUserData().then((result) =>{
+        getJwt().then((result) =>{
             if (result) props.history.push('/');
         });
     }

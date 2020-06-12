@@ -3,14 +3,16 @@ import { Table, Button } from 'react-bootstrap';
 import { getBillions, getDateStringFromUnixTime } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Bar, Line } from 'react-chartjs-2';
+import { useCookies } from 'react-cookie';
 
 export function Summary(props) {
+    const [cookies] = useCookies(['jwt']);
     const [logo, setLogo] = useState(null);
     const [isInWatchList, setIsInWatchList] = useState(false);
     const [isInWatchListChecking, setIsInWatchListChecking] = useState(true);
 
     const { ticker, profile, recommendations,
-        comparingCompanies, addComparingCompany, removeComparingCompany, userData } = props;
+        comparingCompanies, addComparingCompany, removeComparingCompany } = props;
 
     useEffect(() => {
         const getLogo = () => {
@@ -30,7 +32,7 @@ export function Summary(props) {
 
    
     useEffect(() => {
-        if (!userData) return;
+        if (!cookies.jwt) return;
 
         setIsInWatchListChecking(true);
         const checkIsInWatchList = async () => {
@@ -38,7 +40,7 @@ export function Summary(props) {
             let response = await fetch(`api/account/isInWatchList/${profile.quoteType.symbol}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + userData.token
+                    'Authorization': 'Bearer ' + cookies.jwt
                 },
             });
             let result = await response.json();
@@ -49,7 +51,7 @@ export function Summary(props) {
             setIsInWatchList(result);
             setIsInWatchListChecking(false);
         })
-    }, [profile, userData])
+    }, [profile, cookies.jwt])
 
     const handleCompareClick = () => {
         addComparingCompany({
@@ -68,7 +70,7 @@ export function Summary(props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ ticker: profile.quoteType.symbol })
         }).then(response => {
@@ -84,7 +86,7 @@ export function Summary(props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ ticker: profile.quoteType.symbol })
         }).then(response => {
@@ -102,11 +104,11 @@ export function Summary(props) {
                         {comparingCompanies.some(c => c.profile.quoteType.symbol === profile.quoteType.symbol)
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
-                        {userData && !isInWatchList &&
+                        {cookies.jwt && !isInWatchList &&
                             <Button variant='outline-success' onClick={handleAddToWatchListClick} disabled={isInWatchListChecking}>
                                 Add to watch list
                             </Button>}
-                        {userData && isInWatchList &&
+                        {cookies.jwt && isInWatchList &&
                             <Button variant='outline-danger' onClick={handleDeleteFromWatchListClick} disabled={isInWatchListChecking}>
                                 Delete from watch list
                             </Button>}

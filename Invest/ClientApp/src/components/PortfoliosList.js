@@ -1,55 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button, Modal, Table, Form } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 
 export function PortfoliosList(props) {
-    const { userData } = props;
+    const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
     const [portfolios, setPortfolios] = useState([]);
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [newPortfolioName, setNewPortfolioName] = useState('New Portfolio');
+    
 
     const handleClose = () => setShowNewDialog(false);
     const handleShow = () => setShowNewDialog(true);
 
     const loadPortfolios = useCallback(async () => {
-        if (userData === null) return;
-
-        // const loadPrice = async (company) => {
-        //     let response = await fetch(`api/yahoofinance/price/${company.ticker}`, {
-        //         method: 'GET',
-        //         headers: {
-        //             "Accept": "application/json",
-        //         }
-        //     });
-        //     let result = await response.json();
-        //     company.price = result.raw;
-        // }
-
+        if (!cookies.jwt) return;
 
         let response = await fetch('api/account/portfolios', {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             }
         });
         let portfolios = await response.json();
         setPortfolios(portfolios);
 
-        // let pricedCompanies = [...companies];
-        // let promises = pricedCompanies.map(c => loadPrice(c));
-        // await Promise.all(promises);
-        // setCompanies(pricedCompanies);
-
-    }, [userData]);
+    }, [cookies.jwt]);
 
     const addPortfolio = async (name) => {
         let response = await fetch('api/account/addPortfolio', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ name })
         });
@@ -60,7 +45,7 @@ export function PortfoliosList(props) {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ id })
         });

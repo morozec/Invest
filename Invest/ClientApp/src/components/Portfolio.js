@@ -4,10 +4,12 @@ import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
 import Select, {createFilter } from 'react-select';
-import {MenuList} from './helpers/MenuList'
+import {MenuList} from './helpers/MenuList';
+import { useCookies } from 'react-cookie';
 
 export function Portfolio(props) {
-    const { userData, companies } = props;
+    const { companies } = props;
+    const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
     const [portfolioName, setPortfolioName] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
@@ -133,19 +135,19 @@ export function Portfolio(props) {
     }
 
     const loadPortfolio = useCallback(async () => {
-        if (userData === null) return;
+        if (!cookies.jwt) return;
 
         let response = await fetch(`api/account/portfolio/${portfolioId}`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
         });
         let portfolio = await response.json();
         console.log('portfolio', portfolio);
         return portfolio;
-    }, [userData]);
+    }, [cookies.jwt]);
 
     const addUpdateHoldings = async (id) => {
         console.log(addHoldingsDate, new Date(addHoldingsDate));
@@ -153,7 +155,7 @@ export function Portfolio(props) {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({
                 id: id,
@@ -231,7 +233,7 @@ export function Portfolio(props) {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
         });
         let transactions = await response.json();
@@ -267,7 +269,7 @@ export function Portfolio(props) {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ id: t.id })
         });

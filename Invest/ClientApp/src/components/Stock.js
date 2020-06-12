@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
 export function YahooFinance(props) {
-  const { userData } = props;
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState(null);
 

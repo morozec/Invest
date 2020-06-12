@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 
 export function WatchList(props) {
-    const { userData } = props;
+    const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
 
    
     const loadCompanies = useCallback(() => {
-        if (userData === null) return;
+        if (!cookies.jwt) return;
         setIsLoading(true);
 
         const loadPrice = async (company) => {
@@ -28,7 +29,7 @@ export function WatchList(props) {
                 method: 'GET',
                 headers: {
                     "Accept": "application/json",
-                    'Authorization': 'Bearer ' + userData.token
+                    'Authorization': 'Bearer ' + cookies.jwt
                 }
             });
             let companies = await response.json();            
@@ -41,7 +42,7 @@ export function WatchList(props) {
             setCompanies(pricedCompanies);
         })();
 
-    }, [userData]);
+    }, [cookies.jwt]);
 
     useEffect(() => {
         loadCompanies();
@@ -53,7 +54,7 @@ export function WatchList(props) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userData.token
+                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ ticker })
         }).then(response => {
