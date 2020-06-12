@@ -303,8 +303,8 @@ export function Portfolio(props) {
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
-    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount).toFixed(2)
-    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount) / item.totalAmount * 100).toFixed(2)}%`;
+    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends).toFixed(2)
+    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends) / item.totalAmount * 100).toFixed(2)}%`;
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item)} (${getOverallPLPercent(item)})`
 
 
