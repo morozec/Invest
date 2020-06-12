@@ -305,13 +305,14 @@ namespace Invest.Controllers
                     var buyHoldings = new List<Holding>();
                     var sellHoldings = new List<Holding>();
                     var closedAmount = 0d;
-                    var totalAmount = 0d;
+                    var totalBuyAmount = 0d;
+                    var totalSellAmount = 0d;
 
                     foreach (var trans in g)
                     {
                         if (trans.TransactionType.Type == "Buy")
                         {
-                            totalAmount += trans.Price * trans.Quantity;
+                            totalBuyAmount += trans.Price * trans.Quantity;
                             if (sellHoldings.Count == 0)
                             {
                                 buyHoldings.Add(new Holding()
@@ -343,8 +344,9 @@ namespace Invest.Controllers
                                 sellHoldings.RemoveRange(0, removeCount);
                             }
                         }
-                        else
+                        else //Sell
                         {
+                            totalSellAmount += trans.Price * trans.Quantity;
                             if (buyHoldings.Count > 0)
                             {
                                 var sellQuantity = trans.Quantity;
@@ -384,18 +386,21 @@ namespace Invest.Controllers
                     int openQuantity = 0;
                     double openAmount = 0d;
                     double openAvgPrice = 0d;
+                    double totalAmount = 0d;
                    
                     if (buyHoldings.Count > 0)
                     {
                         openQuantity = buyHoldings.Sum(h => h.Quantity);
                         openAmount = buyHoldings.Sum(h => h.Price * h.Quantity);
                         openAvgPrice = buyHoldings.Average(h => h.Price);
+                        totalAmount = totalBuyAmount;
                     }
                     else if (sellHoldings.Count > 0)
                     {
                         openQuantity = sellHoldings.Sum(h => -h.Quantity);
-                        openAmount = buyHoldings.Sum(h => -h.Price * h.Quantity);
-                        openAvgPrice = sellHoldings.Average(h => -h.Price);
+                        openAmount = sellHoldings.Sum(h => -h.Price * h.Quantity);
+                        openAvgPrice = sellHoldings.Average(h => h.Price);
+                        totalAmount = totalSellAmount;
                     }
 
                     return new PortfolioHoldingsDto
