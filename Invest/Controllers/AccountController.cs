@@ -518,5 +518,46 @@ namespace Invest.Controllers
             return _companyContext.Companies.ToList();
         }
 
+        [Authorize]
+        [HttpGet("getDividends/{portfolioId}/{companySymbol}")]
+        public double GetDividends(int portfolioId, string companySymbol)
+        {
+            var sum = 0d;
+            var startDate = _companyContext.Transactions
+                .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
+                .Min(t => t.Date);
+            long unixTimeStartDate = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
+
+            var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{companySymbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
+
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+            if (obj.chart.result == null) return 0d;
+            var events = obj.chart.result[0].events;
+            if (events == null) return 0d;
+
+            Dictionary<string, dynamic> dividendsDict = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(
+                events.dividends.ToString());
+
+            var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+            foreach (var key in dividendsDict.Keys)
+            {
+                var divDate = dtDateTime.AddSeconds((double) dividendsDict[key].date).ToLocalTime().Date;
+                double divAmount = dividendsDict[key].amount;
+                var count = _companyContext.Transactions
+                    .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
+                    .Where(t => t.Date < divDate)
+                    .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
+                sum += divAmount * count;
+            }
+
+            return sum;
+        }
+
     }
 }

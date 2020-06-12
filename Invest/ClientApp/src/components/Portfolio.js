@@ -123,15 +123,16 @@ export function Portfolio(props) {
     }
 
     const loadDividends = async (company) => {
-        let response = await fetch(`api/yahoofinance/dividends/${company.ticker}`, {
+        let response = await fetch(`api/account/getDividends/${portfolioId}/${company.ticker}`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
+                'Authorization': 'Bearer ' + cookies.jwt
             }
         });
         let dividends = await response.json();
         company.dividends = dividends;
-        console.log(dividends);
+        console.log('div', dividends);
     }
 
     const loadPortfolio = useCallback(async () => {
@@ -182,7 +183,7 @@ export function Portfolio(props) {
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
-            promises = pricedHoldings.map(item => loadPrice(item));
+            promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
             await Promise.all(promises);
             setPortfolioHoldings(pricedHoldings);
         })()
@@ -207,7 +208,7 @@ export function Portfolio(props) {
                 setPortfolioHoldings(portfolio.holdings);
 
                 let pricedHoldings = [...portfolio.holdings];
-                let promises = pricedHoldings.map(item => loadPrice(item));
+                let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))];
                 await Promise.all(promises);
                 setPortfolioHoldings(pricedHoldings);
 
@@ -222,7 +223,7 @@ export function Portfolio(props) {
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
-            let promises = pricedHoldings.map(item => loadPrice(item));
+            let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
             await Promise.all(promises);
             setPortfolioHoldings(pricedHoldings);
         })();
@@ -283,7 +284,7 @@ export function Portfolio(props) {
         setPortfolioHoldings(portfolio.holdings);
 
         let pricedHoldings = [...portfolio.holdings];
-        let promises = pricedHoldings.map(item => loadPrice(item));
+        let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
         await Promise.all(promises);
         setPortfolioHoldings(pricedHoldings);
     }
@@ -395,6 +396,7 @@ export function Portfolio(props) {
                         <th className='centered'>Amount</th>
                         <th className='centered'>{"Day's P&L"}</th>
                         <th className='centered'>{"Unrealized P&L"}</th>
+                        <th className='centered'>Dividends</th>
                         <th className='centered'>{"Closed P&L"}</th>
                         <th className='centered'>{"Overall P&L"}</th>
                         <th className='centered'></th>
@@ -435,12 +437,16 @@ export function Portfolio(props) {
                                 {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
                             </td>
 
+                            <td className='centered'>
+                                {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
+                            </td>
+
                             <td className={`centered ${item.closedAmount > 0
                                 ? 'up'
                                 : item.closedAmount < 0
                                     ? 'down'
                                     : ''}`}>
-                                {item.closedAmount}
+                                {(item.closedAmount).toFixed(2)}
                             </td>
 
                             <td className={`centered ${item.price && getOverallPL(item) > 0
