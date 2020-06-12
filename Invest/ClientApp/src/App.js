@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Route } from 'react-router';
 import { Home } from './components/Home';
 import { YahooFinance } from './components/Stock';
@@ -16,8 +16,16 @@ import { Portfolio } from './components/Portfolio';
 
 export default function App() {
 
+  const [companies, setCompanies] = useState([]);
   const [comparingCompanies, setComparingCompanies] = useState([]);
   const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    fetch(`api/account/loadCompanies`)
+      .then(response => response.json())
+      .then(companies => setCompanies(companies));
+  }, [])
+
 
   const addComparingCompany = (company) => {
     setComparingCompanies([...comparingCompanies, company]);
@@ -29,7 +37,7 @@ export default function App() {
 
   return (
     <div>
-      <NavMenu comparingCompanies={comparingCompanies} userData={userData} setUserData={setUserData} />
+      <NavMenu comparingCompanies={comparingCompanies} userData={userData} setUserData={setUserData} companies={companies} />
       <div className='layout-container'>
         <Route exact path='/' component={Home} />
         <Route path='/counter' component={Counter} />
@@ -47,7 +55,7 @@ export default function App() {
         <Route path='/login' render={props => <Login userData={userData} setUserData={setUserData} {...props} />} />
         <Route path='/watchList' render={props => <WatchList userData={userData} {...props} />} />
         <Route path='/portfolios' render={props => <PortfoliosList userData={userData} {...props} />} />
-        <Route path='/portfolio/:portfolioId' render={props => <Portfolio userData={userData} {...props} />} />
+        <Route path='/portfolio/:portfolioId' render={props => <Portfolio userData={userData} companies={companies} {...props} />} />
       </div>
     </div>
   );

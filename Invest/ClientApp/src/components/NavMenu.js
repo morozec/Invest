@@ -4,44 +4,15 @@ import { Link, withRouter } from 'react-router-dom';
 import './NavMenu.css';
 import LinkButton from '../LinkButton';
 import Select, { createFilter } from 'react-select';
-import { FixedSizeList as List } from "react-window";
+import {MenuList} from './helpers/MenuList'
 
-const height = 35;
 
-class MenuList extends Component {
-  render() {
-    const { options, children, maxHeight, getValue } = this.props;
-    const [value] = getValue();
-    const initialOffset = options.indexOf(value) * height;
 
-    // const optionsCount = options.length ? options.length : 1
-    // const optionsHeight = optionsCount > 8
-    //   ? maxHeight
-    //   : optionsCount * height
-
-    return (
-      <List
-        height={maxHeight}
-        itemCount={children.length}
-        itemSize={height}
-        initialScrollOffset={initialOffset}
-      >
-        {({ index, style }) => <div style={style} className='searchListItem'>{children[index]}</div>}
-      </List>
-    );
-  }
-}
 
 function NavMenu(props) {
-  const [companies, setCompanies] = useState([])
-  const { comparingCompanies, userData, setUserData } = props;
+  const { companies, comparingCompanies, userData, setUserData } = props;
 
-  useEffect(() => {
-    fetch(`api/account/loadCompanies`)
-      .then(response => response.json())
-      .then(companies => setCompanies(companies));
-  }, [])
-
+  
 
   const handleLogout = () => {
     setUserData(null);

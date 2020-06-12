@@ -3,9 +3,11 @@ import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'rea
 import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
+import Select, {createFilter } from 'react-select';
+import {MenuList} from './helpers/MenuList'
 
 export function Portfolio(props) {
-    const { userData } = props;
+    const { userData, companies } = props;
     const [isLoading, setIsLoading] = useState(true);
     const [portfolioName, setPortfolioName] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
@@ -13,7 +15,7 @@ export function Portfolio(props) {
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
 
     const [addHoldingsType, setAddHoldingsType] = useState('Buy');
-    const [addHoldingsSymbol, setAddHoldingsSymbol] = useState('');
+    const [addHoldingsCompany, setAddHoldingsCompany] = useState(null);
     const [addHoldingsPrice, setAddHoldingsPrice] = useState(0);
     const [addHoldingsQuantity, setAddHoldingsQuantity] = useState(1);
     const [addHoldingsCommission, setAddHoldingsCommission] = useState(0);
@@ -77,7 +79,7 @@ export function Portfolio(props) {
 
     const handleNewClose = () => {
         setShowNewDialog(false);
-        setAddHoldingsSymbol('');
+        setAddHoldingsCompany(null);
         setAddHoldingsPrice(0);
         setAddHoldingsQuantity(1);
         setAddHoldingsCommission(0);
@@ -85,8 +87,11 @@ export function Portfolio(props) {
     }
     const handleNewShow = (id = null) => {
         setShowNewDialog(true);
-        if (transactionsItem){
-            setAddHoldingsSymbol(transactionsItem.ticker);
+        if (transactionsItem) {
+            let ahCompanies = companies.filter(c => c.ticker === transactionsItem.ticker);
+            if (ahCompanies.length === 1){
+                setAddHoldingsCompany(ahCompanies[0]);
+            }
             setAddHoldingsPrice(transactionsItem.price.regularMarketPrice.raw);
         }
         if (id !== null) setCurTransactionId(id);
@@ -153,7 +158,7 @@ export function Portfolio(props) {
             body: JSON.stringify({
                 id: id,
                 portfolioId: portfolioId,
-                companyTicker: addHoldingsSymbol,
+                companyTicker: addHoldingsCompany.ticker,
                 quantity: addHoldingsQuantity,
                 price: addHoldingsPrice,
                 commission: addHoldingsCommission,
@@ -304,46 +309,50 @@ export function Portfolio(props) {
         setSelectedCurrency(e.target.value);
     }
 
-
-
     const getSelectedCurrencyValue = (value, valueCurrency) => {
         return value * currencyRates[valueCurrency][selectedCurrency];
     }
+
+    const handleAddHoldingsCompanyChanged = (company) => {
+        setAddHoldingsCompany(company);
+        let pricedCompany = {ticker:company.ticker};
+        loadPrice(pricedCompany).then(() => setAddHoldingsPrice(pricedCompany.price.regularMarketPrice.raw));
+    } 
 
 
     const currencyGroups = {};
     const industryGroups = {};
     const sectorsGroups = {};
 
-    if (portfolioHoldings !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))){
-        for (let ph of portfolioHoldings){
+    if (portfolioHoldings !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))) {
+        for (let ph of portfolioHoldings) {
             let value = getSelectedCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.price.currency);
-            if (!currencyGroups.hasOwnProperty(ph.price.currency)){
+            if (!currencyGroups.hasOwnProperty(ph.price.currency)) {
                 currencyGroups[ph.price.currency] = value;
-            }else{
+            } else {
                 currencyGroups[ph.price.currency] += value;
             }
 
-            if (ph.industry){
-                if (!industryGroups.hasOwnProperty(ph.industry)){
+            if (ph.industry) {
+                if (!industryGroups.hasOwnProperty(ph.industry)) {
                     industryGroups[ph.industry] = value;
-                }else{
+                } else {
                     industryGroups[ph.industry] += value;
                 }
             }
-            
-            if (ph.sector){
-                if (!sectorsGroups.hasOwnProperty(ph.sector)){
+
+            if (ph.sector) {
+                if (!sectorsGroups.hasOwnProperty(ph.sector)) {
                     sectorsGroups[ph.sector] = value;
-                }else{
+                } else {
                     sectorsGroups[ph.sector] += value;
                 }
             }
-           
+
         }
     }
 
-   
+
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
     let content = isLoading
@@ -550,8 +559,19 @@ export function Portfolio(props) {
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Symbol</Form.Label>
-                            <Form.Control type='text' placeholder="Enter company symbol"
-                                value={addHoldingsSymbol} onChange={(e) => setAddHoldingsSymbol(e.target.value)} />
+                            <Select
+                                className='searchFormSelect'
+                                options={companies}
+                                value={addHoldingsCompany}
+                                onChange={handleAddHoldingsCompanyChanged}
+
+                                getOptionLabel={company => `${company.exchange} : ${company.ticker} - ${company.shortName}`}
+                                getOptionValue={company => company}
+
+                                filterOption={createFilter({ ignoreAccents: false })} // this makes all the difference!
+                                components={{ MenuList }}
+                            />
+                           
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Price</Form.Label>
@@ -579,7 +599,7 @@ export function Portfolio(props) {
                     <Button variant="secondary" onClick={handleNewClose}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleAddUpdateHoldings} disabled={addHoldingsSymbol === ''}>
+                    <Button variant="primary" onClick={handleAddUpdateHoldings} disabled={addHoldingsCompany === null}>
                         Ok
                     </Button>
                 </Modal.Footer>
