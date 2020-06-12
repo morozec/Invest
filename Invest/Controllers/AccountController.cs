@@ -299,10 +299,9 @@ namespace Invest.Controllers
                 .Where(t => t.Portfolio.Id == id)
                 .OrderBy(t => t.Date)
                 .AsEnumerable()
-                .GroupBy(t => t.Company.Ticker)
+                .GroupBy(t => t.Company)
                 .Select(g =>
                 {
-                    var ticker = g.Key;
                     var buyHoldings = new List<Holding>();
                     var sellHoldings = new List<Holding>();
                     var closedAmount = 0d;
@@ -401,12 +400,14 @@ namespace Invest.Controllers
 
                     return new PortfolioHoldingsDto
                     {
-                        Ticker = ticker,
+                        Ticker = g.Key.Ticker,
                         Quantity = openQuantity,
                         Amount = openAmount,
                         AvgPrice = openAvgPrice,
                         ClosedAmount = closedAmount,
-                        TotalAmount = totalAmount
+                        TotalAmount = totalAmount,
+                        Sector = g.Key.Sector,
+                        Industry = g.Key.Industry
                     };
 
                 }).ToList();
@@ -448,6 +449,10 @@ namespace Invest.Controllers
             public double Amount { get; set; }
             public double ClosedAmount { get; set; }
             public double TotalAmount { get; set; }
+
+
+            public string Sector { get; set; }
+            public string Industry { get; set; }
         }
 
         [Authorize]

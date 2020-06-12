@@ -6,17 +6,17 @@ export function YahooFinance(props) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    (async () => {
+    // (async () => {
      
-      const response = await fetch('api/account/loadIndustries', {method:'GET'});
-      if (response.ok) {
-        console.log('test ok');
-      } else {
-        console.log('test not ok')
-      }
+    //   const response = await fetch('api/account/loadIndustries', {method:'GET'});
+    //   if (response.ok) {
+    //     console.log('test ok');
+    //   } else {
+    //     console.log('test not ok')
+    //   }
 
-      setIsLoading(false);
-    })();
+    //   setIsLoading(false);
+    // })();
   }, [])
 
 

@@ -301,11 +301,14 @@ export function Portfolio(props) {
 
 
     const getSelectedCurrencyValue = (value, valueCurrency) => {
-        return +(value * currencyRates[valueCurrency][selectedCurrency]).toFixed(2);
+        return value * currencyRates[valueCurrency][selectedCurrency];
     }
 
 
     const currencyGroups = {};
+    const industryGroups = {};
+    const sectorsGroups = {};
+
     if (portfolioHoldings !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))){
         for (let ph of portfolioHoldings){
             let value = getSelectedCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.price.currency);
@@ -314,11 +317,27 @@ export function Portfolio(props) {
             }else{
                 currencyGroups[ph.price.currency] += value;
             }
+
+            if (ph.industry){
+                if (!industryGroups.hasOwnProperty(ph.industry)){
+                    industryGroups[ph.industry] = value;
+                }else{
+                    industryGroups[ph.industry] += value;
+                }
+            }
+            
+            if (ph.sector){
+                if (!sectorsGroups.hasOwnProperty(ph.sector)){
+                    sectorsGroups[ph.sector] = value;
+                }else{
+                    sectorsGroups[ph.sector] += value;
+                }
+            }
            
         }
     }
 
-
+   
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
     let content = isLoading
@@ -348,6 +367,8 @@ export function Portfolio(props) {
                     <tr>
                         <th className='centered'>Symbol</th>
                         <th>Name</th>
+                        <th className='centered'>Sector</th>
+                        <th className='centered'>Industry</th>
                         <th className='centered'>Currency</th>
                         <th className='centered'>Price</th>
                         <th className='centered'>Day's Price Change</th>
@@ -367,6 +388,8 @@ export function Portfolio(props) {
                         <tr key={item.ticker}>
                             <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.sector}</td>
+                            <td className='centered'>{item.industry}</td>
                             <td className='centered'>{item.price ? item.price.currency : <em>Loading...</em>}</td>
                             <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
                             <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
@@ -427,7 +450,7 @@ export function Portfolio(props) {
                         labels: portfolioHoldings.map(p => p.ticker),
                         datasets: [{
                             data: portfolioHoldings.map(p => p.price
-                                ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency)
+                                ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency).toFixed(2)
                                 : 0)
                         }]
                     }}
@@ -445,7 +468,44 @@ export function Portfolio(props) {
                     <Doughnut data={{
                         labels: Object.keys(currencyGroups),
                         datasets: [{
-                            data: Object.keys(currencyGroups).map(currency => currencyGroups[currency])
+                            data: Object.keys(currencyGroups).map(currency => currencyGroups[currency].toFixed(2))
+                        }]
+                    }}
+                        options={{
+                            plugins: {
+                                colorschemes: {
+                                    scheme: 'brewer.Paired12'
+                                }
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+
+            <div className='row'>
+                <div className='col-sm-6'>
+
+                    <Doughnut data={{
+                        labels: Object.keys(sectorsGroups),
+                        datasets: [{
+                            data: Object.keys(sectorsGroups).map(sector => sectorsGroups[sector].toFixed(2))
+                        }]
+                    }}
+                        options={{
+                            plugins: {
+                                colorschemes: {
+                                    scheme: 'brewer.Paired12'
+                                }
+                            }
+                        }}
+                    />
+                </div>
+                <div className='col-sm-6'>
+
+                    <Doughnut data={{
+                        labels: Object.keys(industryGroups),
+                        datasets: [{
+                            data: Object.keys(industryGroups).map(industry => industryGroups[industry].toFixed(2))
                         }]
                     }}
                         options={{
