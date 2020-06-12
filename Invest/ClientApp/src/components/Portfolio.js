@@ -301,8 +301,22 @@ export function Portfolio(props) {
 
 
     const getSelectedCurrencyValue = (value, valueCurrency) => {
-        return (value * currencyRates[valueCurrency][selectedCurrency]).toFixed(2);
-    }   
+        return +(value * currencyRates[valueCurrency][selectedCurrency]).toFixed(2);
+    }
+
+
+    const currencyGroups = {};
+    if (portfolioHoldings !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))){
+        for (let ph of portfolioHoldings){
+            let value = getSelectedCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.price.currency);
+            if (!currencyGroups.hasOwnProperty(ph.price.currency)){
+                currencyGroups[ph.price.currency] = value;
+            }else{
+                currencyGroups[ph.price.currency] += value;
+            }
+           
+        }
+    }
 
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
@@ -387,7 +401,7 @@ export function Portfolio(props) {
                                     ? 'down'
                                     : ''}`}>
                                 {item.closedAmount}
-                            </td>    
+                            </td>
 
                             <td className={`centered ${item.price && getOverallPL(item) > 0
                                 ? 'up'
@@ -406,22 +420,45 @@ export function Portfolio(props) {
                 </tbody>
             </Table>
 
-            <Doughnut data={{
-                labels: portfolioHoldings.map(p => p.ticker),
-                datasets: [{
-                    data: portfolioHoldings.map(p => p.price
-                        ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency)
-                        : 0)
-                }]
-            }}
-                options={{
-                    plugins: {
-                        colorschemes: {
-                            scheme: 'brewer.Paired12'
-                        }
-                    }
-                }}
-            />
+            <div className='row'>
+                <div className='col-sm-6'>
+
+                    <Doughnut data={{
+                        labels: portfolioHoldings.map(p => p.ticker),
+                        datasets: [{
+                            data: portfolioHoldings.map(p => p.price
+                                ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency)
+                                : 0)
+                        }]
+                    }}
+                        options={{
+                            plugins: {
+                                colorschemes: {
+                                    scheme: 'brewer.Paired12'
+                                }
+                            }
+                        }}
+                    />
+                </div>
+                <div className='col-sm-6'>
+
+                    <Doughnut data={{
+                        labels: Object.keys(currencyGroups),
+                        datasets: [{
+                            data: Object.keys(currencyGroups).map(currency => currencyGroups[currency])
+                        }]
+                    }}
+                        options={{
+                            plugins: {
+                                colorschemes: {
+                                    scheme: 'brewer.Paired12'
+                                }
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+
         </div>
 
 
