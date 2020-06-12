@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,7 @@ using Microsoft.IdentityModel.Tokens;
 using Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RestSharp;
 
 namespace Invest.Controllers
 {
@@ -459,6 +461,50 @@ namespace Invest.Controllers
                 .OrderBy(t => t.Date)
                 .ToList();
             return transactions;
+        }
+
+        [HttpGet("loadIndustries")]
+        public IActionResult LoadIndustries()
+        {
+
+            RestClient client = null;
+            var request = new RestRequest(Method.GET);
+
+            var badCompanies = new List<Company>();
+
+            var companies = _companyContext.Companies;
+            foreach (var c in companies)
+            {
+                var url =
+                    $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{c.Ticker}?modules=" +
+                    "assetProfile";
+                if (client == null)
+                {
+                    client = new RestClient(url);
+                }
+                else
+                {
+                    client.BaseUrl = new Uri(url);
+                }
+                
+                var response = client.Execute(request);
+
+                dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                var result = obj.quoteSummary.result;
+                if (result == null)
+                {
+                    badCompanies.Add(c);
+                    continue;
+                }
+
+                var industry = result[0].assetProfile.industry;
+                var sector = result[0].assetProfile.sector;
+                c.Industry = industry;
+                c.Sector = sector;
+            }
+
+            _companyContext.SaveChanges();
+            return Ok();
         }
 
     }

@@ -12,6 +12,9 @@ namespace Model
         public string LongName { get; set; }
         public string Exchange { get; set; }
 
+        public string Industry { get; set; }
+        public string Sector { get; set; }
+
         public List<CompanyWatchList> CompanyWatchLists { get; set; }
 
         public Company(string ticker, string shortName, string longName, string exchange)

@@ -7,16 +7,8 @@ export function YahooFinance(props) {
 
   useEffect(() => {
     (async () => {
-      const init = userData === null
-        ? null
-        : {
-          method: 'GET',
-          headers: {
-            'Authorization': 'Bearer ' + userData.token
-          }
-        }
-      console.log(init)
-      const response = await fetch('api/account/addPortfolio', init);
+     
+      const response = await fetch('api/account/loadIndustries', {method:'GET'});
       if (response.ok) {
         console.log('test ok');
       } else {
