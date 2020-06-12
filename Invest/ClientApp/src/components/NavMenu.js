@@ -1,66 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { Container, Navbar, Nav, Form, Button, NavDropdown } from 'react-bootstrap';
 import { Link, withRouter } from 'react-router-dom';
 import './NavMenu.css';
 import LinkButton from '../LinkButton';
-import { DebounceInput } from 'react-debounce-input';
+import Select, { createFilter } from 'react-select';
+import { FixedSizeList as List } from "react-window";
+
+const height = 35;
+
+class MenuList extends Component {
+  render() {
+    const { options, children, maxHeight, getValue } = this.props;
+    const [value] = getValue();
+    const initialOffset = options.indexOf(value) * height;
+
+    // const optionsCount = options.length ? options.length : 1
+    // const optionsHeight = optionsCount > 8
+    //   ? maxHeight
+    //   : optionsCount * height
+
+    return (
+      <List
+        height={maxHeight}
+        itemCount={children.length}
+        itemSize={height}
+        initialScrollOffset={initialOffset}
+      >
+        {({ index, style }) => <div style={style} className='searchListItem'>{children[index]}</div>}
+      </List>
+    );
+  }
+}
 
 function NavMenu(props) {
-  const [ticker, setTicker] = useState('')
   const [companies, setCompanies] = useState([])
   const { comparingCompanies, userData, setUserData } = props;
 
-  const getCompanyFromDb = async (searchText) => {
-    const response = await fetch(`api/search/${searchText}`);
-    const data = await response.json();
-    return data;
-  }
+  useEffect(() => {
+    fetch(`api/account/loadCompanies`)
+      .then(response => response.json())
+      .then(companies => setCompanies(companies));
+  }, [])
 
-  const handleSearchChange = (e) => {
-
-    let t = e.target.value;
-    setTicker(t);
-    if (t === '') return;
-
-    let selectedOption = document.querySelector(`#stocks option[value="${t}"]`);
-    if (selectedOption !== null) {
-      let ticker = selectedOption.dataset.ticker;
-      console.log('value to send', ticker);
-      props.history.push({
-        pathname: '/stock',
-        search: `t=${ticker}`,
-      });
-    } else {
-      console.log('update list', t);
-      // const promises = [getCompanyByTicker(t), getCompanyByName(t)];
-      // Promise.all(promises).then(result => {
-      //   let companies = [];
-      //   let id = -1;
-      //   if (result[0].length > 0) {
-      //     companies.push(result[0][0]);
-      //     id = result[0][0].simId;
-      //   }
-      //   let i = 0;
-      //   while (companies.length < 10 && i < result[1].length) {
-      //     if (result[1][i].simId !== id) {
-      //       companies.push(result[1][i]);
-      //     }
-      //     i++;
-      //   }
-      //   console.log(companies);
-      //   setCompanies(companies);
-      // })
-      getCompanyFromDb(t).then(result => {
-        let companies = result.slice(0, 10);
-        console.log(companies);
-        setCompanies(companies);
-      })
-    }
-  }
 
   const handleLogout = () => {
     setUserData(null);
     props.history.push('/');
+  }
+
+  const handleCompanyChanged = (selectedCompany) => {
+    props.history.push(`/stock?t=${selectedCompany.ticker}`);
   }
 
   return (
@@ -87,25 +76,18 @@ function NavMenu(props) {
               {!userData && <Nav.Link as={Link} to={{ pathname: '/login', state: { type: 'register' } }}>Register</Nav.Link>}
 
 
-              <Form inline>
-                {/* <FormControl type="text" placeholder="Search" className="mr-sm-2" value={ticker} onChange={handleSearchChange} /> */}
-                <DebounceInput
-                  debounceTimeout={500}
-                  onChange={handleSearchChange}
-                  placeholder='Search'
-                  list='stocks'
-                  className='mr-sm-2 form-control' />
+              <Form inline className='searchForm'>
+                <Select
+                  className='searchFormSelect'
+                  options={companies}
+                  onChange={handleCompanyChanged}
 
-                <datalist id='stocks'>
-                  {companies.map((c, i) =>
-                    <option key={i}
-                      value={`${c.shortName} (${c.ticker}) - ${c.exchange}`}
-                      data-ticker={c.ticker}
-                    >
-                    </option>)}
-                </datalist>
+                  getOptionLabel={company => `${company.exchange} : ${company.ticker} - ${company.shortName}`}
+                  getOptionValue={company => company.ticker}
 
-                <LinkButton to={`/search?q=${ticker}`} variant="outline-success" disabled={ticker === ''}>Search</LinkButton>
+                  filterOption={createFilter({ ignoreAccents: false })} // this makes all the difference!
+                  components={{ MenuList }}
+                />
               </Form>
             </Nav>
           </Navbar.Collapse>

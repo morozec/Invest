@@ -306,3 +306,23 @@ td.worst{
   align-items: center;
   justify-content: space-around;
 }
+
+.searchForm{
+  min-width: 350px;
+}
+
+.searchFormSelect{
+  min-width: 100%;
+}
+
+.searchListItem{
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  /* background-color: #E01A76; */
+  max-width: 100%;
+}
+
+.searchListItem div{
+  max-width: 100%;
+}

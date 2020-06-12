@@ -512,5 +512,11 @@ namespace Invest.Controllers
             return Ok();
         }
 
+        [HttpGet("loadCompanies")]
+        public IEnumerable<Company> LoadCompanies()
+        {
+            return _companyContext.Companies.ToList();
+        }
+
     }
 }
