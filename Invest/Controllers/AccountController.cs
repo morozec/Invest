@@ -201,12 +201,22 @@ namespace Invest.Controllers
 
 
         [Authorize]
-        [HttpPost("addPortfolio")]
-        public async Task<IActionResult> AddPortfolio(AddPortfolioDto addPortfolioDto)
+        [HttpPost("addUpdatePortfolio")]
+        public async Task<IActionResult> AddPortfolio(AddUpdatePortfolioDto addUpdatePortfolioDto)
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
-            var portfolio = new Portfolio() {Name = addPortfolioDto.Name, User = user};
-            _companyContext.Portfolios.Add(portfolio);
+            Portfolio portfolio;
+            if (addUpdatePortfolioDto.Id == null)
+            {
+                portfolio = new Portfolio() { Name = addUpdatePortfolioDto.Name, User = user };
+                _companyContext.Portfolios.Add(portfolio);
+            }
+            else
+            {
+                portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdatePortfolioDto.Id);
+                portfolio.Name = addUpdatePortfolioDto.Name;
+            }
+           
             _companyContext.SaveChanges();
             return Ok();
         }
@@ -221,8 +231,9 @@ namespace Invest.Controllers
             return Ok();
         }
 
-        public class AddPortfolioDto
+        public class AddUpdatePortfolioDto
         {
+            public int? Id { get; set; }
             public string Name { get; set; }
         }
 

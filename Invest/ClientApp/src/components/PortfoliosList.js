@@ -9,9 +9,10 @@ export function PortfoliosList(props) {
     const [portfolios, setPortfolios] = useState([]);
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [newPortfolioName, setNewPortfolioName] = useState('New Portfolio');
-    
+    const [editPortfolioId, setEditPortfolioId] = useState(null);
 
-    const handleClose = () => setShowNewDialog(false);
+
+    const handleClose = () => {setShowNewDialog(false); setEditPortfolioId(null); setNewPortfolioName('New Portfolio');}
     const handleShow = () => setShowNewDialog(true);
 
     const loadPortfolios = useCallback(async () => {
@@ -29,14 +30,14 @@ export function PortfoliosList(props) {
 
     }, [cookies.jwt]);
 
-    const addPortfolio = async (name) => {
-        let response = await fetch('api/account/addPortfolio', {
+    const addUpdatePortfolio = async (name) => {
+        let response = await fetch('api/account/addUpdatePortfolio', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
                 'Authorization': 'Bearer ' + cookies.jwt
             },
-            body: JSON.stringify({ name })
+            body: JSON.stringify({ name, id:editPortfolioId })
         });
     }
 
@@ -56,16 +57,15 @@ export function PortfoliosList(props) {
         loadPortfolios().then(() => setIsLoading(false));
     }, [loadPortfolios])
 
-    const handleAddPortfolio = () => {
+    const handleAddUpdatePortfolio = () => {
         (async () => {
             setIsLoading(true);
-            await addPortfolio(newPortfolioName);
+            await addUpdatePortfolio(newPortfolioName);
             await loadPortfolios();
             setIsLoading(false);
             handleClose();
         })();
-    }
-
+    }   
     const handleDeletePortfolio = (id) => {
         (async () => {
             setIsLoading(true);
@@ -107,8 +107,12 @@ export function PortfoliosList(props) {
                                 <td className='centered'>{p.dayChangePercent !== undefined ? p.dayChangePercent : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.totalChange !== undefined ? p.totalChange : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.totalChangePercent !== undefined ? p.totalChangePercent : <em>Loading...</em>}</td>
-                                <td className='centered'><Button variant='outline-danger'
-                                    onClick={() => handleDeletePortfolio(p.id)}>Delete</Button></td>
+                                <td className='centered'>
+                                    <Button variant='outline-warning' className='mr-1'
+                                        onClick={() => {setNewPortfolioName(p.name); setEditPortfolioId(p.id); handleShow()}}>Edit</Button>
+                                    <Button variant='outline-danger' className='ml-1'
+                                        onClick={() => handleDeletePortfolio(p.id)}>Delete</Button>
+                                </td>
                             </tr>)}
                     </tbody>
                 </Table>
@@ -136,7 +140,7 @@ export function PortfoliosList(props) {
                     <Button variant="secondary" onClick={handleClose}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleAddPortfolio} disabled={newPortfolioName === ''}>
+                    <Button variant="primary" onClick={handleAddUpdatePortfolio} disabled={newPortfolioName === ''}>
                         Ok
                     </Button>
                 </Modal.Footer>
