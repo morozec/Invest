@@ -297,7 +297,7 @@ export function Portfolio(props) {
 
     const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.fmt} (${item.price.regularMarketChangePercent.fmt})`
 
-    const getMarketValue = (item) => (item.price.regularMarketPrice.raw * item.quantity).toFixed(2);
+    const getMarketValue = (item) => (item.price.regularMarketPrice.raw * item.quantity);
 
     const getDaysPL = (item) => item.price.regularMarketChange.raw * item.quantity;
     const getDaysPLPlusPerncet = (item) => `${getDaysPL(item).toFixed(2)} (${item.price.regularMarketChangePercent.fmt})`;
@@ -307,9 +307,9 @@ export function Portfolio(props) {
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
-    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends).toFixed(2)
+    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends);
     const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends) / item.totalAmount * 100).toFixed(2)}%`;
-    const getOverallPLPlusPercent = (item) => `${getOverallPL(item)} (${getOverallPLPercent(item)})`
+    const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
     const handleCurrencyChanged = (e) => {
@@ -359,6 +359,36 @@ export function Portfolio(props) {
         }
     }
 
+    let portfolioMarketValue = (() => {
+        if (!portfolioHoldings) return null;
+        if (portfolioHoldings.some(ph => !ph.price)) return null;
+        return portfolioHoldings.reduce((sum, ph) => 
+            sum + getSelectedCurrencyValue(getMarketValue(ph), ph.price.currency), 0).toFixed(2);
+    })();
+
+    let portfolioDaysPl = (() => {
+        if (!portfolioHoldings) return null;
+        if (portfolioHoldings.some(ph => !ph.price)) return null;
+        return portfolioHoldings.reduce((sum, ph) => 
+            sum + getSelectedCurrencyValue(getDaysPL(ph), ph.price.currency), 0).toFixed(2);
+    })();
+
+    let portfolioUnrealizedPl = (() => {
+        if (!portfolioHoldings) return null;
+        if (portfolioHoldings.some(ph => !ph.price)) return null;
+        return portfolioHoldings.reduce((sum, ph) => 
+            sum + getSelectedCurrencyValue(getUnrealizedPL(ph), ph.price.currency), 0).toFixed(2);
+    })();
+
+    let portfolioOverallPl = (() => {
+        if (!portfolioHoldings) return null;
+        if (portfolioHoldings.some(ph => !ph.price)) return null;
+        return portfolioHoldings.reduce((sum, ph) => 
+            sum + getSelectedCurrencyValue(getOverallPL(ph), ph.price.currency), 0).toFixed(2);
+    })();
+
+    // let portfolioCommission = portfolioHoldings.reduce((sum, ph) => sum + ph.commission, 0);
+
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
@@ -367,6 +397,30 @@ export function Portfolio(props) {
         : <div>
             <div className='statementHeader'>
                 <h1>{portfolioName}</h1>
+            </div>
+            <div className='row'>
+                <div className='col-sm-4'>
+                    <div className='d-flex'>
+                        <div>Market Value</div>
+                        <div className='ml-auto'>{portfolioMarketValue !== null ? portfolioMarketValue : <em>Loading...</em>}</div>
+                    </div>
+                    <div className='d-flex'>
+                        <div>{"Day's P&L"}</div>
+                        <div className='ml-auto'>{portfolioDaysPl !== null ? portfolioDaysPl : <em>Loading...</em>}</div>
+                    </div>
+                    <div className='d-flex'>
+                        <div>{"Unrealized P&L"}</div>
+                        <div className='ml-auto'>{portfolioUnrealizedPl !== null ? portfolioUnrealizedPl : <em>Loading...</em>}</div>
+                    </div>
+                    <div className='d-flex'>
+                        <div>{"Overall P&L"}</div>
+                        <div className='ml-auto'>{portfolioOverallPl !== null ? portfolioOverallPl : <em>Loading...</em>}</div>
+                    </div>
+                    {/* <div className='d-flex'>
+                        <div>{"Comission"}</div>
+                        <div className='ml-auto'>{portfolioCommission.toFixed(2)}</div>
+                    </div> */}
+                </div>
             </div>
 
             <div className='portfilioSettings'>
@@ -422,7 +476,7 @@ export function Portfolio(props) {
                                     : ''}`}>
                                 {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
                             </td>
-                            <td className='centered'>{item.price ? getMarketValue(item) : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.price ? getMarketValue(item).toFixed(2) : <em>Loading...</em>}</td>
                             <td className='centered'>{getAvgPrice(item)}</td>
                             <td className='centered'>{item.quantity}</td>
                             <td className='centered'>{item.amount.toFixed(2)}</td>
