@@ -402,6 +402,13 @@ export function Portfolio(props) {
         return sumCommission.toFixed(2);
     })();
 
+    let portfolioDividends = (() => {
+        if (!portfolioHoldings || !currencyRates) return null;
+        if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
+        return portfolioHoldings.reduce((sum, ph) => 
+            sum + getSelectedCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
+    })();
+
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
@@ -432,6 +439,10 @@ export function Portfolio(props) {
                     <div className='d-flex'>
                         <div>{"Comission"}</div>
                         <div className='ml-auto'>{sumPortfolioCommissions !== null ? sumPortfolioCommissions : <em>Loading...</em>}</div>
+                    </div>
+                    <div className='d-flex'>
+                        <div>{"Dividends"}</div>
+                        <div className='ml-auto'>{portfolioDividends !== null ? portfolioDividends : <em>Loading...</em>}</div>
                     </div>
                 </div>
             </div>
