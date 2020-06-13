@@ -5,7 +5,7 @@ export function PortfolioEditor(props) {
 
     const { show, handleClose, handleSave, name, currency } = props;
     const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');
-    const currencies = ['USD', 'RUB', 'EUR'];
+    const currencies = ['USD', 'EUR', 'RUB'];
     const [portfolioCurrency, setPortfolioCurrency] = useState(currency ? currency : currencies[0]);
 
     return (

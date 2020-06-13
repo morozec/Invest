@@ -31,14 +31,12 @@ export function Portfolio(props) {
     const [transactions, setTransactions] = useState(null);
     const [curTransactionId, setCurTransactionId] = useState(null);
 
-    const [selectedCurrency, setSelectedCurrency] = useState('USD');
     const [currencyRates, setCurrencyRates] = useState(null)
 
     const { portfolioId } = useParams();
 
-    const currencies = ['USD', 'RUB', 'EUR'];
-
     const [showPortfolioEditor, setShowPortfilioEditor] = useState(false);
+    const currencies = ['USD', 'EUR', 'RUB'];
 
     const loadCurrencyRate = async (from, to) => {
         let response = await fetch(`api/currency/${from}/${to}`, {
@@ -314,12 +312,8 @@ export function Portfolio(props) {
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
-    const handleCurrencyChanged = (e) => {
-        setSelectedCurrency(e.target.value);
-    }
-
-    const getSelectedCurrencyValue = (value, valueCurrency) => {
-        return value * currencyRates[valueCurrency][selectedCurrency];
+    const getPortfolioCurrencyValue = (value, valueCurrency) => {
+        return value * currencyRates[valueCurrency][portfolio.currency];
     }
 
     const handleAddHoldingsCompanyChanged = (company) => {
@@ -335,7 +329,7 @@ export function Portfolio(props) {
 
     if (portfolioHoldings !== null && currencyRates !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))) {
         for (let ph of portfolioHoldings) {
-            let value = getSelectedCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.currency);
+            let value = getPortfolioCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.currency);
             if (!currencyGroups.hasOwnProperty(ph.currency)) {
                 currencyGroups[ph.currency] = value;
             } else {
@@ -366,28 +360,28 @@ export function Portfolio(props) {
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw `WRONG CURRENCY`;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getSelectedCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioDaysPl = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getSelectedCurrencyValue(getDaysPL(ph), ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(getDaysPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioUnrealizedPl = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getSelectedCurrencyValue(getUnrealizedPL(ph), ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(getUnrealizedPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioOverallPl = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getSelectedCurrencyValue(getOverallPL(ph), ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(getOverallPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let sumPortfolioCommissions = (() => {
@@ -395,7 +389,7 @@ export function Portfolio(props) {
         console.log('comm', portfolio.commissions)
         let sumCommission = 0;
         for (let currency of Object.keys(portfolio.commissions)) {
-            sumCommission += getSelectedCurrencyValue(portfolio.commissions[currency], currency);
+            sumCommission += getPortfolioCurrencyValue(portfolio.commissions[currency], currency);
         }
         return sumCommission.toFixed(2);
     })();
@@ -404,7 +398,7 @@ export function Portfolio(props) {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getSelectedCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
     })();
 
     const savePortfolioEdit = (name, currency) => {
@@ -466,21 +460,7 @@ export function Portfolio(props) {
                         <div className='ml-auto'>{portfolioDividends !== null ? portfolioDividends : <em>Loading...</em>}</div>
                     </div>
                 </div>
-            </div>
-
-            <div className='portfilioSettings'>
-                {addHoldingsButton}
-                <Form>
-                    <Form.Group>
-                        <Form.Label>Currency</Form.Label>
-                        <Form.Control as='select' onChange={handleCurrencyChanged}>
-                            {currencies.map(c =>
-                                <option key={c}>{c}</option>
-                            )}
-                        </Form.Control>
-                    </Form.Group>
-                </Form>
-            </div>
+            </div>           
 
             <Table className='table-sm portfolioTable' bordered hover variant='light'>
                 <caption>Holdings</caption>
@@ -568,6 +548,7 @@ export function Portfolio(props) {
                         </tr>)}
                 </tbody>
             </Table>
+            {addHoldingsButton}  
 
             <div className='row'>
                 <div className='col-sm-6'>
@@ -576,7 +557,7 @@ export function Portfolio(props) {
                         labels: portfolioHoldings.map(p => p.ticker),
                         datasets: [{
                             data: portfolioHoldings.map(p => p.price
-                                ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
+                                ? getPortfolioCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
                                 : 0)
                         }]
                     }}
@@ -730,7 +711,6 @@ export function Portfolio(props) {
                         isTransactionsLoading
                             ? <p><em>Loading...</em></p>
                             : <div>
-                                {addHoldingsButton}
                                 <Table className='table-sm' bordered hover variant='light'>
                                     <thead>
                                         <tr>
@@ -764,6 +744,7 @@ export function Portfolio(props) {
                                             </tr>)}
                                     </tbody>
                                 </Table>
+                                {addHoldingsButton}
                             </div>
                     }
 
