@@ -544,15 +544,27 @@ namespace Invest.Controllers
             return _companyContext.Companies.ToList();
         }
 
+        private readonly DateTime dtDateTime = new DateTime(
+            1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        private DateTime UnixDateToDate(double unixDate)
+        {
+            return dtDateTime.AddSeconds(unixDate).ToLocalTime().Date;
+        }
+
         [Authorize]
         [HttpGet("getDividends/{portfolioId}/{companySymbol}")]
-        public double GetDividends(int portfolioId, string companySymbol)
+        public PricesDividendsDto GetDividends(int portfolioId, string companySymbol)
         {
-            var sum = 0d;
-            var startDate = _companyContext.Transactions
+            var mktValues = new List<MarketValueDto>();
+            var dividends = 0d;
+
+            var orderedTransactions = _companyContext.Transactions
+                .Include(t => t.TransactionType)
                 .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
-                .Min(t => t.Date);
-            long unixTimeStartDate = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
+                .OrderBy(t => t.Date).ToList();
+
+            var startDate = orderedTransactions[0].Date;
+            long unixTimeStartDate = ((DateTimeOffset)startDate.ToLocalTime()).ToUnixTimeSeconds();
 
             var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{companySymbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
 
@@ -562,27 +574,104 @@ namespace Invest.Controllers
 
             dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
-            if (obj.chart.result == null) return 0d;
-            var events = obj.chart.result[0].events;
-            if (events == null) return 0d;
+            if (obj.chart.result == null)
+                return new PricesDividendsDto() {MktValues = mktValues, Dividends = dividends};
 
-            Dictionary<string, dynamic> dividendsDict = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(
-                events.dividends.ToString());
+            var times = obj.chart.result[0].timestamp;
+            var close = obj.chart.result[0].indicators.quote[0].close;
+            //var events = obj.chart.result[0].events;
 
-            var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            //Dictionary<string, dynamic> dividendsDict = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(
+            //    events.dividends.ToString());
 
-            foreach (var key in dividendsDict.Keys)
+            
+
+            //foreach (var key in dividendsDict.Keys)
+            //{
+            //    var divDate = dtDateTime.AddSeconds((double) dividendsDict[key].date).ToLocalTime().Date;
+            //    double divAmount = dividendsDict[key].amount;
+            //    var count = _companyContext.Transactions
+            //        .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
+            //        .Where(t => t.Date < divDate)
+            //        .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
+            //    dividends += divAmount * count;
+            //}
+
+            var count = orderedTransactions[0].Quantity;
+            var index = 0;
+            double? lastValue = null;
+            for (var i = 1; i < orderedTransactions.Count; ++i)
             {
-                var divDate = dtDateTime.AddSeconds((double) dividendsDict[key].date).ToLocalTime().Date;
-                double divAmount = dividendsDict[key].amount;
-                var count = _companyContext.Transactions
-                    .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
-                    .Where(t => t.Date < divDate)
-                    .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
-                sum += divAmount * count;
+                var trans = orderedTransactions[i];
+                DateTime date;
+                while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+                {
+                    double mktValue;
+                    if (close[index] == null)
+                    {
+                        if (lastValue != null) mktValue = count * lastValue.Value;
+                        else mktValue = 0d;
+                    }
+                    else
+                    {
+                        lastValue = (double)close[index];
+                        mktValue = count * lastValue.Value;
+                    }
+
+                    mktValues.Add(new MarketValueDto()
+                    {
+                        Date = date,
+                        MktValue = mktValue
+                    });
+                    index++;
+                }
+
+                count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
             }
 
-            return sum;
+            
+            while (index < times.Count)
+            {
+                var date = UnixDateToDate((double)times[index]);
+                double mktValue;
+
+                if (close[index] == null)
+                {
+                    if (lastValue != null) mktValue = count * lastValue.Value;
+                    else mktValue = 0d;
+                }
+                else
+                {
+                    lastValue = (double)close[index];
+                    mktValue = count * lastValue.Value;
+                }
+                
+                mktValues.Add(new MarketValueDto()
+                {
+                    Date = date,
+                    MktValue = mktValue
+                });
+                ++index;
+            }
+
+
+            return new PricesDividendsDto()
+            {
+                MktValues = mktValues,
+                Dividends = dividends
+            };
+        }
+
+        public class PricesDividendsDto
+        {
+            public IList<MarketValueDto> MktValues { get; set; }
+            public double Dividends { get; set; }
+        }
+
+        public class MarketValueDto
+        {
+            public DateTime Date { get; set; }
+            public double MktValue { get; set; }
         }
 
     }

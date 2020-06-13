@@ -307,8 +307,8 @@ export function Portfolio(props) {
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
-    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends);
-    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends) / item.totalAmount * 100).toFixed(2)}%`;
+    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends.dividends);
+    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends.dividends) / item.totalAmount * 100).toFixed(2)}%`;
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
@@ -398,7 +398,7 @@ export function Portfolio(props) {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(ph.dividends.dividends, ph.currency), 0).toFixed(2);
     })();
 
     const savePortfolioEdit = (name, currency) => {
@@ -522,7 +522,7 @@ export function Portfolio(props) {
                             </td>
 
                             <td className='centered'>
-                                {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
+                                {item.dividends !== undefined ? (item.dividends.dividends).toFixed(2) : <em>Loading...</em>}
                             </td>
 
                             <td className={`centered ${item.closedAmount > 0
