@@ -2,17 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Button, Modal, Table, Form } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
+import { PortfolioEditor } from './PortfolioEditor';
 
 export function PortfoliosList(props) {
     const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
     const [portfolios, setPortfolios] = useState([]);
     const [showNewDialog, setShowNewDialog] = useState(false);
-    const [newPortfolioName, setNewPortfolioName] = useState('New Portfolio');
-    const [editPortfolioId, setEditPortfolioId] = useState(null);
 
-
-    const handleClose = () => {setShowNewDialog(false); setEditPortfolioId(null); setNewPortfolioName('New Portfolio');}
+    const handleClose = () => {setShowNewDialog(false);}
     const handleShow = () => setShowNewDialog(true);
 
     const loadPortfolios = useCallback(async () => {
@@ -30,14 +28,14 @@ export function PortfoliosList(props) {
 
     }, [cookies.jwt]);
 
-    const addUpdatePortfolio = async (name) => {
+    const addPortfolio = async (name, currency) => {
         let response = await fetch('api/account/addUpdatePortfolio', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
                 'Authorization': 'Bearer ' + cookies.jwt
             },
-            body: JSON.stringify({ name, id:editPortfolioId })
+            body: JSON.stringify({ name, currency })
         });
     }
 
@@ -57,10 +55,10 @@ export function PortfoliosList(props) {
         loadPortfolios().then(() => setIsLoading(false));
     }, [loadPortfolios])
 
-    const handleAddUpdatePortfolio = () => {
+    const handleAddPortfolio = (name, currency) => {
         (async () => {
             setIsLoading(true);
-            await addUpdatePortfolio(newPortfolioName);
+            await addPortfolio(name, currency);
             await loadPortfolios();
             setIsLoading(false);
             handleClose();
@@ -107,9 +105,7 @@ export function PortfoliosList(props) {
                                 <td className='centered'>{p.dayChangePercent !== undefined ? p.dayChangePercent : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.totalChange !== undefined ? p.totalChange : <em>Loading...</em>}</td>
                                 <td className='centered'>{p.totalChangePercent !== undefined ? p.totalChangePercent : <em>Loading...</em>}</td>
-                                <td className='centered'>
-                                    <Button variant='outline-warning' className='mr-1'
-                                        onClick={() => {setNewPortfolioName(p.name); setEditPortfolioId(p.id); handleShow()}}>Edit</Button>
+                                <td className='centered'>                                   
                                     <Button variant='outline-danger' className='ml-1'
                                         onClick={() => handleDeletePortfolio(p.id)}>Delete</Button>
                                 </td>
@@ -122,29 +118,7 @@ export function PortfoliosList(props) {
     return (
         <div>
             {content}
-
-            <Modal show={showNewDialog} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>New Portfolio</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group>
-                            <Form.Label>Portfolio name</Form.Label>
-                            <Form.Control type='text' placeholder="Enter portfolio name"
-                                value={newPortfolioName} onChange={(e) => setNewPortfolioName(e.target.value)} />
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" onClick={handleAddUpdatePortfolio} disabled={newPortfolioName === ''}>
-                        Ok
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <PortfolioEditor show={showNewDialog} handleClose={handleClose} handleSave={handleAddPortfolio} />
         </div>
     )
 }

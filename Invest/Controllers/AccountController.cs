@@ -208,13 +208,15 @@ namespace Invest.Controllers
             Portfolio portfolio;
             if (addUpdatePortfolioDto.Id == null)
             {
-                portfolio = new Portfolio() { Name = addUpdatePortfolioDto.Name, User = user };
+                portfolio = new Portfolio()
+                    {Name = addUpdatePortfolioDto.Name, Currency = addUpdatePortfolioDto.Currency, User = user};
                 _companyContext.Portfolios.Add(portfolio);
             }
             else
             {
                 portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdatePortfolioDto.Id);
                 portfolio.Name = addUpdatePortfolioDto.Name;
+                portfolio.Currency = addUpdatePortfolioDto.Currency;
             }
            
             _companyContext.SaveChanges();
@@ -235,6 +237,7 @@ namespace Invest.Controllers
         {
             public int? Id { get; set; }
             public string Name { get; set; }
+            public string Currency { get; set; }
         }
 
         public class PortfolioIdDto
@@ -444,6 +447,7 @@ namespace Invest.Controllers
             {
                 Name = portfolio.Name,
                 Commissions = commissions,
+                Currency = portfolio.Currency,
                 Holdings = holdings
             };
         }
@@ -457,6 +461,7 @@ namespace Invest.Controllers
         public class PortfolioDto
         {
             public string Name { get; set; }
+            public string Currency { get; set; }
             public IDictionary<string, double> Commissions { get; set; }
             public IList<PortfolioHoldingsDto> Holdings { get; set; }
         }

@@ -3,18 +3,18 @@ import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'rea
 import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
-import Select, {createFilter } from 'react-select';
-import {MenuList} from './helpers/MenuList';
+import Select, { createFilter } from 'react-select';
+import { MenuList } from './helpers/MenuList';
 import { useCookies } from 'react-cookie';
+import { PortfolioEditor } from './PortfolioEditor';
 
 export function Portfolio(props) {
     const { companies } = props;
     const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
 
-    const [portfolioName, setPortfolioName] = useState(null);
+    const [portfolio, setPortfolio] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
-    const [portfolioCommissions, setPortfolioCommissions] = useState(null);
 
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
@@ -38,6 +38,7 @@ export function Portfolio(props) {
 
     const currencies = ['USD', 'RUB', 'EUR'];
 
+    const [showPortfolioEditor, setShowPortfilioEditor] = useState(false);
 
     const loadCurrencyRate = async (from, to) => {
         let response = await fetch(`api/currency/${from}/${to}`, {
@@ -95,7 +96,7 @@ export function Portfolio(props) {
         setShowNewDialog(true);
         if (transactionsItem) {
             let ahCompanies = companies.filter(c => c.ticker === transactionsItem.ticker);
-            if (ahCompanies.length === 1){
+            if (ahCompanies.length === 1) {
                 setAddHoldingsCompany(ahCompanies[0]);
             }
             setAddHoldingsPrice(transactionsItem.price.regularMarketPrice.raw);
@@ -181,9 +182,9 @@ export function Portfolio(props) {
             setIsLoading(true);
             let promises = [loadPortfolio(), loadCurrencyRates()];
             const [portfolio, rates] = await Promise.all(promises);
-            setPortfolioName(portfolio.name);
+            setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+
             setPortfolioHoldings(portfolio.holdings);
-            setPortfolioCommissions(portfolio.commissions);
             setCurrencyRates(rates);
             setIsLoading(false);
 
@@ -209,9 +210,8 @@ export function Portfolio(props) {
 
 
                 let portfolio = await loadPortfolio();
-                setPortfolioName(portfolio.name);
+                setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
                 setPortfolioHoldings(portfolio.holdings);
-                setPortfolioCommissions(portfolio.commissions);
 
                 let pricedHoldings = [...portfolio.holdings];
                 let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))];
@@ -224,9 +224,8 @@ export function Portfolio(props) {
             setIsLoading(true);
             await addUpdateHoldings(id);
             let portfolio = await loadPortfolio();
-            setPortfolioName(portfolio.name);
+            setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
             setPortfolioHoldings(portfolio.holdings);
-            setPortfolioCommissions(portfolio.commissions);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -287,9 +286,8 @@ export function Portfolio(props) {
 
 
         let portfolio = await loadPortfolio();
-        setPortfolioName(portfolio.name);
+        setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
         setPortfolioHoldings(portfolio.holdings);
-        setPortfolioCommissions(portfolio.commissions);
 
         let pricedHoldings = [...portfolio.holdings];
         let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
@@ -326,9 +324,9 @@ export function Portfolio(props) {
 
     const handleAddHoldingsCompanyChanged = (company) => {
         setAddHoldingsCompany(company);
-        let pricedCompany = {ticker:company.ticker};
+        let pricedCompany = { ticker: company.ticker };
         loadPrice(pricedCompany).then(() => setAddHoldingsPrice(pricedCompany.price.regularMarketPrice.raw));
-    } 
+    }
 
 
     const currencyGroups = {};
@@ -367,37 +365,37 @@ export function Portfolio(props) {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw `WRONG CURRENCY`;
-        return portfolioHoldings.reduce((sum, ph) => 
+        return portfolioHoldings.reduce((sum, ph) =>
             sum + getSelectedCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioDaysPl = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
-        return portfolioHoldings.reduce((sum, ph) => 
+        return portfolioHoldings.reduce((sum, ph) =>
             sum + getSelectedCurrencyValue(getDaysPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioUnrealizedPl = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
-        return portfolioHoldings.reduce((sum, ph) => 
+        return portfolioHoldings.reduce((sum, ph) =>
             sum + getSelectedCurrencyValue(getUnrealizedPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioOverallPl = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
-        return portfolioHoldings.reduce((sum, ph) => 
+        return portfolioHoldings.reduce((sum, ph) =>
             sum + getSelectedCurrencyValue(getOverallPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let sumPortfolioCommissions = (() => {
-        if (!portfolioCommissions || !currencyRates) return null;
-        console.log('comm', portfolioCommissions)
+        if (!portfolio || !currencyRates) return null;
+        console.log('comm', portfolio.commissions)
         let sumCommission = 0;
-        for (let currency of Object.keys(portfolioCommissions)){
-            sumCommission += getSelectedCurrencyValue(portfolioCommissions[currency], currency);
+        for (let currency of Object.keys(portfolio.commissions)) {
+            sumCommission += getSelectedCurrencyValue(portfolio.commissions[currency], currency);
         }
         return sumCommission.toFixed(2);
     })();
@@ -405,10 +403,28 @@ export function Portfolio(props) {
     let portfolioDividends = (() => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
-        return portfolioHoldings.reduce((sum, ph) => 
+        return portfolioHoldings.reduce((sum, ph) =>
             sum + getSelectedCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
     })();
 
+    const savePortfolioEdit = (name, currency) => {
+        (async () => {
+            setIsLoading(true);
+            let response = await fetch('api/account/addUpdatePortfolio', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json;charset=utf-8",
+                    'Authorization': 'Bearer ' + cookies.jwt
+                },
+                body: JSON.stringify({ id:portfolioId, name, currency })
+            });
+            let portfolio = await loadPortfolio();
+            setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+
+            setIsLoading(false);
+            setShowPortfilioEditor(false);
+        })()
+    }
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
 
@@ -416,10 +432,15 @@ export function Portfolio(props) {
         ? <p><em>Loading...</em></p>
         : <div>
             <div className='statementHeader'>
-                <h1>{portfolioName}</h1>
+                <h1>{portfolio.name}</h1>
+                <Button variant='outline-warning' className='ml-2' onClick={() => setShowPortfilioEditor(true)}>Edit</Button>
             </div>
             <div className='row'>
                 <div className='col-sm-4'>
+                    <div className='d-flex'>
+                        <div>Currency</div>
+                        <div className='ml-auto'>{portfolio.currency}</div>
+                    </div>
                     <div className='d-flex'>
                         <div>Market Value</div>
                         <div className='ml-auto'>{portfolioMarketValue !== null ? portfolioMarketValue : <em>Loading...</em>}</div>
@@ -661,7 +682,7 @@ export function Portfolio(props) {
                                 filterOption={createFilter({ ignoreAccents: false })} // this makes all the difference!
                                 components={{ MenuList }}
                             />
-                           
+
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Price</Form.Label>
@@ -753,6 +774,13 @@ export function Portfolio(props) {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {portfolio &&
+                <PortfolioEditor show={showPortfolioEditor} handleClose={() => setShowPortfilioEditor(false)}
+                    handleSave={savePortfolioEdit}
+                    name={portfolio.name}
+                    currency={portfolio.currency} />
+            }
         </div>
     )
 }
