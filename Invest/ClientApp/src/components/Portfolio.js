@@ -11,8 +11,11 @@ export function Portfolio(props) {
     const { companies } = props;
     const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
+
     const [portfolioName, setPortfolioName] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
+    const [portfolioCommissions, setPortfolioCommissions] = useState(null);
+
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
 
@@ -29,7 +32,7 @@ export function Portfolio(props) {
     const [curTransactionId, setCurTransactionId] = useState(null);
 
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
-    const [currencyRates, setCurrencyRates] = useState({})
+    const [currencyRates, setCurrencyRates] = useState(null)
 
     const { portfolioId } = useParams();
 
@@ -72,7 +75,6 @@ export function Portfolio(props) {
             rates[to][from] = 1 / rate;
         }
 
-        console.log(rates);
         return rates;
     }, [])
 
@@ -153,7 +155,6 @@ export function Portfolio(props) {
     }, [cookies.jwt]);
 
     const addUpdateHoldings = async (id) => {
-        console.log(addHoldingsDate, new Date(addHoldingsDate));
         let response = await fetch('api/account/addUpdateTransaction', {
             method: 'POST',
             headers: {
@@ -182,6 +183,7 @@ export function Portfolio(props) {
             const [portfolio, rates] = await Promise.all(promises);
             setPortfolioName(portfolio.name);
             setPortfolioHoldings(portfolio.holdings);
+            setPortfolioCommissions(portfolio.commissions);
             setCurrencyRates(rates);
             setIsLoading(false);
 
@@ -209,6 +211,7 @@ export function Portfolio(props) {
                 let portfolio = await loadPortfolio();
                 setPortfolioName(portfolio.name);
                 setPortfolioHoldings(portfolio.holdings);
+                setPortfolioCommissions(portfolio.commissions);
 
                 let pricedHoldings = [...portfolio.holdings];
                 let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))];
@@ -223,6 +226,7 @@ export function Portfolio(props) {
             let portfolio = await loadPortfolio();
             setPortfolioName(portfolio.name);
             setPortfolioHoldings(portfolio.holdings);
+            setPortfolioCommissions(portfolio.commissions);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -268,7 +272,6 @@ export function Portfolio(props) {
     }
 
     const handleDeleteTransaction = async (t) => {
-        console.log(t);
         setIsTransactionsLoading(true);
         let response = await fetch(`api/account/deleteTransaction`, {
             method: 'DELETE',
@@ -286,6 +289,7 @@ export function Portfolio(props) {
         let portfolio = await loadPortfolio();
         setPortfolioName(portfolio.name);
         setPortfolioHoldings(portfolio.holdings);
+        setPortfolioCommissions(portfolio.commissions);
 
         let pricedHoldings = [...portfolio.holdings];
         let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
@@ -331,13 +335,13 @@ export function Portfolio(props) {
     const industryGroups = {};
     const sectorsGroups = {};
 
-    if (portfolioHoldings !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))) {
+    if (portfolioHoldings !== null && currencyRates !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))) {
         for (let ph of portfolioHoldings) {
-            let value = getSelectedCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.price.currency);
-            if (!currencyGroups.hasOwnProperty(ph.price.currency)) {
-                currencyGroups[ph.price.currency] = value;
+            let value = getSelectedCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.currency);
+            if (!currencyGroups.hasOwnProperty(ph.currency)) {
+                currencyGroups[ph.currency] = value;
             } else {
-                currencyGroups[ph.price.currency] += value;
+                currencyGroups[ph.currency] += value;
             }
 
             if (ph.industry) {
@@ -360,34 +364,43 @@ export function Portfolio(props) {
     }
 
     let portfolioMarketValue = (() => {
-        if (!portfolioHoldings) return null;
+        if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
+        if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw `WRONG CURRENCY`;
         return portfolioHoldings.reduce((sum, ph) => 
-            sum + getSelectedCurrencyValue(getMarketValue(ph), ph.price.currency), 0).toFixed(2);
+            sum + getSelectedCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioDaysPl = (() => {
-        if (!portfolioHoldings) return null;
+        if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) => 
-            sum + getSelectedCurrencyValue(getDaysPL(ph), ph.price.currency), 0).toFixed(2);
+            sum + getSelectedCurrencyValue(getDaysPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioUnrealizedPl = (() => {
-        if (!portfolioHoldings) return null;
+        if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) => 
-            sum + getSelectedCurrencyValue(getUnrealizedPL(ph), ph.price.currency), 0).toFixed(2);
+            sum + getSelectedCurrencyValue(getUnrealizedPL(ph), ph.currency), 0).toFixed(2);
     })();
 
     let portfolioOverallPl = (() => {
-        if (!portfolioHoldings) return null;
+        if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) => 
-            sum + getSelectedCurrencyValue(getOverallPL(ph), ph.price.currency), 0).toFixed(2);
+            sum + getSelectedCurrencyValue(getOverallPL(ph), ph.currency), 0).toFixed(2);
     })();
 
-    // let portfolioCommission = portfolioHoldings.reduce((sum, ph) => sum + ph.commission, 0);
+    let sumPortfolioCommissions = (() => {
+        if (!portfolioCommissions || !currencyRates) return null;
+        console.log('comm', portfolioCommissions)
+        let sumCommission = 0;
+        for (let currency of Object.keys(portfolioCommissions)){
+            sumCommission += getSelectedCurrencyValue(portfolioCommissions[currency], currency);
+        }
+        return sumCommission.toFixed(2);
+    })();
 
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
@@ -416,10 +429,10 @@ export function Portfolio(props) {
                         <div>{"Overall P&L"}</div>
                         <div className='ml-auto'>{portfolioOverallPl !== null ? portfolioOverallPl : <em>Loading...</em>}</div>
                     </div>
-                    {/* <div className='d-flex'>
+                    <div className='d-flex'>
                         <div>{"Comission"}</div>
-                        <div className='ml-auto'>{portfolioCommission.toFixed(2)}</div>
-                    </div> */}
+                        <div className='ml-auto'>{sumPortfolioCommissions !== null ? sumPortfolioCommissions : <em>Loading...</em>}</div>
+                    </div>
                 </div>
             </div>
 
@@ -467,7 +480,7 @@ export function Portfolio(props) {
                             <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
                             <td className='centered'>{item.sector}</td>
                             <td className='centered'>{item.industry}</td>
-                            <td className='centered'>{item.price ? item.price.currency : <em>Loading...</em>}</td>
+                            <td className='centered'>{item.currency}</td>
                             <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
                             <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
                                 ? 'up'
@@ -531,7 +544,7 @@ export function Portfolio(props) {
                         labels: portfolioHoldings.map(p => p.ticker),
                         datasets: [{
                             data: portfolioHoldings.map(p => p.price
-                                ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.price.currency).toFixed(2)
+                                ? getSelectedCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
                                 : 0)
                         }]
                     }}

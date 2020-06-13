@@ -305,6 +305,7 @@ namespace Invest.Controllers
         public PortfolioDto GetPortfolio(int id)
         {
             var portfolio = _companyContext.Portfolios.Single(p => p.Id == id);
+            var commissions = new Dictionary<string, double>();
             var holdings = _companyContext
                 .Transactions
                 .Include(t => t.Company)
@@ -320,9 +321,11 @@ namespace Invest.Controllers
                     var closedAmount = 0d;
                     var totalBuyAmount = 0d;
                     var totalSellAmount = 0d;
+                    if (!commissions.ContainsKey(g.Key.Currency)) commissions.Add(g.Key.Currency, 0d);
 
                     foreach (var trans in g)
                     {
+                        commissions[g.Key.Currency] += trans.Commission;
                         if (trans.TransactionType.Type == "Buy")
                         {
                             totalBuyAmount += trans.Price * trans.Quantity;
@@ -421,7 +424,8 @@ namespace Invest.Controllers
                         ClosedAmount = closedAmount,
                         TotalAmount = totalAmount,
                         Sector = g.Key.Sector,
-                        Industry = g.Key.Industry
+                        Industry = g.Key.Industry,
+                        Currency = g.Key.Currency
                     };
 
                 }).ToList();
@@ -439,6 +443,7 @@ namespace Invest.Controllers
             return new PortfolioDto()
             {
                 Name = portfolio.Name,
+                Commissions = commissions,
                 Holdings = holdings
             };
         }
@@ -452,6 +457,7 @@ namespace Invest.Controllers
         public class PortfolioDto
         {
             public string Name { get; set; }
+            public IDictionary<string, double> Commissions { get; set; }
             public IList<PortfolioHoldingsDto> Holdings { get; set; }
         }
 
@@ -467,6 +473,7 @@ namespace Invest.Controllers
 
             public string Sector { get; set; }
             public string Industry { get; set; }
+            public string Currency { get; set; }
         }
 
         [Authorize]
