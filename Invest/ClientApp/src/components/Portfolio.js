@@ -461,7 +461,8 @@ export function Portfolio(props) {
                     </div>
                 </div>
             </div>           
-
+            
+            <div className='mt-2'>{addHoldingsButton}</div>
             <Table className='table-sm portfolioTable' bordered hover variant='light'>
                 <caption>Holdings</caption>
                 <thead>
@@ -548,7 +549,7 @@ export function Portfolio(props) {
                         </tr>)}
                 </tbody>
             </Table>
-            {addHoldingsButton}  
+            
 
             <div className='row'>
                 <div className='col-sm-6'>
@@ -711,6 +712,7 @@ export function Portfolio(props) {
                         isTransactionsLoading
                             ? <p><em>Loading...</em></p>
                             : <div>
+                                {addHoldingsButton}
                                 <Table className='table-sm' bordered hover variant='light'>
                                     <thead>
                                         <tr>
@@ -744,7 +746,6 @@ export function Portfolio(props) {
                                             </tr>)}
                                     </tbody>
                                 </Table>
-                                {addHoldingsButton}
                             </div>
                     }
 

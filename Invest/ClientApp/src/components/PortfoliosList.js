@@ -79,10 +79,10 @@ export function PortfoliosList(props) {
         ? <p><em>Loading...</em></p>
         : portfolios.length === 0
             ? <div>
-                <p>Portfolios list is empty</p>
                 {addButton}
             </div>
             : <div>
+                {addButton}
                 <Table className='table-sm' bordered hover variant='light'>
                     <caption>Portfolios</caption>
                     <thead>
@@ -112,7 +112,6 @@ export function PortfoliosList(props) {
                             </tr>)}
                     </tbody>
                 </Table>
-                {addButton}
             </div>
 
     return (
