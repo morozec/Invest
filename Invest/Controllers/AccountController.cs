@@ -551,62 +551,171 @@ namespace Invest.Controllers
             return dtDateTime.AddSeconds(unixDate).ToLocalTime().Date;
         }
 
-        [Authorize]
-        [HttpGet("getDividends/{portfolioId}/{companySymbol}")]
-        public PricesDividendsDto GetDividends(int portfolioId, string companySymbol)
-        {
-            var mktValues = new List<MarketValueDto>();
-            var dividends = 0d;
+        //[Authorize]
+        //[HttpGet("getDividends/{portfolioId}/{companySymbol}")]
+        //public PricesDividendsDto GetDividends(int portfolioId, string companySymbol)
+        //{
+        //    var mktValues = new List<MarketValueDto>();
+        //    var dividends = 0d;
 
-            var orderedTransactions = _companyContext.Transactions
-                .Include(t => t.TransactionType)
-                .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
-                .OrderBy(t => t.Date).ToList();
+        //    var orderedTransactions = _companyContext.Transactions
+        //        .Include(t => t.TransactionType)
+        //        .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
+        //        .OrderBy(t => t.Date).ToList();
 
-            var startDate = orderedTransactions[0].Date;
-            long unixTimeStartDate = ((DateTimeOffset)startDate.ToLocalTime()).ToUnixTimeSeconds();
+        //    var startDate = orderedTransactions[0].Date;
+        //    long unixTimeStartDate = ((DateTimeOffset)startDate.ToLocalTime()).ToUnixTimeSeconds();
 
-            var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{companySymbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
+        //    var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{companySymbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
 
-            var client = new RestClient(url);
-            var request = new RestRequest(Method.GET);
-            var response = client.Execute(request);
+        //    var client = new RestClient(url);
+        //    var request = new RestRequest(Method.GET);
+        //    var response = client.Execute(request);
 
-            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+        //    dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
-            if (obj.chart.result == null)
-                return new PricesDividendsDto() {MktValues = mktValues, Dividends = dividends};
+        //    if (obj.chart.result == null)
+        //        return new PricesDividendsDto() {MktValues = mktValues, Dividends = dividends};
 
-            var times = obj.chart.result[0].timestamp;
-            var close = obj.chart.result[0].indicators.quote[0].close;
-            //var events = obj.chart.result[0].events;
-
-            //Dictionary<string, dynamic> dividendsDict = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(
-            //    events.dividends.ToString());
-
+        //    var times = obj.chart.result[0].timestamp;
+        //    var close = obj.chart.result[0].indicators.quote[0].close;
             
 
-            //foreach (var key in dividendsDict.Keys)
-            //{
-            //    var divDate = dtDateTime.AddSeconds((double) dividendsDict[key].date).ToLocalTime().Date;
-            //    double divAmount = dividendsDict[key].amount;
-            //    var count = _companyContext.Transactions
-            //        .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == companySymbol)
-            //        .Where(t => t.Date < divDate)
-            //        .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
-            //    dividends += divAmount * count;
-            //}
+        //    var count = orderedTransactions[0].Quantity;
+        //    var index = 0;
+        //    double? lastValue = null;
+        //    for (var i = 1; i < orderedTransactions.Count; ++i)
+        //    {
+        //        var trans = orderedTransactions[i];
+        //        DateTime date;
+        //        while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+        //        {
+        //            double mktValue;
+        //            if (close[index] == null)
+        //            {
+        //                if (lastValue != null) mktValue = count * lastValue.Value;
+        //                else mktValue = 0d;
+        //            }
+        //            else
+        //            {
+        //                lastValue = (double)close[index];
+        //                mktValue = count * lastValue.Value;
+        //            }
 
-            var count = orderedTransactions[0].Quantity;
-            var index = 0;
-            double? lastValue = null;
-            for (var i = 1; i < orderedTransactions.Count; ++i)
+        //            mktValues.Add(new MarketValueDto()
+        //            {
+        //                Date = date,
+        //                MktValue = mktValue
+        //            });
+        //            index++;
+        //        }
+
+        //        count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
+        //    }
+
+            
+        //    while (index < times.Count)
+        //    {
+        //        var date = UnixDateToDate((double)times[index]);
+        //        double mktValue;
+
+        //        if (close[index] == null)
+        //        {
+        //            if (lastValue != null) mktValue = count * lastValue.Value;
+        //            else mktValue = 0d;
+        //        }
+        //        else
+        //        {
+        //            lastValue = (double)close[index];
+        //            mktValue = count * lastValue.Value;
+        //        }
+                
+        //        mktValues.Add(new MarketValueDto()
+        //        {
+        //            Date = date,
+        //            MktValue = mktValue
+        //        });
+        //        ++index;
+        //    }
+
+
+        //    return new PricesDividendsDto()
+        //    {
+        //        MktValues = mktValues,
+        //        Dividends = dividends
+        //    };
+        //}
+
+
+        [Authorize]
+        [HttpGet("getDividends/{portfolioId}")]
+        public PricesDividendsDto GetDividends(int portfolioId, [FromQuery(Name = "symbols")] List<string> symbols)
+        {
+            var mktValues = new List<MarketValueDto>();
+            var dividends = new Dictionary<string, double>();
+
+            Parallel.ForEach(symbols, (symbol) =>
             {
-                var trans = orderedTransactions[i];
-                DateTime date;
-                while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+                var orderedTransactions = _companyContext.Transactions
+                .Include(t => t.TransactionType)
+                .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == symbol)
+                .OrderBy(t => t.Date).ToList();
+
+                var startDate = orderedTransactions[0].Date;
+                long unixTimeStartDate = ((DateTimeOffset)startDate.ToLocalTime()).ToUnixTimeSeconds();
+
+                var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
+
+                var client = new RestClient(url);
+                var request = new RestRequest(Method.GET);
+                var response = client.Execute(request);
+
+                dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+                if (obj.chart.result == null) return;
+
+                var times = obj.chart.result[0].timestamp;
+                var close = obj.chart.result[0].indicators.quote[0].close;
+
+
+                var count = orderedTransactions[0].Quantity;
+                var index = 0;
+                double? lastValue = null;
+                for (var i = 1; i < orderedTransactions.Count; ++i)
                 {
+                    var trans = orderedTransactions[i];
+                    DateTime date;
+                    while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+                    {
+                        double mktValue;
+                        if (close[index] == null)
+                        {
+                            if (lastValue != null) mktValue = count * lastValue.Value;
+                            else mktValue = 0d;
+                        }
+                        else
+                        {
+                            lastValue = (double)close[index];
+                            mktValue = count * lastValue.Value;
+                        }
+
+                        //mktValues.Add(new MarketValueDto()
+                        //{
+                        //    Date = date,
+                        //    MktValue = mktValue
+                        //});
+                        index++;
+                    }
+
+                    count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
+                }
+
+
+                while (index < times.Count)
+                {
+                    var date = UnixDateToDate((double)times[index]);
                     double mktValue;
+
                     if (close[index] == null)
                     {
                         if (lastValue != null) mktValue = count * lastValue.Value;
@@ -618,41 +727,14 @@ namespace Invest.Controllers
                         mktValue = count * lastValue.Value;
                     }
 
-                    mktValues.Add(new MarketValueDto()
-                    {
-                        Date = date,
-                        MktValue = mktValue
-                    });
-                    index++;
+                    //mktValues.Add(new MarketValueDto()
+                    //{
+                    //    Date = date,
+                    //    MktValue = mktValue
+                    //});
+                    ++index;
                 }
-
-                count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
-            }
-
-            
-            while (index < times.Count)
-            {
-                var date = UnixDateToDate((double)times[index]);
-                double mktValue;
-
-                if (close[index] == null)
-                {
-                    if (lastValue != null) mktValue = count * lastValue.Value;
-                    else mktValue = 0d;
-                }
-                else
-                {
-                    lastValue = (double)close[index];
-                    mktValue = count * lastValue.Value;
-                }
-                
-                mktValues.Add(new MarketValueDto()
-                {
-                    Date = date,
-                    MktValue = mktValue
-                });
-                ++index;
-            }
+            });
 
 
             return new PricesDividendsDto()
@@ -665,7 +747,7 @@ namespace Invest.Controllers
         public class PricesDividendsDto
         {
             public IList<MarketValueDto> MktValues { get; set; }
-            public double Dividends { get; set; }
+            public Dictionary<string, double> Dividends { get; set; }
         }
 
         public class MarketValueDto
