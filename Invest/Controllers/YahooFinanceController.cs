@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RestSharp;
@@ -118,6 +120,33 @@ namespace Invest.Controllers
             if (result == null) return NoContent();
 
             return Ok(result[0].price);
+        }
+
+        [HttpGet("prices")]
+        public IDictionary<string, dynamic> GetPrices([FromQuery(Name = "symbols")] List<string> symbols)
+        {
+            var prices = new Dictionary<string, dynamic>();
+            Parallel.ForEach(symbols, (symbol) =>
+            {
+                var url =
+                    $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{symbol}?modules=price";
+                var client = new RestClient(url);
+                var request = new RestRequest(Method.GET);
+                var response = client.Execute(request);
+
+                dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                var result = obj.quoteSummary.result;
+                prices.Add(symbol, result == null ? null : result[0].price);
+            });
+            //for (var i = 0; i < symbols.Count; ++i)
+            //{
+            //    var symbol = symbols[i];
+               
+            //    if (result == null) prices.Add(null);
+            //    else prices.Add(result[0].price);
+            //}
+
+            return prices;
         }
 
         [Authorize]

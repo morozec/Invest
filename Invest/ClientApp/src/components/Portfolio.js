@@ -125,6 +125,28 @@ export function Portfolio(props) {
         company.price = price;
     }
 
+    const loadAllPrices = async (companies) => {
+        let url = 'api/yahoofinance/prices?';
+        for (let company of companies) {
+            url += `symbols=${company.ticker}&`;
+        }
+        console.log(url);
+        let response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+            }
+        });
+        let prices = await response.json();
+        companies.map(c => {
+            c.price = prices[c.ticker];
+            c.dividends = {
+                mktValues: [],
+                dividends: 0
+            };
+        });
+    }
+
     const loadDividends = async (company) => {
         let response = await fetch(`api/account/getDividends/${portfolioId}/${company.ticker}`, {
             method: 'GET',
@@ -187,9 +209,17 @@ export function Portfolio(props) {
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
-            promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
-            await Promise.all(promises);
+            let t0 = performance.now();
+            await loadAllPrices(pricedHoldings);
+            let t1 = performance.now();
+            console.log('all prices time', t1 - t0);
             setPortfolioHoldings(pricedHoldings);
+
+            // promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
+            // await Promise.all(promises);
+            // setPortfolioHoldings(pricedHoldings);
+
+
         })()
     }, [loadPortfolio, loadCurrencyRates])
 
@@ -410,7 +440,7 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id:portfolioId, name, currency })
+                body: JSON.stringify({ id: portfolioId, name, currency })
             });
             let portfolio = await loadPortfolio();
             setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
@@ -460,8 +490,8 @@ export function Portfolio(props) {
                         <div className='ml-auto'>{portfolioDividends !== null ? portfolioDividends : <em>Loading...</em>}</div>
                     </div>
                 </div>
-            </div>           
-            
+            </div>
+
             <div className='mt-2'>{addHoldingsButton}</div>
             <Table className='table-sm portfolioTable' bordered hover variant='light'>
                 <caption>Holdings</caption>
@@ -549,7 +579,7 @@ export function Portfolio(props) {
                         </tr>)}
                 </tbody>
             </Table>
-            
+
 
             <div className='row'>
                 <div className='col-sm-6'>
