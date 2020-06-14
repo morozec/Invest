@@ -651,31 +651,43 @@ namespace Invest.Controllers
         [HttpGet("getDividends/{portfolioId}")]
         public PricesDividendsDto GetDividends(int portfolioId, [FromQuery(Name = "symbols")] List<string> symbols)
         {
-            var mktValues = new List<MarketValueDto>();
+            var mktValues = new Dictionary<DateTime, double>();
             var dividends = new Dictionary<string, double>();
 
-            Parallel.ForEach(symbols, (symbol) =>
-            {
-                var orderedTransactions = _companyContext.Transactions
+            var allOrderedTransactions = _companyContext.Transactions
                 .Include(t => t.TransactionType)
-                .Where(t => t.Portfolio.Id == portfolioId && t.Company.Ticker == symbol)
+                .Include(t => t.Company)
+                .Where(t => t.Portfolio.Id == portfolioId)
                 .OrderBy(t => t.Date).ToList();
 
-                var startDate = orderedTransactions[0].Date;
-                long unixTimeStartDate = ((DateTimeOffset)startDate.ToLocalTime()).ToUnixTimeSeconds();
+            var yahooResults = new Dictionary<string, dynamic>();
+            Parallel.ForEach(symbols, (symbol) =>
+            {
+                var startDate = allOrderedTransactions.First(t => t.Company.Ticker == symbol).Date;
+                long unixTimeStartDate = ((DateTimeOffset) startDate.ToLocalTime()).ToUnixTimeSeconds();
 
-                var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
+                var url =
+                    $"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?period1={unixTimeStartDate}&period2=9999999999&interval=1d&events=div";
 
                 var client = new RestClient(url);
                 var request = new RestRequest(Method.GET);
                 var response = client.Execute(request);
 
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
-
                 if (obj.chart.result == null) return;
+                yahooResults.Add(symbol, obj.chart.result[0]);
+            });
 
-                var times = obj.chart.result[0].timestamp;
-                var close = obj.chart.result[0].indicators.quote[0].close;
+
+            foreach (var symbol in symbols)
+            {
+                dividends.Add(symbol, 0d);//TODO
+                var orderedTransactions = allOrderedTransactions.Where(
+                    t => t.Company.Ticker == symbol).ToList();
+
+                var yahooResult = yahooResults[symbol];
+                var times = yahooResult.timestamp;
+                var close = yahooResult.indicators.quote[0].close;
 
 
                 var count = orderedTransactions[0].Quantity;
@@ -699,6 +711,8 @@ namespace Invest.Controllers
                             mktValue = count * lastValue.Value;
                         }
 
+                        if (!mktValues.ContainsKey(date))mktValues.Add(date, mktValue);
+                        else mktValues[date] += mktValue;
                         //mktValues.Add(new MarketValueDto()
                         //{
                         //    Date = date,
@@ -727,6 +741,8 @@ namespace Invest.Controllers
                         mktValue = count * lastValue.Value;
                     }
 
+                    if (!mktValues.ContainsKey(date)) mktValues.Add(date, mktValue);
+                    else mktValues[date] += mktValue;
                     //mktValues.Add(new MarketValueDto()
                     //{
                     //    Date = date,
@@ -734,7 +750,7 @@ namespace Invest.Controllers
                     //});
                     ++index;
                 }
-            });
+            }
 
 
             return new PricesDividendsDto()
@@ -746,7 +762,7 @@ namespace Invest.Controllers
 
         public class PricesDividendsDto
         {
-            public IList<MarketValueDto> MktValues { get; set; }
+            public IDictionary<DateTime, double> MktValues { get; set; }
             public Dictionary<string, double> Dividends { get; set; }
         }
 

@@ -130,7 +130,7 @@ export function Portfolio(props) {
         for (let company of companies) {
             url += `symbols=${company.ticker}&`;
         }
-        console.log(url);
+        
         let response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -138,26 +138,31 @@ export function Portfolio(props) {
             }
         });
         let prices = await response.json();
-        companies.map(c => {
-            c.price = prices[c.ticker];
-            c.dividends = {
-                mktValues: [],
-                dividends: 0
-            };
-        });
+        return prices;
+        // companies.map(c => c.price = prices[c.ticker]);
     }
 
-    const loadDividends = async (company) => {
-        let response = await fetch(`api/account/getDividends/${portfolioId}/${company.ticker}`, {
+    const loadDividends = async (companies) => {
+        let url = `api/account/getDividends/${portfolioId}?`;
+        for (let company of companies){
+            url += `symbols=${company.ticker}&`;
+        }
+        console.log(url);
+
+        let response = await fetch(url, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
                 'Authorization': 'Bearer ' + cookies.jwt
             }
         });
+
         let dividends = await response.json();
-        company.dividends = dividends;
-        console.log('div', dividends);
+        console.log('market values', dividends.mktValues);
+        return dividends.dividends;
+        // companies.map(c => c.dividends = dividends.dividends[c.ticker]);
+
+        
     }
 
     const loadPortfolio = useCallback(async () => {
@@ -210,7 +215,8 @@ export function Portfolio(props) {
 
             let pricedHoldings = [...portfolio.holdings];
             let t0 = performance.now();
-            await loadAllPrices(pricedHoldings);
+            let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+            pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
             let t1 = performance.now();
             console.log('all prices time', t1 - t0);
             setPortfolioHoldings(pricedHoldings);
@@ -242,8 +248,8 @@ export function Portfolio(props) {
                 setPortfolioHoldings(portfolio.holdings);
 
                 let pricedHoldings = [...portfolio.holdings];
-                let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))];
-                await Promise.all(promises);
+                let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+                pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
                 setPortfolioHoldings(pricedHoldings);
 
                 return;
@@ -257,8 +263,8 @@ export function Portfolio(props) {
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
-            let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
-            await Promise.all(promises);
+            let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+            pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
             setPortfolioHoldings(pricedHoldings);
         })();
     }
@@ -318,8 +324,8 @@ export function Portfolio(props) {
         setPortfolioHoldings(portfolio.holdings);
 
         let pricedHoldings = [...portfolio.holdings];
-        let promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
-        await Promise.all(promises);
+        let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+        pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
         setPortfolioHoldings(pricedHoldings);
     }
 
@@ -337,8 +343,8 @@ export function Portfolio(props) {
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
-    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends.dividends);
-    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends.dividends) / item.totalAmount * 100).toFixed(2)}%`;
+    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends);
+    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends) / item.totalAmount * 100).toFixed(2)}%`;
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
@@ -428,7 +434,7 @@ export function Portfolio(props) {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getPortfolioCurrencyValue(ph.dividends.dividends, ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
     })();
 
     const savePortfolioEdit = (name, currency) => {
@@ -552,7 +558,7 @@ export function Portfolio(props) {
                             </td>
 
                             <td className='centered'>
-                                {item.dividends !== undefined ? (item.dividends.dividends).toFixed(2) : <em>Loading...</em>}
+                                {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
                             </td>
 
                             <td className={`centered ${item.closedAmount > 0
