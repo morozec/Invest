@@ -674,7 +674,7 @@ namespace Invest.Controllers
                 var response = client.Execute(request);
 
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
-                if (obj.chart.result == null) return;
+                if (obj == null || obj.chart.result == null) return;
                 yahooResults.Add(symbol, obj.chart.result[0]);
             });
 
@@ -682,6 +682,7 @@ namespace Invest.Controllers
             foreach (var symbol in symbols)
             {
                 dividends.Add(symbol, 0d);//TODO
+                if (!yahooResults.ContainsKey(symbol)) continue;
                 var orderedTransactions = allOrderedTransactions.Where(
                     t => t.Company.Ticker == symbol).ToList();
 
