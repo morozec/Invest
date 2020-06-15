@@ -489,7 +489,7 @@ namespace Invest.Controllers
                 .Transactions
                 .Include(t => t.TransactionType)
                 .Where(t => t.Portfolio.Id == id && t.Company.Ticker == symbol)
-                .OrderBy(t => t.Date)
+                .OrderByDescending(t => t.Date)
                 .ToList();
             return transactions;
         }
