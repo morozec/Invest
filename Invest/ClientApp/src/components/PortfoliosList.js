@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Button, Modal, Table, Form } from 'react-bootstrap'
+import { Button, Table } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
@@ -29,7 +29,7 @@ export function PortfoliosList(props) {
     }, [cookies.jwt]);
 
     const addPortfolio = async (name, currency) => {
-        let response = await fetch('api/account/addUpdatePortfolio', {
+        await fetch('api/account/addUpdatePortfolio', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
@@ -40,7 +40,7 @@ export function PortfoliosList(props) {
     }
 
     const deletePortfolio = async (id) => {
-        let response = await fetch('api/account/deletePortfolio', {
+        await fetch('api/account/deletePortfolio', {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",

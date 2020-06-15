@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
@@ -10,7 +10,7 @@ function Login(props) {
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [cookies, setCookie] = useCookies(['jwt', 'name']);
+    const [, setCookie] = useCookies(['jwt', 'name']);
 
     let type;
     if (props.location.state) {

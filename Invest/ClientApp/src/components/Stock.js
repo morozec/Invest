@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 export function YahooFinance(props) {
   const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState(null);
+  // const [data, setData] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -24,7 +24,7 @@ export function YahooFinance(props) {
   if (isLoading) {
     content = <p><em>Loading...</em></p>;
   } else {
-    content = data
+    content = <p><em>Loaded</em></p>;
   }
 
 

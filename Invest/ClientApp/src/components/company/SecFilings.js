@@ -42,7 +42,7 @@ export function SecFilings(props) {
                             <td className='centered'>{filing.date}</td>
                             <td className='centered'>{filing.type}</td>
                             <td className='centered'>{filing.title}</td>
-                            <td className='centered'><a href={filing.edgarUrl} target="_blank">Link</a></td>
+                            <td className='centered'><a href={filing.edgarUrl} target="_blank" rel="noopener noreferrer">Link</a></td>
                         </tr>
                     )}
                 </tbody>

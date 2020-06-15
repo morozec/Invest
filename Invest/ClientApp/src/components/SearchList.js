@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, Link, withRouter } from 'react-router-dom';
-import { Container, ListGroup, Table } from 'react-bootstrap';
+import { useLocation, withRouter } from 'react-router-dom';
+import { Container, Table } from 'react-bootstrap';
 
 function SearchList(props) {
     const [companies, setCompanies] = useState([]);

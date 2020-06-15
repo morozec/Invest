@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect } from 'react'
 import { Table, Button, Modal } from 'react-bootstrap';
-import { RatioHelper, GROUPS } from './../RatiosHelper';
+import { GROUPS } from './../RatiosHelper';
 import { Link } from 'react-router-dom';
 
 export function Comparing(props) {
@@ -28,7 +28,7 @@ export function Comparing(props) {
 
         setVisibility(startVisibility);
         setVisibilityTmp(startVisibility);
-    }, [])
+    }, [recommendationsNames])
 
     const getIndexClass = (companyIndex, companyValue, allCompaniesValues) => {
         const min = Math.min(...allCompaniesValues);

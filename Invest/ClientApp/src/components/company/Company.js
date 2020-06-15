@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
-import { StatementData } from './statement-data/StatementData';
 import { Ratios } from './Ratios';
 import { Summary } from './Summary';
 import { News } from './News';
-import { SharesAggregated } from './SharesAggregated'
 import { useLocation } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
-import { getDateStringFromUnixTime } from '../../helpers';
-import { IncomeTable } from './statement-data/IncomeTable';
 import { Financials } from './yahoo-financials/Financials';
 import { Dividends } from './Dividends';
 import {SecFilings} from './SecFilings'
@@ -22,9 +18,6 @@ function Company(props) {
 
   // const [ratios, setRatios] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
-
-  const [sharesAggregatedBasicData, setSharesAggregatedBasicData] = useState(null);
-  const [sharesAggregatedDilutedData, setSharesAggregatedDilutedData] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
 

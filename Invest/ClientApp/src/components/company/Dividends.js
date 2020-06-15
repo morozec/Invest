@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { getDateStringFromUnixTime } from '../../helpers';
 import { Table } from 'react-bootstrap';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 
 export function Dividends(props) {
     const { ticker, isActive } = props;

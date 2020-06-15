@@ -41,7 +41,7 @@ export function Portfolio(props) {
     const [industryGroups, setIndustryGroups] = useState({});
     const [sectorsGroups, setSectorsGroups] = useState({});
 
-    const currencies = ['USD', 'EUR', 'RUB'];
+    
 
     const loadCurrencyRate = async (from, to) => {
         let response = await fetch(`api/currency/${from}/${to}`, {
@@ -56,6 +56,7 @@ export function Portfolio(props) {
     }
 
     const loadCurrencyRates = useCallback(async () => {
+        const currencies = ['USD', 'EUR', 'RUB'];
         let rates = {};
         let promises = [];
         for (let i = 0; i < currencies.length; ++i) {
@@ -81,10 +82,6 @@ export function Portfolio(props) {
 
         return rates;
     }, [])
-
-    // useEffect(() => {
-    //     loadCurrencyRates();
-    // }, [loadCurrencyRates])
 
     const handleNewClose = () => {
         setShowNewDialog(false);
@@ -147,7 +144,7 @@ export function Portfolio(props) {
         // companies.map(c => c.price = prices[c.ticker]);
     }
 
-    const loadDividends = async (companies) => {
+    const loadDividends = useCallback(async (companies) => {
         let url = `api/account/getDividends/${portfolioId}?`;
         for (let company of companies) {
             url += `symbols=${company.ticker}&`;
@@ -166,9 +163,7 @@ export function Portfolio(props) {
         console.log('market values', dividends.mktValues);
         return dividends.dividends;
         // companies.map(c => c.dividends = dividends.dividends[c.ticker]);
-
-
-    }
+    }, [portfolioId, cookies.jwt])
 
     const loadPortfolio = useCallback(async () => {
         if (!cookies.jwt) return;
@@ -183,10 +178,10 @@ export function Portfolio(props) {
         let portfolio = await response.json();
         console.log('portfolio', portfolio);
         return portfolio;
-    }, [cookies.jwt]);
+    }, [portfolioId, cookies.jwt]);
 
     const addUpdateHoldings = async (id) => {
-        let response = await fetch('api/account/addUpdateTransaction', {
+        await fetch('api/account/addUpdateTransaction', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
@@ -221,7 +216,10 @@ export function Portfolio(props) {
             let pricedHoldings = [...portfolio.holdings];
             let t0 = performance.now();
             let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-            pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
+            for (let ph of pricedHoldings){
+                ph.price = prices[ph.ticker]; 
+                ph.dividends = dividends[ph.ticker]
+            }
             let t1 = performance.now();
             console.log('all prices time', t1 - t0);
             setPortfolioHoldings(pricedHoldings);
@@ -232,7 +230,7 @@ export function Portfolio(props) {
 
 
         })()
-    }, [loadPortfolio, loadCurrencyRates])
+    }, [loadPortfolio, loadCurrencyRates, loadDividends])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -254,7 +252,10 @@ export function Portfolio(props) {
 
                 let pricedHoldings = [...portfolio.holdings];
                 let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-                pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
+                for (let ph of pricedHoldings){
+                    ph.price = prices[ph.ticker]; 
+                    ph.dividends = dividends[ph.ticker];
+                }
                 setPortfolioHoldings(pricedHoldings);
 
                 return;
@@ -269,7 +270,10 @@ export function Portfolio(props) {
 
             let pricedHoldings = [...portfolio.holdings];
             let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-            pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
+            for (let ph of pricedHoldings){
+                ph.price = prices[ph.ticker]; 
+                ph.dividends = dividends[ph.ticker];
+            }
             setPortfolioHoldings(pricedHoldings);
         })();
     }
@@ -311,7 +315,7 @@ export function Portfolio(props) {
 
     const handleDeleteTransaction = async (t) => {
         setIsTransactionsLoading(true);
-        let response = await fetch(`api/account/deleteTransaction`, {
+        await fetch(`api/account/deleteTransaction`, {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
@@ -330,7 +334,10 @@ export function Portfolio(props) {
 
         let pricedHoldings = [...portfolio.holdings];
         let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-        pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
+        for (let ph of pricedHoldings){
+            ph.price = prices[ph.ticker]; 
+            ph.dividends = dividends[ph.ticker];
+        }
         setPortfolioHoldings(pricedHoldings);
     }
 
@@ -353,9 +360,9 @@ export function Portfolio(props) {
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
-    const getPortfolioCurrencyValue = (value, valueCurrency) => {
-        return value * currencyRates[valueCurrency][portfolio.currency];
-    }
+    const getPortfolioCurrencyValue = useCallback( (value, valueCurrency) => {
+        return portfolio ? value * currencyRates[valueCurrency][portfolio.currency] : null;
+    }, [currencyRates, portfolio])
 
     const handleAddHoldingsCompanyChanged = (company) => {
         setAddHoldingsCompany(company);
@@ -405,13 +412,13 @@ export function Portfolio(props) {
         setSectorsGroups(sg);
 
 
-    }, [portfolioHoldings, currencyRates])
+    }, [portfolioHoldings, currencyRates, getPortfolioCurrencyValue])//TODO: currency changed
    
 
     const getPortfolioMarketValue = () => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
-        if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw `WRONG CURRENCY`;
+        if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw new Error("WRONG CURRENCY");
         return portfolioHoldings.reduce((sum, ph) =>
             sum + getPortfolioCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
     };
@@ -457,7 +464,7 @@ export function Portfolio(props) {
     const savePortfolioEdit = (name, currency) => {
         (async () => {
             setIsLoading(true);
-            let response = await fetch('api/account/addUpdatePortfolio', {
+            await fetch('api/account/addUpdatePortfolio', {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json;charset=utf-8",

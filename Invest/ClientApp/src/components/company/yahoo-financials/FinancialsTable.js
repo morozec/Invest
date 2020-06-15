@@ -23,11 +23,7 @@ export function FinancialsTable(props) {
         setExpanded(newExpanded);
     }
 
-    const getSum = (index, j) => {
-        let sum = index.children.reduce((s, child) => s + financials.data[child.name][j], 0);
-        return sum;
-    }
-
+    
     const getIndexRow = (index, displayLevel = 0) => {
         return (
             <Fragment key={index.name}>

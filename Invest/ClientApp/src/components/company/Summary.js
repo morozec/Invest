@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect } from 'react';
 import { Table, Button } from 'react-bootstrap';
-import { getBillions, getDateStringFromUnixTime } from '../../helpers';
+import { getDateStringFromUnixTime } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Bar, Line } from 'react-chartjs-2';
 import { useCookies } from 'react-cookie';
