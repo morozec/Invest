@@ -36,6 +36,11 @@ export function Portfolio(props) {
     const { portfolioId } = useParams();
 
     const [showPortfolioEditor, setShowPortfilioEditor] = useState(false);
+
+    const [currencyGroups, setCurrencyGroups] = useState({});
+    const [industryGroups, setIndustryGroups] = useState({});
+    const [sectorsGroups, setSectorsGroups] = useState({});
+
     const currencies = ['USD', 'EUR', 'RUB'];
 
     const loadCurrencyRate = async (from, to) => {
@@ -130,7 +135,7 @@ export function Portfolio(props) {
         for (let company of companies) {
             url += `symbols=${company.ticker}&`;
         }
-        
+
         let response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -144,7 +149,7 @@ export function Portfolio(props) {
 
     const loadDividends = async (companies) => {
         let url = `api/account/getDividends/${portfolioId}?`;
-        for (let company of companies){
+        for (let company of companies) {
             url += `symbols=${company.ticker}&`;
         }
         console.log(url);
@@ -162,7 +167,7 @@ export function Portfolio(props) {
         return dividends.dividends;
         // companies.map(c => c.dividends = dividends.dividends[c.ticker]);
 
-        
+
     }
 
     const loadPortfolio = useCallback(async () => {
@@ -216,7 +221,7 @@ export function Portfolio(props) {
             let pricedHoldings = [...portfolio.holdings];
             let t0 = performance.now();
             let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-            pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
+            pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
             let t1 = performance.now();
             console.log('all prices time', t1 - t0);
             setPortfolioHoldings(pricedHoldings);
@@ -249,7 +254,7 @@ export function Portfolio(props) {
 
                 let pricedHoldings = [...portfolio.holdings];
                 let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-                pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
+                pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
                 setPortfolioHoldings(pricedHoldings);
 
                 return;
@@ -264,7 +269,7 @@ export function Portfolio(props) {
 
             let pricedHoldings = [...portfolio.holdings];
             let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-            pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
+            pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
             setPortfolioHoldings(pricedHoldings);
         })();
     }
@@ -325,7 +330,7 @@ export function Portfolio(props) {
 
         let pricedHoldings = [...portfolio.holdings];
         let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-        pricedHoldings.map(ph => {ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker]});
+        pricedHoldings.map(ph => { ph.price = prices[ph.ticker]; ph.dividends = dividends[ph.ticker] });
         setPortfolioHoldings(pricedHoldings);
     }
 
@@ -359,68 +364,80 @@ export function Portfolio(props) {
     }
 
 
-    const currencyGroups = {};
-    const industryGroups = {};
-    const sectorsGroups = {};
+    useEffect(() => {
+        if (!portfolioHoldings || !currencyRates || portfolioHoldings.some(ph => !ph.price)) {
+            setCurrencyGroups({});
+            setIndustryGroups({});
+            setSectorsGroups({});
+            return;
+        }
 
-    if (portfolioHoldings !== null && currencyRates !== null && portfolioHoldings.every(ph => ph.hasOwnProperty('price'))) {
+        let cg = {};
+        let ig = {};
+        let sg = {};
+
         for (let ph of portfolioHoldings) {
             let value = getPortfolioCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.currency);
-            if (!currencyGroups.hasOwnProperty(ph.currency)) {
-                currencyGroups[ph.currency] = value;
+            if (!cg.hasOwnProperty(ph.currency)) {
+                cg[ph.currency] = value;
             } else {
-                currencyGroups[ph.currency] += value;
+                cg[ph.currency] += value;
             }
 
             if (ph.industry) {
-                if (!industryGroups.hasOwnProperty(ph.industry)) {
-                    industryGroups[ph.industry] = value;
+                if (!ig.hasOwnProperty(ph.industry)) {
+                    ig[ph.industry] = value;
                 } else {
-                    industryGroups[ph.industry] += value;
+                    ig[ph.industry] += value;
                 }
             }
 
             if (ph.sector) {
-                if (!sectorsGroups.hasOwnProperty(ph.sector)) {
-                    sectorsGroups[ph.sector] = value;
+                if (!sg.hasOwnProperty(ph.sector)) {
+                    sg[ph.sector] = value;
                 } else {
-                    sectorsGroups[ph.sector] += value;
+                    sg[ph.sector] += value;
                 }
             }
-
         }
-    }
+        setCurrencyGroups(cg);
+        setIndustryGroups(ig);
+        setSectorsGroups(sg);
 
-    let portfolioMarketValue = (() => {
+
+    }, [portfolioHoldings, currencyRates])
+   
+
+    const getPortfolioMarketValue = () => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw `WRONG CURRENCY`;
         return portfolioHoldings.reduce((sum, ph) =>
             sum + getPortfolioCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
-    })();
+    };
 
-    let portfolioDaysPl = (() => {
+    const getPortfolioDaysPl = () => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
             sum + getPortfolioCurrencyValue(getDaysPL(ph), ph.currency), 0).toFixed(2);
-    })();
+    };
 
-    let portfolioUnrealizedPl = (() => {
+    const getPortfolioUnrealizedPl = () => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
             sum + getPortfolioCurrencyValue(getUnrealizedPL(ph), ph.currency), 0).toFixed(2);
-    })();
+    }
 
-    let portfolioOverallPl = (() => {
+    const getPortfolioOverallPl = () => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
             sum + getPortfolioCurrencyValue(getOverallPL(ph), ph.currency), 0).toFixed(2);
-    })();
+    }
 
-    let sumPortfolioCommissions = (() => {
+    const getSumPortfolioCommissions = () => {
         if (!portfolio || !currencyRates) return null;
         console.log('comm', portfolio.commissions)
         let sumCommission = 0;
@@ -428,14 +445,14 @@ export function Portfolio(props) {
             sumCommission += getPortfolioCurrencyValue(portfolio.commissions[currency], currency);
         }
         return sumCommission.toFixed(2);
-    })();
+    }
 
-    let portfolioDividends = (() => {
+    const getPortfolioDividends = () => {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
             sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
-    })();
+    }
 
     const savePortfolioEdit = (name, currency) => {
         (async () => {
@@ -473,27 +490,27 @@ export function Portfolio(props) {
                     </div>
                     <div className='d-flex'>
                         <div>Market Value</div>
-                        <div className='ml-auto'>{portfolioMarketValue !== null ? portfolioMarketValue : <em>Loading...</em>}</div>
+                        <div className='ml-auto'>{getPortfolioMarketValue() ?? <em>Loading...</em>}</div>
                     </div>
                     <div className='d-flex'>
                         <div>{"Day's P&L"}</div>
-                        <div className='ml-auto'>{portfolioDaysPl !== null ? portfolioDaysPl : <em>Loading...</em>}</div>
+                        <div className='ml-auto'>{getPortfolioDaysPl() ?? <em>Loading...</em>}</div>
                     </div>
                     <div className='d-flex'>
                         <div>{"Unrealized P&L"}</div>
-                        <div className='ml-auto'>{portfolioUnrealizedPl !== null ? portfolioUnrealizedPl : <em>Loading...</em>}</div>
+                        <div className='ml-auto'>{getPortfolioUnrealizedPl() ?? <em>Loading...</em>}</div>
                     </div>
                     <div className='d-flex'>
                         <div>{"Overall P&L"}</div>
-                        <div className='ml-auto'>{portfolioOverallPl !== null ? portfolioOverallPl : <em>Loading...</em>}</div>
+                        <div className='ml-auto'>{getPortfolioOverallPl() ?? <em>Loading...</em>}</div>
                     </div>
                     <div className='d-flex'>
                         <div>{"Comission"}</div>
-                        <div className='ml-auto'>{sumPortfolioCommissions !== null ? sumPortfolioCommissions : <em>Loading...</em>}</div>
+                        <div className='ml-auto'>{getSumPortfolioCommissions() ?? <em>Loading...</em>}</div>
                     </div>
                     <div className='d-flex'>
                         <div>{"Dividends"}</div>
-                        <div className='ml-auto'>{portfolioDividends !== null ? portfolioDividends : <em>Loading...</em>}</div>
+                        <div className='ml-auto'>{getPortfolioDividends() ?? <em>Loading...</em>}</div>
                     </div>
                 </div>
             </div>
