@@ -681,7 +681,7 @@ namespace Invest.Controllers
 
             foreach (var symbol in symbols)
             {
-                dividends.Add(symbol, 0d);//TODO
+                
                 if (!yahooResults.ContainsKey(symbol)) continue;
                 var orderedTransactions = allOrderedTransactions.Where(
                     t => t.Company.Ticker == symbol).ToList();
@@ -690,67 +690,80 @@ namespace Invest.Controllers
                 var times = yahooResult.timestamp;
                 var close = yahooResult.indicators.quote[0].close;
 
-
-                var count = orderedTransactions[0].Quantity;
-                var index = 0;
-                double? lastValue = null;
-                for (var i = 1; i < orderedTransactions.Count; ++i)
+                if (yahooResult.events != null)
                 {
-                    var trans = orderedTransactions[i];
-                    DateTime date;
-                    while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+                    Dictionary<string, dynamic> curDividends =
+                        JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(
+                            yahooResult.events.dividends.ToString());
+
+                    var curDividendsSum = 0d;
+                    foreach (var key in curDividends.Keys)
                     {
-                        double mktValue;
-                        if (close[index] == null)
-                        {
-                            if (lastValue != null) mktValue = count * lastValue.Value;
-                            else mktValue = 0d;
-                        }
-                        else
-                        {
-                            lastValue = (double)close[index];
-                            mktValue = count * lastValue.Value;
-                        }
-
-                        if (!mktValues.ContainsKey(date))mktValues.Add(date, mktValue);
-                        else mktValues[date] += mktValue;
-                        //mktValues.Add(new MarketValueDto()
-                        //{
-                        //    Date = date,
-                        //    MktValue = mktValue
-                        //});
-                        index++;
+                        var divDate = UnixDateToDate((double)curDividends[key].date);
+                        double divAmount = curDividends[key].amount;
+                        var count = orderedTransactions
+                            .Where(t => t.Date < divDate)
+                            .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
+                        curDividendsSum += divAmount * count;
                     }
-
-                    count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
+                    dividends.Add(symbol, curDividendsSum);
                 }
-
-
-                while (index < times.Count)
+                else
                 {
-                    var date = UnixDateToDate((double)times[index]);
-                    double mktValue;
-
-                    if (close[index] == null)
-                    {
-                        if (lastValue != null) mktValue = count * lastValue.Value;
-                        else mktValue = 0d;
-                    }
-                    else
-                    {
-                        lastValue = (double)close[index];
-                        mktValue = count * lastValue.Value;
-                    }
-
-                    if (!mktValues.ContainsKey(date)) mktValues.Add(date, mktValue);
-                    else mktValues[date] += mktValue;
-                    //mktValues.Add(new MarketValueDto()
-                    //{
-                    //    Date = date,
-                    //    MktValue = mktValue
-                    //});
-                    ++index;
+                    dividends.Add(symbol, 0d);
                 }
+               
+
+                //var count = orderedTransactions[0].Quantity;
+                //var index = 0;
+                //double? lastValue = null;
+                //for (var i = 1; i < orderedTransactions.Count; ++i)
+                //{
+                //    var trans = orderedTransactions[i];
+                //    DateTime date;
+                //    while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+                //    {
+                //        double mktValue;
+                //        if (close[index] == null)
+                //        {
+                //            if (lastValue != null) mktValue = count * lastValue.Value;
+                //            else mktValue = 0d;
+                //        }
+                //        else
+                //        {
+                //            lastValue = (double)close[index];
+                //            mktValue = count * lastValue.Value;
+                //        }
+
+                //        if (!mktValues.ContainsKey(date))mktValues.Add(date, mktValue);
+                //        else mktValues[date] += mktValue;
+                //        index++;
+                //    }
+
+                //    count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
+                //}
+
+
+                //while (index < times.Count)
+                //{
+                //    var date = UnixDateToDate((double)times[index]);
+                //    double mktValue;
+
+                //    if (close[index] == null)
+                //    {
+                //        if (lastValue != null) mktValue = count * lastValue.Value;
+                //        else mktValue = 0d;
+                //    }
+                //    else
+                //    {
+                //        lastValue = (double)close[index];
+                //        mktValue = count * lastValue.Value;
+                //    }
+
+                //    if (!mktValues.ContainsKey(date)) mktValues.Add(date, mktValue);
+                //    else mktValues[date] += mktValue;
+                //    ++index;
+                //}
             }
 
 
