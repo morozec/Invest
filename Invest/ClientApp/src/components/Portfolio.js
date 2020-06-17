@@ -384,6 +384,7 @@ export function Portfolio(props) {
         let sg = {};
 
         for (let ph of portfolioHoldings) {
+            if (ph.quantity <= 0) continue;
             let value = getPortfolioCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.currency);
             if (!cg.hasOwnProperty(ph.currency)) {
                 cg[ph.currency] = value;
@@ -683,9 +684,9 @@ export function Portfolio(props) {
                         <div className='col-sm-6'>
 
                             <Doughnut data={{
-                                labels: portfolioHoldings.map(p => p.ticker),
+                                labels: portfolioHoldings.filter(ph => ph.quantity > 0).map(p => p.ticker),
                                 datasets: [{
-                                    data: portfolioHoldings.map(p => p.price
+                                    data: portfolioHoldings.filter(ph => ph.quantity > 0).map(p => p.price
                                         ? getPortfolioCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
                                         : 0)
                                 }]
