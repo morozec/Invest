@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table } from 'react-bootstrap';
+import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table, Tabs, Tab } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
@@ -41,7 +41,7 @@ export function Portfolio(props) {
     const [industryGroups, setIndustryGroups] = useState({});
     const [sectorsGroups, setSectorsGroups] = useState({});
 
-    
+
 
     const loadCurrencyRate = async (from, to) => {
         let response = await fetch(`api/currency/${from}/${to}`, {
@@ -216,8 +216,8 @@ export function Portfolio(props) {
             let pricedHoldings = [...portfolio.holdings];
             let t0 = performance.now();
             let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-            for (let ph of pricedHoldings){
-                ph.price = prices[ph.ticker]; 
+            for (let ph of pricedHoldings) {
+                ph.price = prices[ph.ticker];
                 ph.dividends = dividends[ph.ticker]
             }
             let t1 = performance.now();
@@ -252,8 +252,8 @@ export function Portfolio(props) {
 
                 let pricedHoldings = [...portfolio.holdings];
                 let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-                for (let ph of pricedHoldings){
-                    ph.price = prices[ph.ticker]; 
+                for (let ph of pricedHoldings) {
+                    ph.price = prices[ph.ticker];
                     ph.dividends = dividends[ph.ticker];
                 }
                 setPortfolioHoldings(pricedHoldings);
@@ -270,8 +270,8 @@ export function Portfolio(props) {
 
             let pricedHoldings = [...portfolio.holdings];
             let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-            for (let ph of pricedHoldings){
-                ph.price = prices[ph.ticker]; 
+            for (let ph of pricedHoldings) {
+                ph.price = prices[ph.ticker];
                 ph.dividends = dividends[ph.ticker];
             }
             setPortfolioHoldings(pricedHoldings);
@@ -334,8 +334,8 @@ export function Portfolio(props) {
 
         let pricedHoldings = [...portfolio.holdings];
         let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
-        for (let ph of pricedHoldings){
-            ph.price = prices[ph.ticker]; 
+        for (let ph of pricedHoldings) {
+            ph.price = prices[ph.ticker];
             ph.dividends = dividends[ph.ticker];
         }
         setPortfolioHoldings(pricedHoldings);
@@ -360,7 +360,7 @@ export function Portfolio(props) {
     const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
-    const getPortfolioCurrencyValue = useCallback( (value, valueCurrency) => {
+    const getPortfolioCurrencyValue = useCallback((value, valueCurrency) => {
         return portfolio ? value * currencyRates[valueCurrency][portfolio.currency] : null;
     }, [currencyRates, portfolio])
 
@@ -413,7 +413,7 @@ export function Portfolio(props) {
 
 
     }, [portfolioHoldings, currencyRates, getPortfolioCurrencyValue])//TODO: currency changed
-   
+
 
     const getPortfolioMarketValue = () => {
         if (!portfolioHoldings || !currencyRates) return null;
@@ -522,170 +522,243 @@ export function Portfolio(props) {
                 </div>
             </div>
 
-            <div className='mt-2'>{addHoldingsButton}</div>
-            <Table className='table-sm portfolioTable' bordered hover variant='light'>
-                <caption>Holdings</caption>
-                <thead>
-                    <tr>
-                        <th className='centered'>Symbol</th>
-                        <th>Name</th>
-                        <th className='centered'>Sector</th>
-                        <th className='centered'>Industry</th>
-                        <th className='centered'>Currency</th>
-                        <th className='centered'>Price</th>
-                        <th className='centered'>Day's Price Change</th>
-                        <th className='centered'>Mkt Value</th>
-                        <th className='centered'>Avg Price</th>
-                        <th className='centered'>Quantity</th>
-                        <th className='centered'>Amount</th>
-                        <th className='centered'>{"Day's P&L"}</th>
-                        <th className='centered'>{"Unrealized P&L"}</th>
-                        <th className='centered'>Dividends</th>
-                        <th className='centered'>{"Closed P&L"}</th>
-                        <th className='centered'>{"Overall P&L"}</th>
-                        <th className='centered'></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {portfolioHoldings.map(item =>
-                        <tr key={item.ticker}>
-                            <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
-                            <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
-                            <td className='centered'>{item.sector}</td>
-                            <td className='centered'>{item.industry}</td>
-                            <td className='centered'>{item.currency}</td>
-                            <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
-                            <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
-                                ? 'up'
-                                : item.price && item.price.regularMarketChange.raw < 0
-                                    ? 'down'
-                                    : ''}`}>
-                                {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
-                            </td>
-                            <td className='centered'>{item.price ? getMarketValue(item).toFixed(2) : <em>Loading...</em>}</td>
-                            <td className='centered'>{getAvgPrice(item)}</td>
-                            <td className='centered'>{item.quantity}</td>
-                            <td className='centered'>{item.amount.toFixed(2)}</td>
-                            <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
-                                ? 'up'
-                                : item.price && item.price.regularMarketChange.raw < 0
-                                    ? 'down'
-                                    : ''}`}>
-                                {item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}
-                            </td>
-                            <td className={`centered ${item.price && getUnrealizedPL(item) > 0
-                                ? 'up'
-                                : item.price && getUnrealizedPL(item) < 0
-                                    ? 'down'
-                                    : ''}`}>
-                                {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
-                            </td>
+            <Tabs defaultActiveKey="holdings">
+                <Tab eventKey="holdings" title="Holdings">
+                    <div className='mt-2'>{addHoldingsButton}</div>
+                    <Table className='table-sm portfolioTable' bordered hover variant='light'>
+                        <thead>
+                            <tr>
+                                <th className='centered'>Symbol</th>
+                                <th>Name</th>
+                                <th className='centered'>Sector</th>
+                                <th className='centered'>Industry</th>
+                                <th className='centered'>Currency</th>
+                                <th className='centered'>Price</th>
+                                <th className='centered'>Day's Price Change</th>
+                                <th className='centered'>Mkt Value</th>
+                                <th className='centered'>Avg Price</th>
+                                <th className='centered'>Quantity</th>
+                                <th className='centered'>Amount</th>
+                                <th className='centered'>{"Day's P&L"}</th>
+                                <th className='centered'>{"Unrealized P&L"}</th>
+                                <th className='centered'>Dividends</th>
+                                <th className='centered'>{"Closed P&L"}</th>
+                                <th className='centered'>{"Overall P&L"}</th>
+                                <th className='centered'></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {portfolioHoldings.filter(ph => ph.quantity !== 0).map(item =>
+                                <tr key={item.ticker}>
+                                    <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
+                                    <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
+                                    <td className='centered'>{item.sector}</td>
+                                    <td className='centered'>{item.industry}</td>
+                                    <td className='centered'>{item.currency}</td>
+                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        ? 'up'
+                                        : item.price && item.price.regularMarketChange.raw < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
+                                    </td>
+                                    <td className='centered'>{item.price ? getMarketValue(item).toFixed(2) : <em>Loading...</em>}</td>
+                                    <td className='centered'>{getAvgPrice(item)}</td>
+                                    <td className='centered'>{item.quantity}</td>
+                                    <td className='centered'>{item.amount.toFixed(2)}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        ? 'up'
+                                        : item.price && item.price.regularMarketChange.raw < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}
+                                    </td>
+                                    <td className={`centered ${item.price && getUnrealizedPL(item) > 0
+                                        ? 'up'
+                                        : item.price && getUnrealizedPL(item) < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
+                                    </td>
 
-                            <td className='centered'>
-                                {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
-                            </td>
+                                    <td className='centered'>
+                                        {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
+                                    </td>
 
-                            <td className={`centered ${item.closedAmount > 0
-                                ? 'up'
-                                : item.closedAmount < 0
-                                    ? 'down'
-                                    : ''}`}>
-                                {(item.closedAmount).toFixed(2)}
-                            </td>
+                                    <td className={`centered ${item.closedAmount > 0
+                                        ? 'up'
+                                        : item.closedAmount < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {(item.closedAmount).toFixed(2)}
+                                    </td>
 
-                            <td className={`centered ${item.price && getOverallPL(item) > 0
-                                ? 'up'
-                                : item.price && getOverallPL(item) < 0
-                                    ? 'down'
-                                    : ''}`}>
-                                {item.price ? getOverallPLPlusPercent(item) : <em>Loading...</em>}
-                            </td>
+                                    <td className={`centered ${item.price && getOverallPL(item) > 0
+                                        ? 'up'
+                                        : item.price && getOverallPL(item) < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getOverallPLPlusPercent(item) : <em>Loading...</em>}
+                                    </td>
 
-                            <td className='centered'>
-                                <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
-                                    Holdings
+                                    <td className='centered'>
+                                        <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
+                                            Holdings
                                 </Button>
-                            </td>
-                        </tr>)}
-                </tbody>
-            </Table>
+                                    </td>
+                                </tr>)}
+                        </tbody>
+                    </Table>
 
 
-            <div className='row'>
-                <div className='col-sm-6'>
+                </Tab>
+                <Tab eventKey="closed" title="Closed">
+                    <Table className='table-sm portfolioTable' bordered hover variant='light'>
+                        <thead>
+                            <tr>
+                                <th className='centered'>Symbol</th>
+                                <th>Name</th>
+                                <th className='centered'>Sector</th>
+                                <th className='centered'>Industry</th>
+                                <th className='centered'>Currency</th>
+                                <th className='centered'>Price</th>
+                                <th className='centered'>Day's Price Change</th>
+                                <th className='centered'>Dividends</th>
+                                <th className='centered'>{"Closed P&L"}</th>
+                                <th className='centered'>{"Overall P&L"}</th>
+                                <th className='centered'></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {portfolioHoldings.filter(ph => ph.quantity === 0).map(item =>
+                                <tr key={item.ticker}>
+                                    <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
+                                    <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
+                                    <td className='centered'>{item.sector}</td>
+                                    <td className='centered'>{item.industry}</td>
+                                    <td className='centered'>{item.currency}</td>
+                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        ? 'up'
+                                        : item.price && item.price.regularMarketChange.raw < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
+                                    </td>
 
-                    <Doughnut data={{
-                        labels: portfolioHoldings.map(p => p.ticker),
-                        datasets: [{
-                            data: portfolioHoldings.map(p => p.price
-                                ? getPortfolioCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
-                                : 0)
-                        }]
-                    }}
-                        options={{
-                            plugins: {
-                                colorschemes: {
-                                    scheme: 'brewer.Paired12'
-                                }
-                            }
-                        }}
-                    />
-                </div>
-                <div className='col-sm-6'>
+                                    <td className='centered'>
+                                        {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
+                                    </td>
 
-                    <Doughnut data={{
-                        labels: Object.keys(currencyGroups),
-                        datasets: [{
-                            data: Object.keys(currencyGroups).map(currency => currencyGroups[currency].toFixed(2))
-                        }]
-                    }}
-                        options={{
-                            plugins: {
-                                colorschemes: {
-                                    scheme: 'brewer.Paired12'
-                                }
-                            }
-                        }}
-                    />
-                </div>
-            </div>
+                                    <td className={`centered ${item.closedAmount > 0
+                                        ? 'up'
+                                        : item.closedAmount < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {(item.closedAmount).toFixed(2)}
+                                    </td>
 
-            <div className='row'>
-                <div className='col-sm-6'>
+                                    <td className={`centered ${item.price && getOverallPL(item) > 0
+                                        ? 'up'
+                                        : item.price && getOverallPL(item) < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getOverallPLPlusPercent(item) : <em>Loading...</em>}
+                                    </td>
 
-                    <Doughnut data={{
-                        labels: Object.keys(sectorsGroups),
-                        datasets: [{
-                            data: Object.keys(sectorsGroups).map(sector => sectorsGroups[sector].toFixed(2))
-                        }]
-                    }}
-                        options={{
-                            plugins: {
-                                colorschemes: {
-                                    scheme: 'brewer.Paired12'
-                                }
-                            }
-                        }}
-                    />
-                </div>
-                <div className='col-sm-6'>
+                                    <td className='centered'>
+                                        <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
+                                            Holdings
+                                </Button>
+                                    </td>
+                                </tr>)}
+                        </tbody>
+                    </Table>
 
-                    <Doughnut data={{
-                        labels: Object.keys(industryGroups),
-                        datasets: [{
-                            data: Object.keys(industryGroups).map(industry => industryGroups[industry].toFixed(2))
-                        }]
-                    }}
-                        options={{
-                            plugins: {
-                                colorschemes: {
-                                    scheme: 'brewer.Paired12'
-                                }
-                            }
-                        }}
-                    />
-                </div>
-            </div>
+
+                </Tab>
+                <Tab eventKey="analysis" title="Analysis">
+                    <div className='row'>
+                        <div className='col-sm-6'>
+
+                            <Doughnut data={{
+                                labels: portfolioHoldings.map(p => p.ticker),
+                                datasets: [{
+                                    data: portfolioHoldings.map(p => p.price
+                                        ? getPortfolioCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
+                                        : 0)
+                                }]
+                            }}
+                                options={{
+                                    plugins: {
+                                        colorschemes: {
+                                            scheme: 'brewer.Paired12'
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className='col-sm-6'>
+
+                            <Doughnut data={{
+                                labels: Object.keys(currencyGroups),
+                                datasets: [{
+                                    data: Object.keys(currencyGroups).map(currency => currencyGroups[currency].toFixed(2))
+                                }]
+                            }}
+                                options={{
+                                    plugins: {
+                                        colorschemes: {
+                                            scheme: 'brewer.Paired12'
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className='row'>
+                        <div className='col-sm-6'>
+
+                            <Doughnut data={{
+                                labels: Object.keys(sectorsGroups),
+                                datasets: [{
+                                    data: Object.keys(sectorsGroups).map(sector => sectorsGroups[sector].toFixed(2))
+                                }]
+                            }}
+                                options={{
+                                    plugins: {
+                                        colorschemes: {
+                                            scheme: 'brewer.Paired12'
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className='col-sm-6'>
+
+                            <Doughnut data={{
+                                labels: Object.keys(industryGroups),
+                                datasets: [{
+                                    data: Object.keys(industryGroups).map(industry => industryGroups[industry].toFixed(2))
+                                }]
+                            }}
+                                options={{
+                                    plugins: {
+                                        colorschemes: {
+                                            scheme: 'brewer.Paired12'
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                </Tab>
+            </Tabs>
+
+
 
         </div>
 
