@@ -599,7 +599,7 @@ export function Portfolio(props) {
                                         : item.price && getOverallPL(item) < 0
                                             ? 'down'
                                             : ''}`}>
-                                        {item.price ? getOverallPLPlusPercent(item) : <em>Loading...</em>}
+                                        {item.price ? getOverallPL(item).toFixed(2) : <em>Loading...</em>}
                                     </td>
 
                                     <td className='centered'>
@@ -664,7 +664,7 @@ export function Portfolio(props) {
                                         : item.price && getOverallPL(item) < 0
                                             ? 'down'
                                             : ''}`}>
-                                        {item.price ? getOverallPLPlusPercent(item) : <em>Loading...</em>}
+                                        {item.price ? getOverallPL(item).toFixed(2) : <em>Loading...</em>}
                                     </td>
 
                                     <td className='centered'>
