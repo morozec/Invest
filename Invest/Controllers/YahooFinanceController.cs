@@ -135,11 +135,11 @@ namespace Invest.Controllers
                 var response = client.Execute(request);
 
                 dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
-                if (obj == null)
-                {
-                    prices.Add(symbol, null);
-                    return;
-                }
+                //if (obj == null)
+                //{
+                //    prices.Add(symbol, null);
+                //    return;
+                //}
                 var result = obj.quoteSummary.result;
                 prices.Add(symbol, result == null ? null : result[0].price);
             });
