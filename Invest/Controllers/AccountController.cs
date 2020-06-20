@@ -206,7 +206,7 @@ namespace Invest.Controllers
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
             Portfolio portfolio;
-            if (addUpdatePortfolioDto.Id == null)
+            if (addUpdatePortfolioDto.Id == null) //new Portfolio
             {
                 portfolio = new Portfolio()
                     {Name = addUpdatePortfolioDto.Name, Currency = addUpdatePortfolioDto.Currency, User = user};
@@ -215,8 +215,8 @@ namespace Invest.Controllers
             else
             {
                 portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdatePortfolioDto.Id);
-                portfolio.Name = addUpdatePortfolioDto.Name;
-                portfolio.Currency = addUpdatePortfolioDto.Currency;
+                if (addUpdatePortfolioDto.Name != null) portfolio.Name = addUpdatePortfolioDto.Name;
+                if (addUpdatePortfolioDto.Currency != null) portfolio.Currency = addUpdatePortfolioDto.Currency;
             }
            
             _companyContext.SaveChanges();
