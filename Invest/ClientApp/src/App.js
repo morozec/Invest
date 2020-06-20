@@ -53,7 +53,7 @@ export default function App() {
         <Route path='/login' render={props => <Login {...props} />} />
         <Route path='/watchList' render={props => <WatchList {...props} />} />
         <Route path='/portfolios' render={props => <PortfoliosList {...props} />} />
-        <Route path='/portfolio/:portfolioId' render={props => <Portfolio companies={companies} {...props} />} />
+        <Route path='/portfolio/p=:portfolioId' render={props => <Portfolio companies={companies} {...props} />} />
       </div>
     </div>
   );

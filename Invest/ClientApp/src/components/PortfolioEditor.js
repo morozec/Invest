@@ -3,10 +3,8 @@ import { Modal, Form, Button } from 'react-bootstrap';
 
 export function PortfolioEditor(props) {
 
-    const { show, handleClose, handleSave, name, currency } = props;
-    const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');
-    const currencies = ['USD', 'EUR', 'RUB'];
-    const [portfolioCurrency, setPortfolioCurrency] = useState(currency ? currency : currencies[0]);
+    const { show, handleClose, handleSave, name } = props;
+    const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');    
 
     return (
         <Modal show={show} onHide={handleClose}>
@@ -19,13 +17,7 @@ export function PortfolioEditor(props) {
                         <Form.Label>Portfolio name</Form.Label>
                         <Form.Control type='text' placeholder="Enter portfolio name"
                             value={portfolioName} onChange={(e) => setPortfolioName(e.target.value)} />
-                    </Form.Group>
-                    <Form.Group>
-                        <Form.Label>Currency</Form.Label>
-                        <Form.Control as='select' value={portfolioCurrency} onChange={(e) => setPortfolioCurrency(e.target.value)}>
-                            {currencies.map(c => <option key={c}>{c}</option>)}
-                        </Form.Control>
-                    </Form.Group>
+                    </Form.Group>                    
                 </Form>
             </Modal.Body>
             <Modal.Footer>
@@ -33,7 +25,7 @@ export function PortfolioEditor(props) {
                     Cancel
                 </Button>
                 <Button variant="primary"
-                    onClick={() => handleSave(portfolioName, portfolioCurrency)}
+                    onClick={() => handleSave(portfolioName)}
                     disabled={portfolioName === ''}>
                     Ok
                 </Button>

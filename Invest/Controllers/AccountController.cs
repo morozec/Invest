@@ -206,7 +206,7 @@ namespace Invest.Controllers
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
             Portfolio portfolio;
-            if (addUpdatePortfolioDto.Id == null)
+            if (addUpdatePortfolioDto.Id == null) //new Portfolio
             {
                 portfolio = new Portfolio()
                     {Name = addUpdatePortfolioDto.Name, Currency = addUpdatePortfolioDto.Currency, User = user};
@@ -215,8 +215,8 @@ namespace Invest.Controllers
             else
             {
                 portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdatePortfolioDto.Id);
-                portfolio.Name = addUpdatePortfolioDto.Name;
-                portfolio.Currency = addUpdatePortfolioDto.Currency;
+                if (addUpdatePortfolioDto.Name != null) portfolio.Name = addUpdatePortfolioDto.Name;
+                if (addUpdatePortfolioDto.Currency != null) portfolio.Currency = addUpdatePortfolioDto.Currency;
             }
            
             _companyContext.SaveChanges();
@@ -304,16 +304,16 @@ namespace Invest.Controllers
         }
 
         [Authorize]
-        [HttpGet("portfolio/{id}")]
-        public PortfolioDto GetPortfolio(int id)
+        [HttpGet("portfolio")]
+        public PortfolioDto GetPortfolio([FromQuery]List<int> ids)
         {
-            var portfolio = _companyContext.Portfolios.Single(p => p.Id == id);
+            var portfolios = _companyContext.Portfolios.Where(p => ids.Contains(p.Id));
             var commissions = new Dictionary<string, double>();
             var holdings = _companyContext
                 .Transactions
                 .Include(t => t.Company)
                 .Include(t => t.TransactionType)
-                .Where(t => t.Portfolio.Id == id)
+                .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date)
                 .AsEnumerable()
                 .GroupBy(t => t.Company)
@@ -445,9 +445,13 @@ namespace Invest.Controllers
 
             return new PortfolioDto()
             {
-                Name = portfolio.Name,
+                Portfolios = portfolios.Select(p => new SinglePortfolioDto()
+                {
+                    Id = p.Id,
+                    Currency = p.Currency,
+                    Name = p.Name
+                }).ToList(),
                 Commissions = commissions,
-                Currency = portfolio.Currency,
                 Holdings = holdings
             };
         }
@@ -460,10 +464,16 @@ namespace Invest.Controllers
 
         public class PortfolioDto
         {
-            public string Name { get; set; }
-            public string Currency { get; set; }
+            public List<SinglePortfolioDto> Portfolios { get; set; }
             public IDictionary<string, double> Commissions { get; set; }
             public IList<PortfolioHoldingsDto> Holdings { get; set; }
+        }
+
+        public class SinglePortfolioDto
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Currency { get; set; }
         }
 
         public class PortfolioHoldingsDto
@@ -482,13 +492,13 @@ namespace Invest.Controllers
         }
 
         [Authorize]
-        [HttpGet("portfolio/{id}/{symbol}")]
-        public IEnumerable<Transaction> GetPortfolioCompanyTransactions(int id, string symbol)
+        [HttpGet("portfolio/{symbol}")]
+        public IEnumerable<Transaction> GetPortfolioCompanyTransactions(string symbol, [FromQuery]List<int> ids)
         {
             var transactions = _companyContext
                 .Transactions
                 .Include(t => t.TransactionType)
-                .Where(t => t.Portfolio.Id == id && t.Company.Ticker == symbol)
+                .Where(t => ids.Contains(t.Portfolio.Id) && t.Company.Ticker == symbol)
                 .OrderByDescending(t => t.Date)
                 .ToList();
             return transactions;
@@ -648,8 +658,9 @@ namespace Invest.Controllers
 
 
         [Authorize]
-        [HttpGet("getDividends/{portfolioId}")]
-        public PricesDividendsDto GetDividends(int portfolioId, [FromQuery(Name = "symbols")] List<string> symbols)
+        [HttpGet("getDividends")]
+        public PricesDividendsDto GetDividends(
+            [FromQuery(Name = "ids")] List<int> ids, [FromQuery(Name = "symbols")] List<string> symbols)
         {
             var mktValues = new Dictionary<DateTime, double>();
             var dividends = new Dictionary<string, double>();
@@ -657,7 +668,7 @@ namespace Invest.Controllers
             var allOrderedTransactions = _companyContext.Transactions
                 .Include(t => t.TransactionType)
                 .Include(t => t.Company)
-                .Where(t => t.Portfolio.Id == portfolioId)
+                .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date).ToList();
 
             var yahooResults = new Dictionary<string, dynamic>();

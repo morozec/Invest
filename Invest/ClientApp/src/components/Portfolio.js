@@ -13,7 +13,8 @@ export function Portfolio(props) {
     const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
 
-    const [portfolio, setPortfolio] = useState(null);
+    const [portfolios, setPortfolios] = useState(null);
+    const [commissions, setCommisions] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
 
     const [showNewDialog, setShowNewDialog] = useState(false);
@@ -34,6 +35,7 @@ export function Portfolio(props) {
     const [currencyRates, setCurrencyRates] = useState(null)
 
     const { portfolioId } = useParams();
+    const [portfolioIds, setResPortfolioIds] = useState(portfolioId.split(','))
 
     const [showPortfolioEditor, setShowPortfilioEditor] = useState(false);
 
@@ -41,7 +43,11 @@ export function Portfolio(props) {
     const [industryGroups, setIndustryGroups] = useState({});
     const [sectorsGroups, setSectorsGroups] = useState({});
 
+    const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
+    useEffect(() => {
+        setResPortfolioIds(portfolioId.split(','))
+    }, [portfolioId])
 
     const loadCurrencyRate = async (from, to) => {
         let response = await fetch(`api/currency/${from}/${to}`, {
@@ -145,11 +151,15 @@ export function Portfolio(props) {
     }
 
     const loadDividends = useCallback(async (companies) => {
-        let url = `api/account/getDividends/${portfolioId}?`;
+        let url = `api/account/getDividends?`;
+
+        for (let pid of portfolioIds) {
+            url += `ids=${pid}&`;
+        }
         for (let company of companies) {
             url += `symbols=${company.ticker}&`;
         }
-        console.log(url);
+
 
         let response = await fetch(url, {
             method: 'GET',
@@ -163,12 +173,13 @@ export function Portfolio(props) {
         console.log('market values', dividends.mktValues);
         return dividends.dividends;
         // companies.map(c => c.dividends = dividends.dividends[c.ticker]);
-    }, [portfolioId, cookies.jwt])
+    }, [portfolioIds, cookies.jwt])
 
     const loadPortfolio = useCallback(async () => {
         if (!cookies.jwt) return;
 
-        let response = await fetch(`api/account/portfolio/${portfolioId}`, {
+        const ids = portfolioIds.reduce((str, id) => `${str}ids=${id}&`, "");
+        let response = await fetch(`api/account/portfolio?${ids}`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
@@ -178,7 +189,7 @@ export function Portfolio(props) {
         let portfolio = await response.json();
         console.log('portfolio', portfolio);
         return portfolio;
-    }, [portfolioId, cookies.jwt]);
+    }, [portfolioIds, cookies.jwt]);
 
     const addUpdateHoldings = async (id) => {
         await fetch('api/account/addUpdateTransaction', {
@@ -207,7 +218,9 @@ export function Portfolio(props) {
             setIsLoading(true);
             let promises = [loadPortfolio(), loadCurrencyRates()];
             const [portfolio, rates] = await Promise.all(promises);
-            setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+            setPortfolios(portfolio.portfolios);
+            setCommisions(portfolio.commissions);
+            setSelectedCurrency(portfolio.portfolios[0].currency);
 
             setPortfolioHoldings(portfolio.holdings);
             setCurrencyRates(rates);
@@ -247,8 +260,10 @@ export function Portfolio(props) {
 
 
                 let portfolio = await loadPortfolio();
-                setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+                setPortfolios(portfolio.portfolios);
+                setCommisions(portfolio.commissions);
                 setPortfolioHoldings(portfolio.holdings);
+                setSelectedCurrency(portfolio.portfolios[0].currency);
 
                 let pricedHoldings = [...portfolio.holdings];
                 let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
@@ -264,8 +279,10 @@ export function Portfolio(props) {
             setIsLoading(true);
             await addUpdateHoldings(id);
             let portfolio = await loadPortfolio();
-            setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+            setPortfolios(portfolio.portfolios);
+            setCommisions(portfolio.commissions);
             setPortfolioHoldings(portfolio.holdings);
+            setSelectedCurrency(portfolio.portfolios[0].currency);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -279,7 +296,13 @@ export function Portfolio(props) {
     }
 
     const loadTransactions = async (ticker) => {
-        let response = await fetch(`api/account/portfolio/${portfolioId}/${ticker}`, {
+        let url = `api/account/portfolio/${ticker}?`;
+        for (let pid of portfolioIds) {
+            url += `ids=${pid}&`
+        }
+        console.log(url);
+
+        let response = await fetch(url, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
@@ -329,8 +352,10 @@ export function Portfolio(props) {
 
 
         let portfolio = await loadPortfolio();
-        setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+        setPortfolios(portfolio.portfolios);
+        setCommisions(portfolio.commissions);
         setPortfolioHoldings(portfolio.holdings);
+        setSelectedCurrency(portfolio.portfolios[0].currency);
 
         let pricedHoldings = [...portfolio.holdings];
         let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
@@ -357,12 +382,12 @@ export function Portfolio(props) {
 
     const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends);
     const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends) / item.totalAmount * 100).toFixed(2)}%`;
-    const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
+    // const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
     const getPortfolioCurrencyValue = useCallback((value, valueCurrency) => {
-        return portfolio ? value * currencyRates[valueCurrency][portfolio.currency] : null;
-    }, [currencyRates, portfolio])
+        return portfolios ? value * currencyRates[valueCurrency][selectedCurrency] : null;
+    }, [currencyRates, portfolios, selectedCurrency])
 
     const handleAddHoldingsCompanyChanged = (company) => {
         setAddHoldingsCompany(company);
@@ -446,11 +471,10 @@ export function Portfolio(props) {
     }
 
     const getSumPortfolioCommissions = () => {
-        if (!portfolio || !currencyRates) return null;
-        console.log('comm', portfolio.commissions)
+        if (!commissions || !currencyRates) return null;
         let sumCommission = 0;
-        for (let currency of Object.keys(portfolio.commissions)) {
-            sumCommission += getPortfolioCurrencyValue(portfolio.commissions[currency], currency);
+        for (let currency of Object.keys(commissions)) {
+            sumCommission += getPortfolioCurrencyValue(commissions[currency], currency);
         }
         return sumCommission.toFixed(2);
     }
@@ -462,7 +486,7 @@ export function Portfolio(props) {
             sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
     }
 
-    const savePortfolioEdit = (name, currency) => {
+    const savePortfolioEdit = (name) => {
         (async () => {
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
@@ -471,30 +495,72 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id: portfolioId, name, currency })
+                body: JSON.stringify({ id: portfolioId, name })
             });
             let portfolio = await loadPortfolio();
-            setPortfolio({ name: portfolio.name, commissions: portfolio.commissions, currency: portfolio.currency });
+            setPortfolios(portfolio.portfolios);
+            setCommisions(portfolio.commissions);
 
             setIsLoading(false);
             setShowPortfilioEditor(false);
         })()
     }
 
-    let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()}>Add Holdings</Button>
+    const handleCurrencyChanged = (currency) => {
+        setSelectedCurrency(currency);
+        if (portfolioIds.length === 1) {
+            (async () => {
+                setIsLoading(true);
+                await fetch('api/account/addUpdatePortfolio', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json;charset=utf-8",
+                        'Authorization': 'Bearer ' + cookies.jwt
+                    },
+                    body: JSON.stringify({ id: portfolioId, currency: currency })
+                });
+                let portfolio = await loadPortfolio();
+                setPortfolios(portfolio.portfolios);
+                setCommisions(portfolio.commissions);
+
+                setIsLoading(false);
+            })()
+        }
+    }
+
+    const currencies = ['USD', 'EUR', 'RUB'];
+
+    let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()} disabled={portfolioIds.length > 1}>
+        Add Holdings
+    </Button>
 
     let content = isLoading
         ? <p><em>Loading...</em></p>
         : <div>
             <div className='statementHeader'>
-                <h1>{portfolio.name}</h1>
-                <Button variant='outline-warning' className='ml-2' onClick={() => setShowPortfilioEditor(true)}>Edit</Button>
+                {portfolios.length === 1 && (
+                    <div className='d-flex'>
+                        <h1>{portfolios[0].name}</h1>
+                        <Button variant='outline-warning' className='ml-2' onClick={() => setShowPortfilioEditor(true)}>Edit</Button>
+                    </div>
+                )}
+                {portfolios.length > 1 && (
+                    <div>
+                        <h1>
+                            {portfolios.map(p => <Link key={p.id} to={{ pathname: `/portfolio/p=${p.id}` }}> {p.name} </Link>)}
+                        </h1>
+                    </div>
+                )}
             </div>
             <div className='row'>
                 <div className='col-sm-4'>
                     <div className='d-flex'>
                         <div>Currency</div>
-                        <div className='ml-auto'>{portfolio.currency}</div>
+                        <div className='ml-auto'>
+                            <select value={selectedCurrency} onChange={(e) => handleCurrencyChanged(e.target.value)}>
+                                {currencies.map(c => <option key={c}>{c}</option>)}
+                            </select>
+                        </div>
                     </div>
                     <div className='d-flex'>
                         <div>Market Value</div>
@@ -871,7 +937,8 @@ export function Portfolio(props) {
                                                 <td className='centered fit'>{t.commission}</td>
                                                 <td className='centered fit'>{t.comment}</td>
                                                 <td className='centered fit'>
-                                                    <Button variant='outline-warning mr-1' onClick={() => handleEditTransaction(t)}>Edit</Button>
+                                                    <Button variant='outline-warning mr-1' disabled={portfolios.length > 1}
+                                                        onClick={() => handleEditTransaction(t)}>Edit</Button>
                                                     <Button variant='outline-danger ml-1'
                                                         onClick={() => handleDeleteTransaction(t)}>
                                                         Delete
@@ -891,11 +958,11 @@ export function Portfolio(props) {
                 </Modal.Footer>
             </Modal>
 
-            {portfolio &&
+            {portfolios && portfolios.length === 1 &&
                 <PortfolioEditor show={showPortfolioEditor} handleClose={() => setShowPortfilioEditor(false)}
                     handleSave={savePortfolioEdit}
-                    name={portfolio.name}
-                    currency={portfolio.currency} />
+                    name={portfolios[0].name}
+                />
             }
         </div>
     )
