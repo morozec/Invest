@@ -530,6 +530,16 @@ export function Portfolio(props) {
         }
     }
 
+    const getDateMktValue = (date) => {
+        let value = 0;
+        const allCurrenciesValues = mktValues[date];
+        let currencies = Object.keys(allCurrenciesValues);
+        for (let currency of currencies){
+            value += getPortfolioCurrencyValue(allCurrenciesValues[currency], currency);
+        }
+        return value;
+    }
+
     const currencies = ['USD', 'EUR', 'RUB'];
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()} disabled={portfolioIds.length > 1}>
@@ -609,7 +619,7 @@ export function Portfolio(props) {
                                     
                                     pointHitRadius: 10,
 
-                                    data: Object.keys(mktValues).map(date => mktValues[date]),
+                                    data: Object.keys(mktValues).map(date => getDateMktValue(date)),
                                 }
                             ],
 

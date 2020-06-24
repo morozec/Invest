@@ -662,7 +662,7 @@ namespace Invest.Controllers
         public PricesDividendsDto GetDividends(
             [FromQuery(Name = "ids")] List<int> ids, [FromQuery(Name = "symbols")] List<string> symbols)
         {
-            var mktValues = new Dictionary<DateTime, double>();
+            var mktValues = new Dictionary<DateTime,Dictionary<string, double>>();
             var dividends = new Dictionary<string, double>();
 
             var allOrderedTransactions = _companyContext.Transactions
@@ -672,6 +672,8 @@ namespace Invest.Controllers
                 .OrderBy(t => t.Date).ToList();
 
             var yahooResults = new Dictionary<string, dynamic>();
+            
+
             Parallel.ForEach(symbols, (symbol) =>
             {
                 var startDate = allOrderedTransactions.First(t => t.Company.Ticker == symbol).Date;
@@ -694,10 +696,12 @@ namespace Invest.Controllers
             {
                 
                 if (!yahooResults.ContainsKey(symbol)) continue;
+               
                 var orderedTransactions = allOrderedTransactions.Where(
                     t => t.Company.Ticker == symbol).ToList();
 
                 var yahooResult = yahooResults[symbol];
+                var currency = yahooResult.meta.currency.ToString();
                 var times = yahooResult.timestamp;
                 var close = yahooResult.indicators.quote[0].close;
 
@@ -746,8 +750,11 @@ namespace Invest.Controllers
                             mktValue = curCount * lastValue.Value;
                         }
 
-                        if (!mktValues.ContainsKey(date)) mktValues.Add(date, mktValue);
-                        else mktValues[date] += mktValue;
+                        if (!mktValues.ContainsKey(date))
+                            mktValues.Add(date, new Dictionary<string, double>());
+                        if (!mktValues[date].ContainsKey(currency))
+                            mktValues[date].Add(currency, 0d);
+                        mktValues[date][currency] += mktValue;
                         index++;
                     }
 
@@ -771,8 +778,11 @@ namespace Invest.Controllers
                         mktValue = curCount * lastValue.Value;
                     }
 
-                    if (!mktValues.ContainsKey(date)) mktValues.Add(date, mktValue);
-                    else mktValues[date] += mktValue;
+                    if (!mktValues.ContainsKey(date)) 
+                        mktValues.Add(date, new Dictionary<string, double>());
+                    if (!mktValues[date].ContainsKey(currency))
+                        mktValues[date].Add(currency, 0d);
+                    mktValues[date][currency] += mktValue;
                     ++index;
                 }
             }
@@ -787,7 +797,7 @@ namespace Invest.Controllers
 
         public class PricesDividendsDto
         {
-            public IDictionary<DateTime, double> MktValues { get; set; }
+            public IDictionary<DateTime, Dictionary<string, double>> MktValues { get; set; }
             public Dictionary<string, double> Dividends { get; set; }
         }
 
