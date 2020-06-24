@@ -729,7 +729,9 @@ namespace Invest.Controllers
                 }
 
 
-                var curCount = orderedTransactions[0].Quantity;
+                var curCount = orderedTransactions[0].TransactionType.Type == "Buy"
+                    ? orderedTransactions[0].Quantity
+                    : -orderedTransactions[0].Quantity;
                 var curDate = orderedTransactions[0].Date;
                 double? lastValue = null;
                 for (var i = 1; i < orderedTransactions.Count; ++i)
