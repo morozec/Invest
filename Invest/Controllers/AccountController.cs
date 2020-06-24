@@ -702,7 +702,7 @@ namespace Invest.Controllers
 
                 var yahooResult = yahooResults[symbol];
                 var currency = yahooResult.meta.currency.ToString();
-                var times = yahooResult.timestamp;
+                List<double> times = JsonConvert.DeserializeObject<List<double>>(yahooResult.timestamp.ToString());
                 var close = yahooResult.indicators.quote[0].close;
 
                 if (yahooResult.events != null)
@@ -730,19 +730,28 @@ namespace Invest.Controllers
 
 
                 var curCount = orderedTransactions[0].Quantity;
-                var index = 0;
+                var curDate = orderedTransactions[0].Date;
                 double? lastValue = null;
                 for (var i = 1; i < orderedTransactions.Count; ++i)
                 {
                     var trans = orderedTransactions[i];
-                    DateTime date;
-                    while ((date = UnixDateToDate((double)times[index])) < trans.Date)
+                    while (curDate < trans.Date)
                     {
+                        if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            curDate = curDate.AddDays(1);
+                            continue;
+                        }
                         double mktValue;
-                        if (close[index] == null)
+                        var index = times.FindIndex(t => UnixDateToDate(t) == curDate);
+                        if (index == -1 || close[index] == null)
                         {
                             if (lastValue != null) mktValue = curCount * lastValue.Value;
-                            else mktValue = 0d;
+                            else
+                            {
+                                curDate = curDate.AddDays(1);
+                                continue;
+                            }
                         }
                         else
                         {
@@ -750,27 +759,36 @@ namespace Invest.Controllers
                             mktValue = curCount * lastValue.Value;
                         }
 
-                        if (!mktValues.ContainsKey(date))
-                            mktValues.Add(date, new Dictionary<string, double>());
-                        if (!mktValues[date].ContainsKey(currency))
-                            mktValues[date].Add(currency, 0d);
-                        mktValues[date][currency] += mktValue;
-                        index++;
+                        if (!mktValues.ContainsKey(curDate))
+                            mktValues.Add(curDate, new Dictionary<string, double>());
+                        if (!mktValues[curDate].ContainsKey(currency))
+                            mktValues[curDate].Add(currency, 0d);
+                        mktValues[curDate][currency] += mktValue;
+                        curDate = curDate.AddDays(1);
                     }
 
                     curCount += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
                 }
 
-
-                while (index < times.Count)
+                var today = DateTime.Now.Date;
+                while (curDate < today)
                 {
-                    var date = UnixDateToDate((double)times[index]);
-                    double mktValue;
+                    if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        curDate = curDate.AddDays(1);
+                        continue;
+                    }
 
-                    if (close[index] == null)
+                    double mktValue;
+                    var index = times.FindIndex(t => UnixDateToDate(t) == curDate);
+                    if (index == -1 || close[index] == null)
                     {
                         if (lastValue != null) mktValue = curCount * lastValue.Value;
-                        else mktValue = 0d;
+                        else
+                        {
+                            curDate = curDate.AddDays(1);
+                            continue;
+                        }
                     }
                     else
                     {
@@ -778,12 +796,12 @@ namespace Invest.Controllers
                         mktValue = curCount * lastValue.Value;
                     }
 
-                    if (!mktValues.ContainsKey(date)) 
-                        mktValues.Add(date, new Dictionary<string, double>());
-                    if (!mktValues[date].ContainsKey(currency))
-                        mktValues[date].Add(currency, 0d);
-                    mktValues[date][currency] += mktValue;
-                    ++index;
+                    if (!mktValues.ContainsKey(curDate)) 
+                        mktValues.Add(curDate, new Dictionary<string, double>());
+                    if (!mktValues[curDate].ContainsKey(currency))
+                        mktValues[curDate].Add(currency, 0d);
+                    mktValues[curDate][currency] += mktValue;
+                    curDate = curDate.AddDays(1);
                 }
             }
 
