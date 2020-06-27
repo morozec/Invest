@@ -1070,6 +1070,7 @@ export function Portfolio(props) {
                 <PortfolioEditor show={showPortfolioEditor} handleClose={() => setShowPortfilioEditor(false)}
                     handleSave={savePortfolioEdit}
                     name={portfolios[0].name}
+                    defaultCommissionPercent={portfolios[0].defaultCommissionPercent}
                 />
             }
         </div>

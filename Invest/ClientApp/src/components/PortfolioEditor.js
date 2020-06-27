@@ -1,11 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap';
 
 export function PortfolioEditor(props) {
 
-    const { show, handleClose, handleSave, name } = props;
+    const { show, handleClose, handleSave, name, defaultCommissionPercent } = props;
     const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');    
-    const [defaultCommissionPercent, setDefaultCommissionPercent] = useState(0);
+    const [portfolioDefaultCommissionPercent, setPortfolioDefaultCommissionPercent] = useState(
+        defaultCommissionPercent ? defaultCommissionPercent : 0);
+
+    useEffect(() => {
+        setPortfolioName(name ? name : 'New Portfilio');
+        setPortfolioDefaultCommissionPercent(defaultCommissionPercent ? defaultCommissionPercent : 0);
+    }, [show, name, defaultCommissionPercent])
 
     return (
         <Modal show={show} onHide={handleClose}>
@@ -22,7 +28,7 @@ export function PortfolioEditor(props) {
                     <Form.Group>
                         <Form.Label>Default Commission (%)</Form.Label>
                         <Form.Control type='number' step='any'
-                            value={defaultCommissionPercent} onChange={(e) => setDefaultCommissionPercent(+e.target.value)} />
+                            value={portfolioDefaultCommissionPercent} onChange={(e) => setPortfolioDefaultCommissionPercent(+e.target.value)} />
                     </Form.Group>                      
                 </Form>
             </Modal.Body>
@@ -31,7 +37,7 @@ export function PortfolioEditor(props) {
                     Cancel
                 </Button>
                 <Button variant="primary"
-                    onClick={() => handleSave(portfolioName, defaultCommissionPercent)}
+                    onClick={() => handleSave(portfolioName, portfolioDefaultCommissionPercent)}
                     disabled={portfolioName === ''}>
                     Ok
                 </Button>
