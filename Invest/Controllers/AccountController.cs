@@ -209,7 +209,12 @@ namespace Invest.Controllers
             if (addUpdatePortfolioDto.Id == null) //new Portfolio
             {
                 portfolio = new Portfolio()
-                    {Name = addUpdatePortfolioDto.Name, Currency = addUpdatePortfolioDto.Currency, User = user};
+                {
+                    Name = addUpdatePortfolioDto.Name,
+                    Currency = addUpdatePortfolioDto.Currency,
+                    User = user,
+                    DefaultCommissionPercent = addUpdatePortfolioDto.DefaultCommissionPercent ?? 0
+                };
                 _companyContext.Portfolios.Add(portfolio);
             }
             else
@@ -217,6 +222,8 @@ namespace Invest.Controllers
                 portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdatePortfolioDto.Id);
                 if (addUpdatePortfolioDto.Name != null) portfolio.Name = addUpdatePortfolioDto.Name;
                 if (addUpdatePortfolioDto.Currency != null) portfolio.Currency = addUpdatePortfolioDto.Currency;
+                if (addUpdatePortfolioDto.DefaultCommissionPercent != null)
+                    portfolio.DefaultCommissionPercent = addUpdatePortfolioDto.DefaultCommissionPercent.Value;
             }
            
             _companyContext.SaveChanges();
@@ -238,6 +245,7 @@ namespace Invest.Controllers
             public int? Id { get; set; }
             public string Name { get; set; }
             public string Currency { get; set; }
+            public double? DefaultCommissionPercent { get; set; }
         }
 
         public class PortfolioIdDto
@@ -452,7 +460,8 @@ namespace Invest.Controllers
                 {
                     Id = p.Id,
                     Currency = p.Currency,
-                    Name = p.Name
+                    Name = p.Name,
+                    DefaultCommissionPercent = p.DefaultCommissionPercent
                 }).ToList(),
                 Commissions = commissions,
                 Holdings = holdings,
@@ -479,6 +488,7 @@ namespace Invest.Controllers
             public int Id { get; set; }
             public string Name { get; set; }
             public string Currency { get; set; }
+            public double DefaultCommissionPercent { get; set; }
         }
 
         public class PortfolioHoldingsDto

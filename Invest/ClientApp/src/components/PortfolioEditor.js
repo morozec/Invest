@@ -5,6 +5,7 @@ export function PortfolioEditor(props) {
 
     const { show, handleClose, handleSave, name } = props;
     const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');    
+    const [defaultCommissionPercent, setDefaultCommissionPercent] = useState(0);
 
     return (
         <Modal show={show} onHide={handleClose}>
@@ -17,7 +18,12 @@ export function PortfolioEditor(props) {
                         <Form.Label>Portfolio name</Form.Label>
                         <Form.Control type='text' placeholder="Enter portfolio name"
                             value={portfolioName} onChange={(e) => setPortfolioName(e.target.value)} />
-                    </Form.Group>                    
+                    </Form.Group>
+                    <Form.Group>
+                        <Form.Label>Default Commission (%)</Form.Label>
+                        <Form.Control type='number' step='any'
+                            value={defaultCommissionPercent} onChange={(e) => setDefaultCommissionPercent(+e.target.value)} />
+                    </Form.Group>                      
                 </Form>
             </Modal.Body>
             <Modal.Footer>
@@ -25,7 +31,7 @@ export function PortfolioEditor(props) {
                     Cancel
                 </Button>
                 <Button variant="primary"
-                    onClick={() => handleSave(portfolioName)}
+                    onClick={() => handleSave(portfolioName, defaultCommissionPercent)}
                     disabled={portfolioName === ''}>
                     Ok
                 </Button>

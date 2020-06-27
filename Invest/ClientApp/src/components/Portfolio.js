@@ -405,6 +405,15 @@ export function Portfolio(props) {
         loadPrice(pricedCompany).then(() => setAddHoldingsPrice(pricedCompany.price.regularMarketPrice.raw));
     }
 
+    const handleAddHoldingsPriceChanged = (price) => {
+        setAddHoldingsPrice(price);
+    }
+
+    useEffect(() => {
+        if (!portfolios || portfolios.length > 1) return;
+        let com = +(addHoldingsPrice * addHoldingsQuantity * portfolios[0].defaultCommissionPercent / 100.0).toFixed(2);
+        setAddHoldingsCommission(com);
+    }, [addHoldingsPrice, addHoldingsQuantity, portfolios])
 
     useEffect(() => {
         if (!portfolioHoldings || !currencyRates || portfolioHoldings.some(ph => !ph.price)) {
@@ -496,7 +505,7 @@ export function Portfolio(props) {
             sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
     }
 
-    const savePortfolioEdit = (name) => {
+    const savePortfolioEdit = (name, defaultCommissionPercent) => {
         (async () => {
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
@@ -505,7 +514,7 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id: portfolioId, name })
+                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent })
             });
             let portfolio = await loadPortfolio();
             setPortfolios(portfolio.portfolios);
@@ -968,7 +977,7 @@ export function Portfolio(props) {
                         <Form.Group>
                             <Form.Label>Price</Form.Label>
                             <Form.Control type='number' min={0} step='any'
-                                value={addHoldingsPrice} onChange={(e) => setAddHoldingsPrice(e.target.value)} />
+                                value={addHoldingsPrice} onChange={(e) => handleAddHoldingsPriceChanged(+e.target.value)} />
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Quantity</Form.Label>

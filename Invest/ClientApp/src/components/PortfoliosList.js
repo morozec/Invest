@@ -29,14 +29,14 @@ export function PortfoliosList(props) {
 
     }, [cookies.jwt]);
 
-    const addPortfolio = async (name) => {
+    const addPortfolio = async (name, defaultCommissionPercent) => {
         await fetch('api/account/addUpdatePortfolio', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
                 'Authorization': 'Bearer ' + cookies.jwt
             },
-            body: JSON.stringify({ name, currency:'USD' })
+            body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent })
         });
     }
 
@@ -56,10 +56,10 @@ export function PortfoliosList(props) {
         loadPortfolios().then(() => setIsLoading(false));
     }, [loadPortfolios])
 
-    const handleAddPortfolio = (name) => {
+    const handleAddPortfolio = (name, defaultCommissionPercent) => {
         (async () => {
             setIsLoading(true);
-            await addPortfolio(name);
+            await addPortfolio(name, defaultCommissionPercent);
             await loadPortfolios();
             setIsLoading(false);
             handleClose();

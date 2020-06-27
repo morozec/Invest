@@ -9,5 +9,7 @@ namespace Model
         public string Currency { get; set; }
         public InvestUser User { get; set; }
         public List<Transaction> Transactions { get; set; }
+
+        public double DefaultCommissionPercent { get; set; }
     }
 }
