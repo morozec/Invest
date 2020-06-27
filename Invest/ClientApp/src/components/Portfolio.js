@@ -889,6 +889,9 @@ export function Portfolio(props) {
                                 }]
                             }}
                                 options={{
+                                    legend:{
+                                        display: portfolioHoldings.filter(ph => ph.quantity > 0).length <= 15
+                                    },
                                     plugins: {
                                         colorschemes: {
                                             scheme: 'brewer.Paired12'
@@ -986,6 +989,9 @@ export function Portfolio(props) {
                                 }]
                             }}
                                 options={{
+                                    legend:{
+                                        display: Object.keys(industryGroups).length <= 15
+                                    },
                                     plugins: {
                                         colorschemes: {
                                             scheme: 'brewer.Paired12'
