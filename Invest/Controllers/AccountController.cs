@@ -309,13 +309,16 @@ namespace Invest.Controllers
         {
             var portfolios = _companyContext.Portfolios.Where(p => ids.Contains(p.Id));
             var commissions = new Dictionary<string, double>();
-            var holdings = _companyContext
+
+            var transactions = _companyContext
                 .Transactions
                 .Include(t => t.Company)
                 .Include(t => t.TransactionType)
                 .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date)
-                .AsEnumerable()
+                .ToList();
+
+            var holdings = transactions
                 .GroupBy(t => t.Company)
                 .Select(g =>
                 {
@@ -442,7 +445,7 @@ namespace Invest.Controllers
             //    })
             //    .ToList();
 
-
+            transactions.Reverse();//от последне к первой
             return new PortfolioDto()
             {
                 Portfolios = portfolios.Select(p => new SinglePortfolioDto()
@@ -452,7 +455,8 @@ namespace Invest.Controllers
                     Name = p.Name
                 }).ToList(),
                 Commissions = commissions,
-                Holdings = holdings
+                Holdings = holdings,
+                Transactions = transactions
             };
         }
 
@@ -467,6 +471,7 @@ namespace Invest.Controllers
             public List<SinglePortfolioDto> Portfolios { get; set; }
             public IDictionary<string, double> Commissions { get; set; }
             public IList<PortfolioHoldingsDto> Holdings { get; set; }
+            public IList<Transaction> Transactions { get; set; }
         }
 
         public class SinglePortfolioDto
@@ -498,6 +503,7 @@ namespace Invest.Controllers
             var transactions = _companyContext
                 .Transactions
                 .Include(t => t.TransactionType)
+                .Include(t => t.Company)
                 .Where(t => ids.Contains(t.Portfolio.Id) && t.Company.Ticker == symbol)
                 .OrderByDescending(t => t.Date)
                 .ToList();

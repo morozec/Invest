@@ -18,6 +18,7 @@ export function Portfolio(props) {
     const [commissions, setCommisions] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
     const [mktValues, setMktValues] = useState({});
+    const [portfolioTransactions, setPortfolioTransactions] = useState(null);
 
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
@@ -99,18 +100,7 @@ export function Portfolio(props) {
         setAddHoldingsCommission(0);
         setAddHoldingsComment('');
         setCurTransactionId(null);
-    }
-    const handleNewShow = (id = null) => {
-        setShowNewDialog(true);
-        if (transactionsItem) {
-            let ahCompanies = companies.filter(c => c.ticker === transactionsItem.ticker);
-            if (ahCompanies.length === 1) {
-                setAddHoldingsCompany(ahCompanies[0]);
-            }
-            setAddHoldingsPrice(transactionsItem.price.regularMarketPrice.raw);
-        }
-        if (id !== null) setCurTransactionId(id);
-    }
+    }    
 
     const [isTransactionsLoading, setIsTransactionsLoading] = useState(true);
 
@@ -192,7 +182,7 @@ export function Portfolio(props) {
         console.log('portfolio', portfolio);
         return portfolio;
     }, [portfolioIds, cookies.jwt]);
-
+   
     const addUpdateHoldings = async (id) => {
         await fetch('api/account/addUpdateTransaction', {
             method: 'POST',
@@ -223,6 +213,7 @@ export function Portfolio(props) {
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
             setSelectedCurrency(portfolio.portfolios[0].currency);
+            setPortfolioTransactions(portfolio.transactions);
 
             setPortfolioHoldings(portfolio.holdings);
             setCurrencyRates(rates);
@@ -266,6 +257,7 @@ export function Portfolio(props) {
                 setCommisions(portfolio.commissions);
                 setPortfolioHoldings(portfolio.holdings);
                 setSelectedCurrency(portfolio.portfolios[0].currency);
+                setPortfolioTransactions(portfolio.transactions);
 
                 let pricedHoldings = [...portfolio.holdings];
                 let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
@@ -285,6 +277,7 @@ export function Portfolio(props) {
             setCommisions(portfolio.commissions);
             setPortfolioHoldings(portfolio.holdings);
             setSelectedCurrency(portfolio.portfolios[0].currency);
+            setPortfolioTransactions(portfolio.transactions);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -328,14 +321,17 @@ export function Portfolio(props) {
     }
 
     const handleEditTransaction = (t) => {
-        handleNewShow(t.id);
+        setAddHoldingsCompany(t.company);
+        setCurTransactionId(t.id);
 
         setAddHoldingsType(t.transactionType.type)
         setAddHoldingsPrice(t.price);
         setAddHoldingsQuantity(t.quantity);
         setAddHoldingsCommission(t.commission);
         setAddHoldingsComment(t.comment);
-        setAddHoldingsDate(t.date.substring(0, 10))
+        setAddHoldingsDate(t.date.substring(0, 10));
+
+        setShowNewDialog(true);
     }
 
     const handleDeleteTransaction = async (t) => {
@@ -348,7 +344,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({ id: t.id })
         });
-        let transactions = await loadTransactions(transactionsItem.ticker);
+        let transactions = await loadTransactions(t.company.ticker);
         setTransactions(transactions);
         setIsTransactionsLoading(false);
 
@@ -358,6 +354,7 @@ export function Portfolio(props) {
         setCommisions(portfolio.commissions);
         setPortfolioHoldings(portfolio.holdings);
         setSelectedCurrency(portfolio.portfolios[0].currency);
+        setPortfolioTransactions(portfolio.transactions);
 
         let pricedHoldings = [...portfolio.holdings];
         let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
@@ -534,7 +531,7 @@ export function Portfolio(props) {
         let value = 0;
         const allCurrenciesValues = mktValues[date];
         let currencies = Object.keys(allCurrenciesValues);
-        for (let currency of currencies){
+        for (let currency of currencies) {
             value += getPortfolioCurrencyValue(allCurrenciesValues[currency], currency);
         }
         return value;
@@ -542,7 +539,7 @@ export function Portfolio(props) {
 
     const currencies = ['USD', 'EUR', 'RUB'];
 
-    let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()} disabled={portfolioIds.length > 1}>
+    let addHoldingsButton = <Button variant='success' onClick={() => setShowNewDialog(true)} disabled={portfolioIds.length > 1}>
         Add Holdings
     </Button>
 
@@ -616,7 +613,7 @@ export function Portfolio(props) {
 
                                     pointHoverRadius: 5,
                                     pointHoverBorderWidth: 2,
-                                    
+
                                     pointHitRadius: 10,
 
                                     data: Object.keys(mktValues).map(date => getDateMktValue(date)),
@@ -720,7 +717,7 @@ export function Portfolio(props) {
                                     <td className='centered'>
                                         <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
                                             Holdings
-                                </Button>
+                                        </Button>
                                     </td>
                                 </tr>)}
                         </tbody>
@@ -793,6 +790,49 @@ export function Portfolio(props) {
 
 
                 </Tab>
+
+                <Tab eventKey="history" title="Transaction History">
+                    <Table className='table-sm' bordered hover variant='light'>
+                        <thead>
+                            <tr>
+                                <th className='centered'>Date</th>
+                                <th className='centered'>Symbol</th>
+                                <th>Name</th>
+                                <th className='centered'>Side</th>
+                                <th className='centered'>Price</th>
+                                <th className='centered'>Quantity</th>
+                                <th className='centered'>Amount</th>
+                                <th className='centered'>Commission</th>
+                                <th className='centered'>Comment</th>
+                                <th className='centered'></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {portfolioTransactions.map(t =>
+                                <tr key={t.id}>
+                                    <td className='centered'>{t.date.substring(0, 10)}</td>
+                                    <td className='centered'>{t.company.ticker}</td>  
+                                    <td>{t.company.shortName}</td>  
+                                    <td className='centered'>{t.transactionType.type}</td>
+                                    <td className='centered'>{t.price}</td>
+                                    <td className='centered'>{t.quantity}</td>
+                                    <td className='centered'>{(t.price * t.quantity).toFixed(2)}</td>
+                                    <td className='centered'>{t.commission}</td>
+                                    <td className='centered'>{t.comment}</td>
+                                    <td className='centered'>
+                                        <Button variant='outline-warning mr-1' disabled={portfolios.length > 1}
+                                            onClick={() => handleEditTransaction(t)}>Edit</Button>
+                                        <Button variant='outline-danger ml-1'
+                                            onClick={() => handleDeleteTransaction(t)}>
+                                            Delete
+                                        </Button>
+                                    </td>
+                                </tr>)}
+                        </tbody>
+                    </Table>
+                </Tab>
+
+
                 <Tab eventKey="analysis" title="Analysis">
                     <div className='row'>
                         <div className='col-sm-6'>
