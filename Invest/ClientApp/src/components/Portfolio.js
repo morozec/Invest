@@ -14,6 +14,8 @@ export function Portfolio(props) {
     const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
 
+    const [allPortfolios, setAllPortfolios] = useState([]);
+
     const [portfolios, setPortfolios] = useState(null);
     const [commissions, setCommisions] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
@@ -23,6 +25,7 @@ export function Portfolio(props) {
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
 
+    const [addHoldingsPortfolioId, setAddHoldingsPortfolioId] = useState(null);
     const [addHoldingsType, setAddHoldingsType] = useState('Buy');
     const [addHoldingsCompany, setAddHoldingsCompany] = useState(null);
     const [addHoldingsPrice, setAddHoldingsPrice] = useState(0);
@@ -100,7 +103,7 @@ export function Portfolio(props) {
         setAddHoldingsCommission(0);
         setAddHoldingsComment('');
         setCurTransactionId(null);
-    }    
+    }
 
     const [isTransactionsLoading, setIsTransactionsLoading] = useState(true);
 
@@ -167,6 +170,22 @@ export function Portfolio(props) {
         return result.dividends;
     }, [portfolioIds, cookies.jwt])
 
+
+    const loadAllPortfolios = useCallback(async () => {
+        if (!cookies.jwt) return;
+
+        let response = await fetch('api/account/portfolios', {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Authorization': 'Bearer ' + cookies.jwt
+            }
+        });
+        let allPortfolios = await response.json();
+        return allPortfolios;
+
+    }, [cookies.jwt]);
+
     const loadPortfolio = useCallback(async () => {
         if (!cookies.jwt) return;
 
@@ -182,7 +201,7 @@ export function Portfolio(props) {
         console.log('portfolio', portfolio);
         return portfolio;
     }, [portfolioIds, cookies.jwt]);
-   
+
     const addUpdateHoldings = async (id) => {
         await fetch('api/account/addUpdateTransaction', {
             method: 'POST',
@@ -192,7 +211,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({
                 id: id,
-                portfolioId: portfolioId,
+                portfolioId: addHoldingsPortfolioId,
                 companyTicker: addHoldingsCompany.ticker,
                 quantity: addHoldingsQuantity,
                 price: addHoldingsPrice,
@@ -208,8 +227,8 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let promises = [loadPortfolio(), loadCurrencyRates()];
-            const [portfolio, rates] = await Promise.all(promises);
+            let promises = [loadPortfolio(), loadCurrencyRates(), loadAllPortfolios()];
+            const [portfolio, rates, allPortfolios] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
             setSelectedCurrency(portfolio.portfolios[0].currency);
@@ -217,6 +236,8 @@ export function Portfolio(props) {
 
             setPortfolioHoldings(portfolio.holdings);
             setCurrencyRates(rates);
+            setAllPortfolios(allPortfolios);
+            setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -236,7 +257,7 @@ export function Portfolio(props) {
 
 
         })()
-    }, [loadPortfolio, loadCurrencyRates, loadDividends])
+    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -335,7 +356,8 @@ export function Portfolio(props) {
         setAddHoldingsCompany(t.company);
         setCurTransactionId(t.id);
 
-        setAddHoldingsType(t.transactionType.type)
+        setAddHoldingsPortfolioId(t.portfolio.id);
+        setAddHoldingsType(t.transactionType.type);
         setAddHoldingsPrice(t.price);
         setAddHoldingsQuantity(t.quantity);
         setAddHoldingsCommission(t.commission);
@@ -559,7 +581,7 @@ export function Portfolio(props) {
 
     const currencies = ['USD', 'EUR', 'RUB'];
 
-    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings} disabled={portfolioIds.length > 1}>
+    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>
         Add Holdings
     </Button>
 
@@ -831,8 +853,8 @@ export function Portfolio(props) {
                             {portfolioTransactions.map(t =>
                                 <tr key={t.id}>
                                     <td className='centered'>{t.date.substring(0, 10)}</td>
-                                    <td className='centered'>{t.company.ticker}</td>  
-                                    <td>{t.company.shortName}</td>  
+                                    <td className='centered'>{t.company.ticker}</td>
+                                    <td>{t.company.shortName}</td>
                                     <td className='centered'>{t.transactionType.type}</td>
                                     <td className='centered'>{t.price}</td>
                                     <td className='centered'>{t.quantity}</td>
@@ -840,7 +862,7 @@ export function Portfolio(props) {
                                     <td className='centered'>{t.commission}</td>
                                     <td className='centered'>{t.comment}</td>
                                     <td className='centered'>
-                                        <Button variant='outline-warning mr-1' disabled={portfolios.length > 1}
+                                        <Button variant='outline-warning mr-1'
                                             onClick={() => handleEditTransaction(t)}>Edit</Button>
                                         <Button variant='outline-danger ml-1'
                                             onClick={() => handleDeleteTransaction(t)}>
@@ -948,7 +970,7 @@ export function Portfolio(props) {
                     <Modal.Title>Add Holdings</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
+                    <Form>                        
                         <Form.Group className='d-flex'>
                             <Form.Label>Side</Form.Label>
                             <div className='ml-auto'>
@@ -958,6 +980,15 @@ export function Portfolio(props) {
                                 </ToggleButtonGroup>
                             </div>
                         </Form.Group>
+
+                        <Form.Group>
+                            <Form.Label>Portfolio</Form.Label>
+                            <Form.Control as='select' value={addHoldingsPortfolioId} onChange={(e) => setAddHoldingsPortfolioId(e.target.value)}>
+                                {allPortfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </Form.Control>                            
+                        </Form.Group>
+
+
                         <Form.Group>
                             <Form.Label>Symbol</Form.Label>
                             <Select
@@ -1045,7 +1076,7 @@ export function Portfolio(props) {
                                                 <td className='centered fit'>{t.commission}</td>
                                                 <td className='centered fit'>{t.comment}</td>
                                                 <td className='centered fit'>
-                                                    <Button variant='outline-warning mr-1' disabled={portfolios.length > 1}
+                                                    <Button variant='outline-warning mr-1'
                                                         onClick={() => handleEditTransaction(t)}>Edit</Button>
                                                     <Button variant='outline-danger ml-1'
                                                         onClick={() => handleDeleteTransaction(t)}>

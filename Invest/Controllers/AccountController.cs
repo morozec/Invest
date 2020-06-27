@@ -322,6 +322,7 @@ namespace Invest.Controllers
                 .Transactions
                 .Include(t => t.Company)
                 .Include(t => t.TransactionType)
+                .Include(t => t.Portfolio)
                 .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date)
                 .ToList();
@@ -514,6 +515,7 @@ namespace Invest.Controllers
                 .Transactions
                 .Include(t => t.TransactionType)
                 .Include(t => t.Company)
+                .Include(t => t.Portfolio)
                 .Where(t => ids.Contains(t.Portfolio.Id) && t.Company.Ticker == symbol)
                 .OrderByDescending(t => t.Date)
                 .ToList();
