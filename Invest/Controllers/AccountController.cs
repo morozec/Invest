@@ -662,7 +662,7 @@ namespace Invest.Controllers
         public PricesDividendsDto GetDividends(
             [FromQuery(Name = "ids")] List<int> ids, [FromQuery(Name = "symbols")] List<string> symbols)
         {
-            var mktValues = new Dictionary<DateTime, double>();
+            var mktValues = new Dictionary<DateTime,Dictionary<string, double>>();
             var dividends = new Dictionary<string, double>();
 
             var allOrderedTransactions = _companyContext.Transactions
@@ -672,6 +672,8 @@ namespace Invest.Controllers
                 .OrderBy(t => t.Date).ToList();
 
             var yahooResults = new Dictionary<string, dynamic>();
+            
+
             Parallel.ForEach(symbols, (symbol) =>
             {
                 var startDate = allOrderedTransactions.First(t => t.Company.Ticker == symbol).Date;
@@ -694,11 +696,13 @@ namespace Invest.Controllers
             {
                 
                 if (!yahooResults.ContainsKey(symbol)) continue;
+               
                 var orderedTransactions = allOrderedTransactions.Where(
                     t => t.Company.Ticker == symbol).ToList();
 
                 var yahooResult = yahooResults[symbol];
-                var times = yahooResult.timestamp;
+                var currency = yahooResult.meta.currency.ToString();
+                List<double> times = JsonConvert.DeserializeObject<List<double>>(yahooResult.timestamp.ToString());
                 var close = yahooResult.indicators.quote[0].close;
 
                 if (yahooResult.events != null)
@@ -723,58 +727,84 @@ namespace Invest.Controllers
                 {
                     dividends.Add(symbol, 0d);
                 }
-               
-
-                //var count = orderedTransactions[0].Quantity;
-                //var index = 0;
-                //double? lastValue = null;
-                //for (var i = 1; i < orderedTransactions.Count; ++i)
-                //{
-                //    var trans = orderedTransactions[i];
-                //    DateTime date;
-                //    while ((date = UnixDateToDate((double)times[index])) < trans.Date)
-                //    {
-                //        double mktValue;
-                //        if (close[index] == null)
-                //        {
-                //            if (lastValue != null) mktValue = count * lastValue.Value;
-                //            else mktValue = 0d;
-                //        }
-                //        else
-                //        {
-                //            lastValue = (double)close[index];
-                //            mktValue = count * lastValue.Value;
-                //        }
-
-                //        if (!mktValues.ContainsKey(date))mktValues.Add(date, mktValue);
-                //        else mktValues[date] += mktValue;
-                //        index++;
-                //    }
-
-                //    count += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
-                //}
 
 
-                //while (index < times.Count)
-                //{
-                //    var date = UnixDateToDate((double)times[index]);
-                //    double mktValue;
+                var curCount = orderedTransactions[0].TransactionType.Type == "Buy"
+                    ? orderedTransactions[0].Quantity
+                    : -orderedTransactions[0].Quantity;
+                var curDate = orderedTransactions[0].Date;
+                double? lastValue = null;
+                for (var i = 1; i < orderedTransactions.Count; ++i)
+                {
+                    var trans = orderedTransactions[i];
+                    while (curDate < trans.Date)
+                    {
+                        if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            curDate = curDate.AddDays(1);
+                            continue;
+                        }
+                        double mktValue;
+                        var index = times.FindIndex(t => UnixDateToDate(t) == curDate);
+                        if (index == -1 || close[index] == null)
+                        {
+                            if (lastValue != null) mktValue = curCount * lastValue.Value;
+                            else
+                            {
+                                curDate = curDate.AddDays(1);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            lastValue = (double)close[index];
+                            mktValue = curCount * lastValue.Value;
+                        }
 
-                //    if (close[index] == null)
-                //    {
-                //        if (lastValue != null) mktValue = count * lastValue.Value;
-                //        else mktValue = 0d;
-                //    }
-                //    else
-                //    {
-                //        lastValue = (double)close[index];
-                //        mktValue = count * lastValue.Value;
-                //    }
+                        if (!mktValues.ContainsKey(curDate))
+                            mktValues.Add(curDate, new Dictionary<string, double>());
+                        if (!mktValues[curDate].ContainsKey(currency))
+                            mktValues[curDate].Add(currency, 0d);
+                        mktValues[curDate][currency] += mktValue;
+                        curDate = curDate.AddDays(1);
+                    }
 
-                //    if (!mktValues.ContainsKey(date)) mktValues.Add(date, mktValue);
-                //    else mktValues[date] += mktValue;
-                //    ++index;
-                //}
+                    curCount += trans.TransactionType.Type == "Buy" ? trans.Quantity : -trans.Quantity;
+                }
+
+                var today = DateTime.Now.Date;
+                while (curDate < today)
+                {
+                    if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        curDate = curDate.AddDays(1);
+                        continue;
+                    }
+
+                    double mktValue;
+                    var index = times.FindIndex(t => UnixDateToDate(t) == curDate);
+                    if (index == -1 || close[index] == null)
+                    {
+                        if (lastValue != null) mktValue = curCount * lastValue.Value;
+                        else
+                        {
+                            curDate = curDate.AddDays(1);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        lastValue = (double)close[index];
+                        mktValue = curCount * lastValue.Value;
+                    }
+
+                    if (!mktValues.ContainsKey(curDate)) 
+                        mktValues.Add(curDate, new Dictionary<string, double>());
+                    if (!mktValues[curDate].ContainsKey(currency))
+                        mktValues[curDate].Add(currency, 0d);
+                    mktValues[curDate][currency] += mktValue;
+                    curDate = curDate.AddDays(1);
+                }
             }
 
 
@@ -787,7 +817,7 @@ namespace Invest.Controllers
 
         public class PricesDividendsDto
         {
-            public IDictionary<DateTime, double> MktValues { get; set; }
+            public IDictionary<DateTime, Dictionary<string, double>> MktValues { get; set; }
             public Dictionary<string, double> Dividends { get; set; }
         }
 

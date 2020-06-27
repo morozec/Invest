@@ -7,6 +7,7 @@ import Select, { createFilter } from 'react-select';
 import { MenuList } from './helpers/MenuList';
 import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
+import { Line } from 'react-chartjs-2';
 
 export function Portfolio(props) {
     const { companies } = props;
@@ -16,6 +17,7 @@ export function Portfolio(props) {
     const [portfolios, setPortfolios] = useState(null);
     const [commissions, setCommisions] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
+    const [mktValues, setMktValues] = useState({});
 
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
@@ -169,10 +171,10 @@ export function Portfolio(props) {
             }
         });
 
-        let dividends = await response.json();
-        console.log('market values', dividends.mktValues);
-        return dividends.dividends;
-        // companies.map(c => c.dividends = dividends.dividends[c.ticker]);
+        let result = await response.json();
+        console.log('market values', result.mktValues);
+        setMktValues(result.mktValues);
+        return result.dividends;
     }, [portfolioIds, cookies.jwt])
 
     const loadPortfolio = useCallback(async () => {
@@ -528,6 +530,16 @@ export function Portfolio(props) {
         }
     }
 
+    const getDateMktValue = (date) => {
+        let value = 0;
+        const allCurrenciesValues = mktValues[date];
+        let currencies = Object.keys(allCurrenciesValues);
+        for (let currency of currencies){
+            value += getPortfolioCurrencyValue(allCurrenciesValues[currency], currency);
+        }
+        return value;
+    }
+
     const currencies = ['USD', 'EUR', 'RUB'];
 
     let addHoldingsButton = <Button variant='success' onClick={() => handleNewShow()} disabled={portfolioIds.length > 1}>
@@ -586,6 +598,42 @@ export function Portfolio(props) {
                         <div>{"Dividends"}</div>
                         <div className='ml-auto'>{getPortfolioDividends() ?? <em>Loading...</em>}</div>
                     </div>
+                </div>
+                <div className='col-sm-4'>
+                    <Line
+                        data={{
+                            labels: Object.keys(mktValues),
+                            datasets: [
+                                {
+                                    label: 'Market Value',
+                                    backgroundColor: `rgba(0, 110, 30, 1)`,
+                                    borderColor: `rgba(0, 110, 30, 1)`,
+
+                                    pointBorderColor: 'rgba(0,0,0,1)',
+                                    pointBackgroundColor: 'rgba(156, 255, 174,1)',
+                                    pointRadius: 2.5,
+                                    pointBorderWidth: 1,
+
+                                    pointHoverRadius: 5,
+                                    pointHoverBorderWidth: 2,
+                                    
+                                    pointHitRadius: 10,
+
+                                    data: Object.keys(mktValues).map(date => getDateMktValue(date)),
+                                }
+                            ],
+
+                        }}
+                        options={{
+                            scales: {
+                                xAxes: [{
+                                    type: 'time',
+                                    distribution: 'linear',
+
+                                }]
+                            }
+                        }}
+                    />
                 </div>
             </div>
 
