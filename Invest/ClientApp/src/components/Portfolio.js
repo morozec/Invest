@@ -8,7 +8,7 @@ import { MenuList } from './helpers/MenuList';
 import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
 import { Line } from 'react-chartjs-2';
-import {CurrencySymbols} from './../helpers';
+import { CurrencySymbols } from './../helpers';
 
 export function Portfolio(props) {
     const { companies } = props;
@@ -889,7 +889,7 @@ export function Portfolio(props) {
                                 }]
                             }}
                                 options={{
-                                    legend:{
+                                    legend: {
                                         display: portfolioHoldings.filter(ph => ph.quantity > 0).length <= 15
                                     },
                                     plugins: {
@@ -902,16 +902,18 @@ export function Portfolio(props) {
                                             label: function (tooltipItem, data) {
                                                 //get the concerned dataset
                                                 var dataset = data.datasets[tooltipItem.datasetIndex];
-                                                let label = data.labels[tooltipItem.index];
                                                 //calculate the total of this data set
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${label}: ${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                            },
+                                            title: function (tooltipItem, data) {
+                                                return data.labels[tooltipItem[0].index];
                                             }
-                                        }                                        
+                                        }
                                     },
-                                    
+
                                 }}
                             />
                         </div>
@@ -934,14 +936,16 @@ export function Portfolio(props) {
                                             label: function (tooltipItem, data) {
                                                 //get the concerned dataset
                                                 var dataset = data.datasets[tooltipItem.datasetIndex];
-                                                let label = data.labels[tooltipItem.index];
                                                 //calculate the total of this data set
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${label}: ${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                            },
+                                            title: function (tooltipItem, data) {
+                                                return data.labels[tooltipItem[0].index];
                                             }
-                                        }                                        
+                                        }
                                     },
                                 }}
                             />
@@ -967,15 +971,17 @@ export function Portfolio(props) {
                                         callbacks: {
                                             label: function (tooltipItem, data) {
                                                 //get the concerned dataset
-                                                var dataset = data.datasets[tooltipItem.datasetIndex];
-                                                let label = data.labels[tooltipItem.index];
+                                                var dataset = data.datasets[tooltipItem.datasetIndex];                                                
                                                 //calculate the total of this data set
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${label}: ${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                            },
+                                            title: function (tooltipItem, data) {
+                                                return data.labels[tooltipItem[0].index];
                                             }
-                                        }                                        
+                                        }
                                     },
                                 }}
                             />
@@ -989,7 +995,7 @@ export function Portfolio(props) {
                                 }]
                             }}
                                 options={{
-                                    legend:{
+                                    legend: {
                                         display: Object.keys(industryGroups).length <= 15
                                     },
                                     plugins: {
@@ -1002,14 +1008,16 @@ export function Portfolio(props) {
                                             label: function (tooltipItem, data) {
                                                 //get the concerned dataset
                                                 var dataset = data.datasets[tooltipItem.datasetIndex];
-                                                let label = data.labels[tooltipItem.index];
                                                 //calculate the total of this data set
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${label}: ${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                            },
+                                            title: function (tooltipItem, data) {
+                                                return data.labels[tooltipItem[0].index];
                                             }
-                                        }                                        
+                                        }
                                     },
                                 }}
                             />
