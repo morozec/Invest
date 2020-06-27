@@ -320,6 +320,17 @@ export function Portfolio(props) {
         })()
     }
 
+    const handleAddHoldings = () => {
+        if (transactionsItem) {
+            let ahCompanies = companies.filter(c => c.ticker === transactionsItem.ticker);
+            if (ahCompanies.length === 1) {
+                setAddHoldingsCompany(ahCompanies[0]);
+            }
+            setAddHoldingsPrice(transactionsItem.price.regularMarketPrice.raw);
+        }
+        setShowNewDialog(true);
+    }
+
     const handleEditTransaction = (t) => {
         setAddHoldingsCompany(t.company);
         setCurTransactionId(t.id);
@@ -539,7 +550,7 @@ export function Portfolio(props) {
 
     const currencies = ['USD', 'EUR', 'RUB'];
 
-    let addHoldingsButton = <Button variant='success' onClick={() => setShowNewDialog(true)} disabled={portfolioIds.length > 1}>
+    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings} disabled={portfolioIds.length > 1}>
         Add Holdings
     </Button>
 
