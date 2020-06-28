@@ -22,6 +22,7 @@ export function Portfolio(props) {
     const [commissions, setCommisions] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
     const [mktValues, setMktValues] = useState({});
+    const [overallPL, setOverallPL] = useState({});
     const [portfolioTransactions, setPortfolioTransactions] = useState(null);
 
     const [showNewDialog, setShowNewDialog] = useState(false);
@@ -167,8 +168,9 @@ export function Portfolio(props) {
         });
 
         let result = await response.json();
-        console.log('market values', result.mktValues);
+        console.log('divs container', result);
         setMktValues(result.mktValues);
+        setOverallPL(result.overallPL);
         return result.dividends;
     }, [portfolioIds, cookies.jwt])
 
@@ -571,12 +573,11 @@ export function Portfolio(props) {
         }
     }
 
-    const getDateMktValue = (date) => {
+    const getDateValue = (dateValue) => {
         let value = 0;
-        const allCurrenciesValues = mktValues[date];
-        let currencies = Object.keys(allCurrenciesValues);
+        let currencies = Object.keys(dateValue);
         for (let currency of currencies) {
-            value += getPortfolioCurrencyValue(allCurrenciesValues[currency], currency);
+            value += getPortfolioCurrencyValue(dateValue[currency], currency);
         }
         return value;
     }
@@ -660,7 +661,49 @@ export function Portfolio(props) {
 
                                     pointHitRadius: 10,
 
-                                    data: Object.keys(mktValues).map(date => getDateMktValue(date)),
+                                    data: Object.keys(mktValues).map(date => getDateValue(mktValues[date])),
+                                }
+                            ],
+
+                        }}
+                        options={{
+                            scales: {
+                                xAxes: [{
+                                    type: 'time',
+                                    distribution: 'linear',
+
+                                }]
+                            },
+                            plugins:{
+                                datalabels:{
+                                    display:false
+                                }
+                            }
+                        }}
+                    />
+                </div>
+
+                <div className='col-sm-4'>
+                    <Line
+                        data={{
+                            labels: Object.keys(overallPL),
+                            datasets: [
+                                {
+                                    label: 'Overall P&L',
+                                    backgroundColor: `rgba(0, 110, 30, 1)`,
+                                    borderColor: `rgba(0, 110, 30, 1)`,
+
+                                    pointBorderColor: 'rgba(0,0,0,1)',
+                                    pointBackgroundColor: 'rgba(156, 255, 174,1)',
+                                    pointRadius: 2.5,
+                                    pointBorderWidth: 1,
+
+                                    pointHoverRadius: 5,
+                                    pointHoverBorderWidth: 2,
+
+                                    pointHitRadius: 10,
+
+                                    data: Object.keys(overallPL).map(date => getDateValue(overallPL[date])),
                                 }
                             ],
 
