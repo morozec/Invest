@@ -659,8 +659,6 @@ export function Portfolio(props) {
                                     pointHoverRadius: 5,
                                     pointHoverBorderWidth: 2,
 
-                                    pointHitRadius: 10,
-
                                     data: Object.keys(mktValues).map(date => getDateValue(mktValues[date])),
                                 }
                             ],
@@ -700,8 +698,6 @@ export function Portfolio(props) {
 
                                     pointHoverRadius: 5,
                                     pointHoverBorderWidth: 2,
-
-                                    pointHitRadius: 10,
 
                                     data: Object.keys(overallPL).map(date => getDateValue(overallPL[date])),
                                 }
