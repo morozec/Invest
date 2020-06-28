@@ -576,7 +576,7 @@ namespace Invest.Controllers
             1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
         private DateTime UnixDateToDate(double unixDate)
         {
-            return dtDateTime.AddSeconds(unixDate).ToLocalTime().Date;
+            return dtDateTime.AddSeconds(unixDate).ToUniversalTime().Date;
         }
 
         //[Authorize]
