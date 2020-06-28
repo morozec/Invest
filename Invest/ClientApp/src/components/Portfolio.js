@@ -3,6 +3,7 @@ import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table, Tabs, Tab 
 import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
+import 'chartjs-plugin-datalabels';
 import Select, { createFilter } from 'react-select';
 import { MenuList } from './helpers/MenuList';
 import { useCookies } from 'react-cookie';
@@ -671,6 +672,11 @@ export function Portfolio(props) {
                                     distribution: 'linear',
 
                                 }]
+                            },
+                            plugins:{
+                                datalabels:{
+                                    display:false
+                                }
                             }
                         }}
                     />
@@ -888,15 +894,33 @@ export function Portfolio(props) {
                                         : 0)
                                 }]
                             }}
+
                                 options={{
-                                    legend: {
-                                        display: portfolioHoldings.filter(ph => ph.quantity > 0).length <= 15
-                                    },
-                                    plugins: {
-                                        colorschemes: {
-                                            scheme: 'brewer.Paired12'
+                                    layout: {
+                                        padding: {
+                                            top: 25,
+                                            bottom: 25,
                                         }
                                     },
+                                    legend: {
+                                        display: false
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            color: 'black',
+                                            anchor: 'end',
+                                            align: 'end',
+                                            display: 'auto',
+                                            formatter: (value, ctx) => {
+                                                let dataArr = ctx.chart.data.datasets[0].data;
+                                                let sum = dataArr.reduce((sum, cur) => sum + +cur, 0);
+                                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                                let percentage = (+value * 100 / sum);
+                                                return `${label}: ${percentage.toFixed(2)}%`;
+                                            },
+                                        }
+                                    },
+
                                     tooltips: {
                                         callbacks: {
                                             label: function (tooltipItem, data) {
@@ -925,12 +949,33 @@ export function Portfolio(props) {
                                     data: Object.keys(currencyGroups).map(currency => currencyGroups[currency].toFixed(2))
                                 }]
                             }}
+
                                 options={{
-                                    plugins: {
-                                        colorschemes: {
-                                            scheme: 'brewer.Paired12'
+                                    layout: {
+                                        padding: {
+                                            top: 25,
+                                            bottom: 25,
                                         }
                                     },
+                                    legend: {
+                                        display: false
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            color: 'black',
+                                            anchor: 'end',
+                                            align: 'end',
+                                            display: 'auto',
+                                            formatter: (value, ctx) => {
+                                                let dataArr = ctx.chart.data.datasets[0].data;
+                                                let sum = dataArr.reduce((sum, cur) => sum + +cur, 0);
+                                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                                let percentage = (+value * 100 / sum);
+                                                return `${label}: ${percentage.toFixed(2)}%`;
+                                            },
+                                        }
+                                    },
+
                                     tooltips: {
                                         callbacks: {
                                             label: function (tooltipItem, data) {
@@ -947,6 +992,7 @@ export function Portfolio(props) {
                                             }
                                         }
                                     },
+
                                 }}
                             />
                         </div>
@@ -961,48 +1007,33 @@ export function Portfolio(props) {
                                     data: Object.keys(sectorsGroups).map(sector => sectorsGroups[sector].toFixed(2))
                                 }]
                             }}
-                                options={{
-                                    plugins: {
-                                        colorschemes: {
-                                            scheme: 'brewer.Paired12'
-                                        }
-                                    },
-                                    tooltips: {
-                                        callbacks: {
-                                            label: function (tooltipItem, data) {
-                                                //get the concerned dataset
-                                                var dataset = data.datasets[tooltipItem.datasetIndex];                                                
-                                                //calculate the total of this data set
-                                                var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
-                                                var curValue = +dataset.data[tooltipItem.index];
-                                                var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
-                                            },
-                                            title: function (tooltipItem, data) {
-                                                return data.labels[tooltipItem[0].index];
-                                            }
-                                        }
-                                    },
-                                }}
-                            />
-                        </div>
-                        <div className='col-sm-6'>
 
-                            <Doughnut data={{
-                                labels: Object.keys(industryGroups),
-                                datasets: [{
-                                    data: Object.keys(industryGroups).map(industry => industryGroups[industry].toFixed(2))
-                                }]
-                            }}
                                 options={{
-                                    legend: {
-                                        display: Object.keys(industryGroups).length <= 15
-                                    },
-                                    plugins: {
-                                        colorschemes: {
-                                            scheme: 'brewer.Paired12'
+                                    layout: {
+                                        padding: {
+                                            top: 25,
+                                            bottom: 25,
                                         }
                                     },
+                                    legend: {
+                                        display: false
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            color: 'black',
+                                            anchor: 'end',
+                                            align: 'end',
+                                            display: 'auto',
+                                            formatter: (value, ctx) => {
+                                                let dataArr = ctx.chart.data.datasets[0].data;
+                                                let sum = dataArr.reduce((sum, cur) => sum + +cur, 0);
+                                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                                let percentage = (+value * 100 / sum);
+                                                return `${label}: ${percentage.toFixed(2)}%`;
+                                            },
+                                        }
+                                    },
+
                                     tooltips: {
                                         callbacks: {
                                             label: function (tooltipItem, data) {
@@ -1019,8 +1050,65 @@ export function Portfolio(props) {
                                             }
                                         }
                                     },
+
                                 }}
                             />
+                        </div>
+                        <div className='col-sm-6'>
+
+                            <Doughnut data={{
+                                labels: Object.keys(industryGroups),
+                                datasets: [{
+                                    data: Object.keys(industryGroups).map(industry => industryGroups[industry].toFixed(2))
+                                }]
+                            }}
+
+                                options={{
+                                    layout: {
+                                        padding: {
+                                            top: 25,
+                                            bottom: 25,
+                                        }
+                                    },
+                                    legend: {
+                                        display: false
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            color: 'black',
+                                            anchor: 'end',
+                                            align: 'end',
+                                            display: 'auto',
+                                            formatter: (value, ctx) => {
+                                                let dataArr = ctx.chart.data.datasets[0].data;
+                                                let sum = dataArr.reduce((sum, cur) => sum + +cur, 0);
+                                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                                let percentage = (+value * 100 / sum);
+                                                return `${label}: ${percentage.toFixed(2)}%`;
+                                            },
+                                        }
+                                    },
+
+                                    tooltips: {
+                                        callbacks: {
+                                            label: function (tooltipItem, data) {
+                                                //get the concerned dataset
+                                                var dataset = data.datasets[tooltipItem.datasetIndex];
+                                                //calculate the total of this data set
+                                                var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
+                                                var curValue = +dataset.data[tooltipItem.index];
+                                                var percent = +(curValue / total * 100).toFixed(2);
+                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                            },
+                                            title: function (tooltipItem, data) {
+                                                return data.labels[tooltipItem[0].index];
+                                            }
+                                        }
+                                    },
+
+                                }}
+                            />
+
                         </div>
                     </div>
 
