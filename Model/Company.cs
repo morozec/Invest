@@ -18,6 +18,7 @@ namespace Model
         public string Currency { get; set; }
 
         public List<CompanyWatchList> CompanyWatchLists { get; set; }
+        public List<CompanyPortfolio> CompanyPortfolios { get; set; }
 
         public Company(string ticker, string shortName, string longName, string exchange)
         {
@@ -26,12 +27,14 @@ namespace Model
             LongName = longName;
             Exchange = exchange;
             CompanyWatchLists = new List<CompanyWatchList>();
+            CompanyPortfolios = new List<CompanyPortfolio>();
         }
         
 
         public Company()
         {
             CompanyWatchLists = new List<CompanyWatchList>();
+            CompanyPortfolios = new List<CompanyPortfolio>();
         }
     }
 }

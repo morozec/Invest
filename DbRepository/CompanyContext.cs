@@ -37,6 +37,18 @@ namespace DbRepository
                 .HasOne(cwl => cwl.WatchList)
                 .WithMany(wl => wl.CompanyWatchLists)
                 .HasForeignKey(cwl => cwl.WatchListId);
+
+            builder.Entity<CompanyPortfolio>()
+                .HasKey(t => new { t.CompanyTicker, t.PortfolioId });
+            builder.Entity<CompanyPortfolio>()
+                .HasOne(cwl => cwl.Company)
+                .WithMany(c => c.CompanyPortfolios)
+                .HasForeignKey(cwl => cwl.CompanyTicker);
+            builder.Entity<CompanyPortfolio>()
+                .HasOne(cwl => cwl.Portfolio)
+                .WithMany(wl => wl.CompanyPortfolios)
+                .HasForeignKey(cwl => cwl.PortfolioId);
+
         }
 
     }
