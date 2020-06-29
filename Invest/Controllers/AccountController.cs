@@ -257,6 +257,41 @@ namespace Invest.Controllers
             public int Id { get; set; }
         }
 
+        [Authorize]
+        [HttpPost("updateDividendTaxes")]
+        public IActionResult UpdateDividendTaxes(UpdateDividendTaxesDto updateDividendTaxesDto)
+        {
+            var portfolio = _companyContext.Portfolios
+                .Include(p => p.CompanyPortfolios)
+                .Single(p => p.Id == updateDividendTaxesDto.PortfolioId);
+            portfolio.CompanyPortfolios.Clear();
+
+            foreach (var item in updateDividendTaxesDto.DividendTaxDtos)
+            {
+                portfolio.CompanyPortfolios.Add(new CompanyPortfolio()
+                {
+                    CompanyTicker = item.CompanyTicker,
+                    PortfolioId = portfolio.Id,
+                    DividendTaxPercent = item.DividendTaxPercent
+                });
+            }
+
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        public class UpdateDividendTaxesDto
+        {
+            public int PortfolioId { get; set; }
+            public IList<DividendTaxDto> DividendTaxDtos { get; set; }
+        }
+
+        public class DividendTaxDto
+        {
+            public string CompanyTicker { get; set; }
+            public double DividendTaxPercent { get; set; }
+        }
+
 
         [Authorize]
         [HttpPost("addUpdateTransaction")]
@@ -266,7 +301,11 @@ namespace Invest.Controllers
                 ? _companyContext.Transactions.Single(t => t.Id == addUpdateTransactionDto.Id)
                 : new Transaction();
 
-            var portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdateTransactionDto.PortfolioId);
+           
+            var portfolio = _companyContext.Portfolios
+                    .Single(p => p.Id == addUpdateTransactionDto.PortfolioId);
+            
+           
             var company = _companyContext.Companies
                 .Single(c => c.Ticker.ToLower() == addUpdateTransactionDto.CompanyTicker.ToLower());
             var type = _companyContext.TransactionTypes.Single(t => t.Type == addUpdateTransactionDto.Type);
@@ -313,23 +352,27 @@ namespace Invest.Controllers
             public DateTime Date { get; set; }
             public string Type { get; set; }
             public string Comment { get; set; }
+
         }
 
         [Authorize]
         [HttpGet("portfolio")]
         public PortfolioDto GetPortfolio([FromQuery]List<int> ids)
         {
-            var portfolios = _companyContext.Portfolios.Where(p => ids.Contains(p.Id));
+            var portfolios = _companyContext.Portfolios
+                .Where(p => ids.Contains(p.Id));
             var commissions = new Dictionary<string, double>();
 
             var transactions = _companyContext
                 .Transactions
                 .Include(t => t.Company)
+                .ThenInclude(c => c.CompanyPortfolios)
                 .Include(t => t.TransactionType)
                 .Include(t => t.Portfolio)
                 .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date)
                 .ToList();
+
 
             var holdings = transactions
                 .GroupBy(t => t.Company)
@@ -435,16 +478,29 @@ namespace Invest.Controllers
                         totalAmount = totalSellAmount;
                     }
 
+                    double? dividendTaxPercent = null;
+                    if (ids.Count == 1)
+                    {
+                        var cp = g.Key.CompanyPortfolios
+                            .SingleOrDefault(x => x.PortfolioId == ids[0]);
+                        if (cp != null)
+                        {
+                            dividendTaxPercent = cp.DividendTaxPercent;
+                        }
+                    }
+
                     return new PortfolioHoldingsDto
                     {
                         Ticker = g.Key.Ticker,
+                        CompanyName = g.Key.ShortName,
                         Quantity = openQuantity,
                         Amount = openAmount,
                         ClosedAmount = closedAmount,
                         TotalAmount = totalAmount,
                         Sector = g.Key.Sector,
                         Industry = g.Key.Industry,
-                        Currency = g.Key.Currency
+                        Currency = g.Key.Currency,
+                        DividendTaxPercent = dividendTaxPercent
                     };
 
                 }).ToList();
@@ -501,12 +557,14 @@ namespace Invest.Controllers
         public class PortfolioHoldingsDto
         {
             public string Ticker { get; set; }
+            public string CompanyName { get; set; }
             public double AvgPrice { get; set; }
             public int Quantity { get; set; }
             public double Amount { get; set; }
             public double ClosedAmount { get; set; }
             public double TotalAmount { get; set; }
 
+            public double? DividendTaxPercent { get; set; }
 
             public string Sector { get; set; }
             public string Industry { get; set; }
