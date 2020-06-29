@@ -550,7 +550,7 @@ export function Portfolio(props) {
         return history;
     }
 
-    const savePortfolioEdit = (name, defaultCommissionPercent) => {
+    const savePortfolioEdit = (name, defaultCommissionPercent, defaultDividendTaxPercent) => {
         (async () => {
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
@@ -559,7 +559,7 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent })
+                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent, defaultDividendTaxPercent })
             });
             let portfolio = await loadPortfolio();
             setPortfolios(portfolio.portfolios);
@@ -1348,6 +1348,7 @@ export function Portfolio(props) {
                     handleSave={savePortfolioEdit}
                     name={portfolios[0].name}
                     defaultCommissionPercent={portfolios[0].defaultCommissionPercent}
+                    defaultDividendTaxPercent={portfolios[0].defaultDividendTaxPercent}
                 />
             }
         </div>
