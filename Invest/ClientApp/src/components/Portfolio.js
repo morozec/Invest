@@ -402,6 +402,8 @@ export function Portfolio(props) {
         setPortfolioHoldings(pricedHoldings);
     }
 
+    const getSumDividends = (dividends) => dividends.reduce((sum, cur) => sum + cur.value, 0);
+
     const getAvgPrice = (item) => (item.amount / item.quantity).toFixed(2);
 
     const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.fmt} (${item.price.regularMarketChangePercent.fmt})`
@@ -416,8 +418,8 @@ export function Portfolio(props) {
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
 
-    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + item.dividends);
-    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + item.dividends) / item.totalAmount * 100).toFixed(2)}%`;
+    const getOverallPL = (item) => (getUnrealizedPL(item) + item.closedAmount + getSumDividends(item.dividends));
+    const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + getSumDividends(item.dividends)) / item.totalAmount * 100).toFixed(2)}%`;
     // const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
 
@@ -528,7 +530,24 @@ export function Portfolio(props) {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => ph.dividends === undefined)) return null;
         return portfolioHoldings.reduce((sum, ph) =>
-            sum + getPortfolioCurrencyValue(ph.dividends, ph.currency), 0).toFixed(2);
+            sum + getPortfolioCurrencyValue(getSumDividends(ph.dividends), ph.currency), 0).toFixed(2);
+    }
+
+    const getPortfolioDividendHistory = () => {
+        if (!portfolioHoldings || !currencyRates) return [];
+        if (portfolioHoldings.some(ph => ph.dividends === undefined)) return [];
+        let history = [];
+        for (let ph of portfolioHoldings) {
+            history = [...history, ...ph.dividends.map(div => ({
+                date: div.date,
+                value: div.value,
+                ticker: ph.ticker,
+                shortName: ph.price ? ph.price.shortName : <em>Loading...</em>,
+                currency: ph.currency
+            }))];
+        }
+        history.sort((h1, h2) => h1.date < h2.date ? 1 : -1);
+        return history;
     }
 
     const savePortfolioEdit = (name, defaultCommissionPercent) => {
@@ -672,9 +691,9 @@ export function Portfolio(props) {
 
                                 }]
                             },
-                            plugins:{
-                                datalabels:{
-                                    display:false
+                            plugins: {
+                                datalabels: {
+                                    display: false
                                 }
                             }
                         }}
@@ -712,9 +731,9 @@ export function Portfolio(props) {
 
                                 }]
                             },
-                            plugins:{
-                                datalabels:{
-                                    display:false
+                            plugins: {
+                                datalabels: {
+                                    display: false
                                 }
                             }
                         }}
@@ -783,7 +802,7 @@ export function Portfolio(props) {
                                     </td>
 
                                     <td className='centered'>
-                                        {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
+                                        {item.dividends !== undefined ? (getSumDividends(item.dividends)).toFixed(2) : <em>Loading...</em>}
                                     </td>
 
                                     <td className={`centered ${item.closedAmount > 0
@@ -848,7 +867,7 @@ export function Portfolio(props) {
                                     </td>
 
                                     <td className='centered'>
-                                        {item.dividends !== undefined ? (item.dividends).toFixed(2) : <em>Loading...</em>}
+                                        {item.dividends !== undefined ? (getSumDividends(item.dividends)).toFixed(2) : <em>Loading...</em>}
                                     </td>
 
                                     <td className={`centered ${item.closedAmount > 0
@@ -879,7 +898,7 @@ export function Portfolio(props) {
 
                 </Tab>
 
-                <Tab eventKey="history" title="Transaction History">
+                <Tab eventKey="transactionHistory" title="Transaction History">
                     <Table className='table-sm' bordered hover variant='light'>
                         <thead>
                             <tr>
@@ -891,6 +910,7 @@ export function Portfolio(props) {
                                 <th className='centered'>Quantity</th>
                                 <th className='centered'>Amount</th>
                                 <th className='centered'>Commission</th>
+                                <th className='centered'>Currency</th>
                                 <th className='centered'>Comment</th>
                                 <th className='centered'></th>
                             </tr>
@@ -906,6 +926,7 @@ export function Portfolio(props) {
                                     <td className='centered'>{t.quantity}</td>
                                     <td className='centered'>{(t.price * t.quantity).toFixed(2)}</td>
                                     <td className='centered'>{t.commission}</td>
+                                    <td className='centered'>{t.company.currency}</td>
                                     <td className='centered'>{t.comment}</td>
                                     <td className='centered'>
                                         <Button variant='outline-warning mr-1'
@@ -919,6 +940,32 @@ export function Portfolio(props) {
                         </tbody>
                     </Table>
                 </Tab>
+
+
+                <Tab eventKey="dividendHistory" title="Dividend History">
+                    <Table className='table-sm' bordered hover variant='light'>
+                        <thead>
+                            <tr>
+                                <th className='centered'>Date</th>
+                                <th className='centered'>Symbol</th>
+                                <th>Name</th>
+                                <th className='centered'>Amount</th>
+                                <th className='centered'>Currency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {getPortfolioDividendHistory().map((divItem, index) =>
+                                <tr key={index}>
+                                    <td className='centered'>{divItem.date.substring(0, 10)}</td>
+                                    <td className='centered'>{divItem.ticker}</td>
+                                    <td>{divItem.shortName}</td>
+                                    <td className='centered'>{(divItem.value).toFixed(2)}</td>
+                                    <td className='centered'>{divItem.currency}</td>
+                                </tr>)}
+                        </tbody>
+                    </Table>
+                </Tab>
+
 
 
                 <Tab eventKey="analysis" title="Analysis">

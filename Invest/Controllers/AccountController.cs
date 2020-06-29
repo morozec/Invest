@@ -683,7 +683,7 @@ namespace Invest.Controllers
             var mktValues = new Dictionary<DateTime,Dictionary<string, double>>();
             var unrealizedPL = new Dictionary<DateTime,Dictionary<string, double>>();
             var overallPL = new Dictionary<DateTime,Dictionary<string, double>>();
-            var dividends = new Dictionary<string, double>();
+            var dividends = new Dictionary<string, IList<DividendDto>>();
 
             var allOrderedTransactions = _companyContext.Transactions
                 .Include(t => t.TransactionType)
@@ -732,7 +732,7 @@ namespace Invest.Controllers
                         JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(
                             yahooResult.events.dividends.ToString());
 
-                    var curDividendsSum = 0d;
+                    var curSymbolDividends = new List<DividendDto>();
                     foreach (var key in curDividends.Keys)
                     {
                         var divDate = UnixDateToDate((double)curDividends[key].date);
@@ -740,15 +740,15 @@ namespace Invest.Controllers
                         var count = orderedTransactions
                             .Where(t => t.Date < divDate)
                             .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
-                        curDividendsSum += divAmount * count;
+                        curSymbolDividends.Add(new DividendDto(){Date = divDate, Value = divAmount * count });
 
                         datedDividends.Add(divDate, divAmount * count);
                     }
-                    dividends.Add(symbol, curDividendsSum);
+                    dividends.Add(symbol, curSymbolDividends);
                 }
                 else
                 {
-                    dividends.Add(symbol, 0d);
+                    dividends.Add(symbol, new List<DividendDto>());
                 }
 
                 var curCount = orderedTransactions[0].TransactionType.Type == "Buy"
@@ -888,13 +888,19 @@ namespace Invest.Controllers
             public IDictionary<DateTime, Dictionary<string, double>> MktValues { get; set; }
             public IDictionary<DateTime, Dictionary<string, double>> UnrealizedPL { get; set; }
             public IDictionary<DateTime, Dictionary<string, double>> OverallPL { get; set; }
-            public Dictionary<string, double> Dividends { get; set; }
+            public Dictionary<string, IList<DividendDto>> Dividends { get; set; }
         }
 
         public class MarketValueDto
         {
             public DateTime Date { get; set; }
             public double MktValue { get; set; }
+        }
+
+        public class DividendDto
+        {
+            public DateTime Date { get; set; }
+            public double Value { get; set; }
         }
 
     }
