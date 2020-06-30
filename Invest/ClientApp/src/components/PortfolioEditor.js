@@ -3,19 +3,16 @@ import { Modal, Form, Button } from 'react-bootstrap';
 
 export function PortfolioEditor(props) {
 
-    const { show, handleClose, handleSave, name, defaultCommissionPercent, defaultDividendTaxPercent } = props;
+    const { show, handleClose, handleSave, name, defaultCommissionPercent } = props;
     const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');    
     const [portfolioDefaultCommissionPercent, setPortfolioDefaultCommissionPercent] = useState(
         defaultCommissionPercent ? defaultCommissionPercent : 0);
-    const [portfolioDefaultDividendTaxPercent, setPortfolioDefaultDividendTaxPercent] = useState(
-        defaultDividendTaxPercent ? defaultDividendTaxPercent : 0);
 
     useEffect(() => {
         setPortfolioName(name ? name : 'New Portfilio');
         setPortfolioDefaultCommissionPercent(defaultCommissionPercent ? defaultCommissionPercent : 0);
-        setPortfolioDefaultDividendTaxPercent(defaultDividendTaxPercent ? defaultDividendTaxPercent : 0);
 
-    }, [show, name, defaultCommissionPercent, defaultDividendTaxPercent])
+    }, [show, name, defaultCommissionPercent])
 
     return (
         <Modal show={show} onHide={handleClose}>
@@ -33,12 +30,7 @@ export function PortfolioEditor(props) {
                         <Form.Label>Default Commission (%)</Form.Label>
                         <Form.Control type='number' step='any'
                             value={portfolioDefaultCommissionPercent} onChange={(e) => setPortfolioDefaultCommissionPercent(+e.target.value)} />
-                    </Form.Group>
-                    <Form.Group>
-                        <Form.Label>Default Dividend Tax (%)</Form.Label>
-                        <Form.Control type='number' step='any'
-                            value={portfolioDefaultDividendTaxPercent} onChange={(e) => setPortfolioDefaultDividendTaxPercent(+e.target.value)} />
-                    </Form.Group>                       
+                    </Form.Group>                                      
                 </Form>
             </Modal.Body>
             <Modal.Footer>
@@ -46,7 +38,7 @@ export function PortfolioEditor(props) {
                     Cancel
                 </Button>
                 <Button variant="primary"
-                    onClick={() => handleSave(portfolioName, portfolioDefaultCommissionPercent, portfolioDefaultDividendTaxPercent)}
+                    onClick={() => handleSave(portfolioName, portfolioDefaultCommissionPercent)}
                     disabled={portfolioName === ''}>
                     Ok
                 </Button>

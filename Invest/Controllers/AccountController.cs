@@ -214,7 +214,6 @@ namespace Invest.Controllers
                     Currency = addUpdatePortfolioDto.Currency,
                     User = user,
                     DefaultCommissionPercent = addUpdatePortfolioDto.DefaultCommissionPercent ?? 0,
-                    DefaultDividendTaxPercent = addUpdatePortfolioDto.DefaultDividendTaxPercent ?? 0
                 };
                 _companyContext.Portfolios.Add(portfolio);
             }
@@ -225,8 +224,6 @@ namespace Invest.Controllers
                 if (addUpdatePortfolioDto.Currency != null) portfolio.Currency = addUpdatePortfolioDto.Currency;
                 if (addUpdatePortfolioDto.DefaultCommissionPercent != null)
                     portfolio.DefaultCommissionPercent = addUpdatePortfolioDto.DefaultCommissionPercent.Value;
-                if (addUpdatePortfolioDto.DefaultDividendTaxPercent != null)
-                    portfolio.DefaultDividendTaxPercent = addUpdatePortfolioDto.DefaultDividendTaxPercent.Value;
             }
            
             _companyContext.SaveChanges();
@@ -249,7 +246,6 @@ namespace Invest.Controllers
             public string Name { get; set; }
             public string Currency { get; set; }
             public double? DefaultCommissionPercent { get; set; }
-            public double? DefaultDividendTaxPercent { get; set; }
         }
 
         public class PortfolioIdDto
@@ -264,8 +260,9 @@ namespace Invest.Controllers
             var portfolio = _companyContext.Portfolios
                 .Include(p => p.CompanyPortfolios)
                 .Single(p => p.Id == updateDividendTaxesDto.PortfolioId);
-            portfolio.CompanyPortfolios.Clear();
+            portfolio.DefaultDividendTaxPercent = updateDividendTaxesDto.DefaultDividendTaxPercent;
 
+            portfolio.CompanyPortfolios.Clear();
             foreach (var item in updateDividendTaxesDto.DividendTaxDtos)
             {
                 portfolio.CompanyPortfolios.Add(new CompanyPortfolio()
@@ -283,6 +280,7 @@ namespace Invest.Controllers
         public class UpdateDividendTaxesDto
         {
             public int PortfolioId { get; set; }
+            public double DefaultDividendTaxPercent { get; set; }
             public IList<DividendTaxDto> DividendTaxDtos { get; set; }
         }
 

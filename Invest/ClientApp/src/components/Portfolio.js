@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table, Tabs, Tab } from 'react-bootstrap';
+import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table, Tabs, Tab, Col, Row } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
 import 'chartjs-plugin-colorschemes';
@@ -54,8 +54,10 @@ export function Portfolio(props) {
     const [industryGroups, setIndustryGroups] = useState({});
     const [sectorsGroups, setSectorsGroups] = useState({});
 
+    const [portfolioDefaultDividendTaxPercent, setPortfolioDefaultDividendTaxPercent] = useState(0);
     const [dividendTaxSettings, setDividendTaxSettings] = useState([]);
     const [dividendTaxSettingsCopy, setDividendTaxSettingsCopy] = useState([]);
+    const [portfolioDefaultDividendTaxPercentCopy, setPortfolioDefaultDividendTaxPercentCopy] = useState(0);
 
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
@@ -554,7 +556,7 @@ export function Portfolio(props) {
         return history;
     }
 
-    const savePortfolioEdit = (name, defaultCommissionPercent, defaultDividendTaxPercent) => {
+    const savePortfolioEdit = (name, defaultCommissionPercent) => {
         (async () => {
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
@@ -563,7 +565,7 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent, defaultDividendTaxPercent })
+                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent })
             });
             let portfolio = await loadPortfolio();
             setPortfolios(portfolio.portfolios);
@@ -612,12 +614,14 @@ export function Portfolio(props) {
             isSpecialDividendTax: ph.dividendTaxPercent !== null,
             dividendTaxPercent: ph.dividendTaxPercent !== null ? ph.dividendTaxPercent : defaultDividendTaxPercent
         }));
+        setPortfolioDefaultDividendTaxPercent(defaultDividendTaxPercent);
         setDividendTaxSettings(settings);
     }
 
     const handleShowDividendTaxSetings = () => {
         console.log('dts', dividendTaxSettings)
         setDividendTaxSettingsCopy(_.cloneDeep(dividendTaxSettings));
+        setPortfolioDefaultDividendTaxPercentCopy(portfolioDefaultDividendTaxPercent);
         setShowDividendTaxSetings(true);
     }
 
@@ -627,6 +631,19 @@ export function Portfolio(props) {
         if (!e.target.checked) {
             newSettings[index].dividendTaxPercent = portfolios[0].defaultDividendTaxPercent;
         }
+        setDividendTaxSettingsCopy(newSettings);
+    }
+
+    const handleDefaultDividendTaxChanged = (e) => {
+        let value = +e.target.value;        
+        const newSettings = [...dividendTaxSettingsCopy];
+        for (let ns of newSettings){
+            if (!ns.isSpecialDividendTax){
+                ns.dividendTaxPercent = value;
+            }
+        }
+
+        setPortfolioDefaultDividendTaxPercentCopy(value);
         setDividendTaxSettingsCopy(newSettings);
     }
 
@@ -647,6 +664,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({
                 portfolioId: portfolios[0].id,
+                defaultDividendTaxPercent : portfolioDefaultDividendTaxPercentCopy,
                 dividendTaxDtos: dividendTaxSettingsCopy.filter(ds => ds.isSpecialDividendTax).map(ds => ({
                     companyTicker: ds.ticker,
                     dividendTaxPercent: ds.dividendTaxPercent
@@ -654,6 +672,7 @@ export function Portfolio(props) {
             })
         });
         setDividendTaxSettings(dividendTaxSettingsCopy);
+        setPortfolioDefaultDividendTaxPercent(portfolioDefaultDividendTaxPercentCopy);
 
         let newPortfolioHoldings = [...portfolioHoldings];
         let dividends = await loadDividends(newPortfolioHoldings);
@@ -1424,12 +1443,21 @@ export function Portfolio(props) {
                         <Modal.Title>Dividend Tax Settings</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="6">Default Dividend Tax (%)</Form.Label>
+                            <Col sm="6">
+                                <Form.Control type='number' step='any'
+                                    value={portfolioDefaultDividendTaxPercentCopy} 
+                                    onChange={handleDefaultDividendTaxChanged} />
+                            </Col>
+                        </Form.Group>     
+
                         <Table className='table-sm' bordered hover variant='light'>
                             <thead>
                                 <tr>
                                     <th>Company</th>
                                     <th className='centered'>Special Dividend Tax</th>
-                                    <th className='centered'>Dividend Tax Percent</th>
+                                    <th className='centered'>Dividend Tax (%)</th>
                                 </tr>
                             </thead>
                             <tbody>
