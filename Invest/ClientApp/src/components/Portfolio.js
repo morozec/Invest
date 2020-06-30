@@ -653,8 +653,15 @@ export function Portfolio(props) {
                 }))
             })
         });
-
         setDividendTaxSettings(dividendTaxSettingsCopy);
+
+        let newPortfolioHoldings = [...portfolioHoldings];
+        let dividends = await loadDividends(newPortfolioHoldings);
+        for (let ph of newPortfolioHoldings) {
+            ph.dividends = dividends[ph.ticker]
+        }
+        setPortfolioHoldings(newPortfolioHoldings);
+
         setIsLoading(false);
     }
 

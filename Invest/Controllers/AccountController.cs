@@ -752,6 +752,8 @@ namespace Invest.Controllers
             var allOrderedTransactions = _companyContext.Transactions
                 .Include(t => t.TransactionType)
                 .Include(t => t.Company)
+                .Include(t => t.Portfolio)
+                .ThenInclude(p => p.CompanyPortfolios)
                 .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date).ToList();
 
@@ -801,12 +803,20 @@ namespace Invest.Controllers
                     {
                         var divDate = UnixDateToDate((double)curDividends[key].date);
                         double divAmount = curDividends[key].amount;
-                        var count = orderedTransactions
-                            .Where(t => t.Date < divDate)
-                            .Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity);
-                        curSymbolDividends.Add(new DividendDto(){Date = divDate, Value = divAmount * count });
 
-                        datedDividends.Add(divDate, divAmount * count);
+                        var sumDivValue = 0d;
+                        foreach (var ot in orderedTransactions.Where(t => t.Date < divDate))
+                        {
+                            var cp = ot.Portfolio.CompanyPortfolios.SingleOrDefault(x =>
+                                x.CompanyTicker == ot.Company.Ticker);
+                            var divTaxPercent = cp?.DividendTaxPercent ?? ot.Portfolio.DefaultDividendTaxPercent;
+                            var count = ot.TransactionType.Type == "Buy" ? ot.Quantity : -ot.Quantity;
+                            var divValue = divAmount * (1 - divTaxPercent / 100.0) * count;
+                            sumDivValue += divValue;
+                        }
+                        curSymbolDividends.Add(new DividendDto(){Date = divDate, Value = sumDivValue });
+
+                        datedDividends.Add(divDate, divAmount * sumDivValue);
                     }
                     dividends.Add(symbol, curSymbolDividends);
                 }
