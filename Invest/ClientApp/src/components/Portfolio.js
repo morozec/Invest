@@ -10,6 +10,7 @@ import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
 import { Line } from 'react-chartjs-2';
 import { CurrencySymbols } from './../helpers';
+import _ from 'lodash'
 
 export function Portfolio(props) {
     const { companies } = props;
@@ -47,10 +48,14 @@ export function Portfolio(props) {
     const [portfolioIds, setResPortfolioIds] = useState(portfolioId.split(','))
 
     const [showPortfolioEditor, setShowPortfilioEditor] = useState(false);
+    const [showDividendTaxSettings, setShowDividendTaxSetings] = useState(false);
 
     const [currencyGroups, setCurrencyGroups] = useState({});
     const [industryGroups, setIndustryGroups] = useState({});
     const [sectorsGroups, setSectorsGroups] = useState({});
+
+    const [dividendTaxSettings, setDividendTaxSettings] = useState([]);
+    const [dividendTaxSettingsCopy, setDividendTaxSettingsCopy] = useState([]);
 
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
@@ -222,7 +227,7 @@ export function Portfolio(props) {
                 commission: addHoldingsCommission,
                 date: addHoldingsDate,
                 type: addHoldingsType,
-                comment: addHoldingsComment
+                comment: addHoldingsComment,
             })
         });
     }
@@ -239,6 +244,7 @@ export function Portfolio(props) {
             setPortfolioTransactions(portfolio.transactions);
 
             setPortfolioHoldings(portfolio.holdings);
+            initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
             setCurrencyRates(rates);
             setAllPortfolios(allPortfolios);
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
@@ -253,12 +259,7 @@ export function Portfolio(props) {
             }
             let t1 = performance.now();
             console.log('all prices time', t1 - t0);
-            setPortfolioHoldings(pricedHoldings);
-
-            // promises = [...pricedHoldings.map(item => loadPrice(item)), ...pricedHoldings.map(item => loadDividends(item))]
-            // await Promise.all(promises);
-            // setPortfolioHoldings(pricedHoldings);
-
+            setPortfolioHoldings(pricedHoldings);           
 
         })()
     }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios])
@@ -281,6 +282,7 @@ export function Portfolio(props) {
                 setPortfolios(portfolio.portfolios);
                 setCommisions(portfolio.commissions);
                 setPortfolioHoldings(portfolio.holdings);
+                initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
                 setSelectedCurrency(portfolio.portfolios[0].currency);
                 setPortfolioTransactions(portfolio.transactions);
 
@@ -301,6 +303,7 @@ export function Portfolio(props) {
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
             setPortfolioHoldings(portfolio.holdings);
+            initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
             setSelectedCurrency(portfolio.portfolios[0].currency);
             setPortfolioTransactions(portfolio.transactions);
             setIsLoading(false);
@@ -390,6 +393,7 @@ export function Portfolio(props) {
         setPortfolios(portfolio.portfolios);
         setCommisions(portfolio.commissions);
         setPortfolioHoldings(portfolio.holdings);
+        initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
         setSelectedCurrency(portfolio.portfolios[0].currency);
         setPortfolioTransactions(portfolio.transactions);
 
@@ -550,7 +554,7 @@ export function Portfolio(props) {
         return history;
     }
 
-    const savePortfolioEdit = (name, defaultCommissionPercent) => {
+    const savePortfolioEdit = (name, defaultCommissionPercent, defaultDividendTaxPercent) => {
         (async () => {
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
@@ -559,7 +563,7 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent })
+                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent, defaultDividendTaxPercent })
             });
             let portfolio = await loadPortfolio();
             setPortfolios(portfolio.portfolios);
@@ -601,6 +605,66 @@ export function Portfolio(props) {
         return value;
     }
 
+    const initDividendTaxSettings = (portfolioHoldings, defaultDividendTaxPercent) => {
+        let settings = portfolioHoldings.map(ph => ({
+            ticker: ph.ticker,
+            name: ph.companyName,
+            isSpecialDividendTax: ph.dividendTaxPercent !== null,
+            dividendTaxPercent: ph.dividendTaxPercent !== null ? ph.dividendTaxPercent : defaultDividendTaxPercent
+        }));
+        setDividendTaxSettings(settings);
+    }
+
+    const handleShowDividendTaxSetings = () => {
+        console.log('dts', dividendTaxSettings)
+        setDividendTaxSettingsCopy(_.cloneDeep(dividendTaxSettings));
+        setShowDividendTaxSetings(true);
+    }
+
+    const handleIsSpecialDividendTaxChanged = (e, index) => {
+        const newSettings = [...dividendTaxSettingsCopy];
+        newSettings[index].isSpecialDividendTax = e.target.checked;
+        if (!e.target.checked) {
+            newSettings[index].dividendTaxPercent = portfolios[0].defaultDividendTaxPercent;
+        }
+        setDividendTaxSettingsCopy(newSettings);
+    }
+
+    const handleDividendTaxPercentChanged = (e, index) => {
+        const newSettings = [...dividendTaxSettingsCopy];
+        newSettings[index].dividendTaxPercent = +e.target.value;
+        setDividendTaxSettingsCopy(newSettings);
+    }
+
+    const saveSpecialDividendTaxes = async () => {
+        setShowDividendTaxSetings(false);
+        setIsLoading(true);
+        await fetch('api/account/updateDividendTaxes', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                'Authorization': 'Bearer ' + cookies.jwt
+            },
+            body: JSON.stringify({
+                portfolioId: portfolios[0].id,
+                dividendTaxDtos: dividendTaxSettingsCopy.filter(ds => ds.isSpecialDividendTax).map(ds => ({
+                    companyTicker: ds.ticker,
+                    dividendTaxPercent: ds.dividendTaxPercent
+                }))
+            })
+        });
+        setDividendTaxSettings(dividendTaxSettingsCopy);
+
+        let newPortfolioHoldings = [...portfolioHoldings];
+        let dividends = await loadDividends(newPortfolioHoldings);
+        for (let ph of newPortfolioHoldings) {
+            ph.dividends = dividends[ph.ticker]
+        }
+        setPortfolioHoldings(newPortfolioHoldings);
+
+        setIsLoading(false);
+    }
+
     const currencies = ['USD', 'EUR', 'RUB'];
 
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>
@@ -614,7 +678,8 @@ export function Portfolio(props) {
                 {portfolios.length === 1 && (
                     <div className='d-flex'>
                         <h1>{portfolios[0].name}</h1>
-                        <Button variant='outline-warning' className='ml-2' onClick={() => setShowPortfilioEditor(true)}>Edit</Button>
+                        <Button variant='outline-warning' className='mx-2' onClick={() => setShowPortfilioEditor(true)}>Edit</Button>
+                        <Button variant='outline-warning' className='mx-2' onClick={handleShowDividendTaxSetings}>Dividend Tax Settings</Button>
                     </div>
                 )}
                 {portfolios.length > 1 && (
@@ -770,7 +835,7 @@ export function Portfolio(props) {
                             {portfolioHoldings.filter(ph => ph.quantity !== 0).map(item =>
                                 <tr key={item.ticker}>
                                     <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
-                                    <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
+                                    <td>{item.companyName}</td>
                                     <td className='centered'>{item.sector}</td>
                                     <td className='centered'>{item.industry}</td>
                                     <td className='centered'>{item.currency}</td>
@@ -1270,7 +1335,7 @@ export function Portfolio(props) {
                             <Form.Label>Date</Form.Label>
                             <Form.Control type='date'
                                 value={addHoldingsDate} onChange={(e) => setAddHoldingsDate(e.target.value)} />
-                        </Form.Group>
+                        </Form.Group>                        
                         <Form.Group>
                             <Form.Label>Comment</Form.Label>
                             <Form.Control type='text'
@@ -1348,7 +1413,56 @@ export function Portfolio(props) {
                     handleSave={savePortfolioEdit}
                     name={portfolios[0].name}
                     defaultCommissionPercent={portfolios[0].defaultCommissionPercent}
+                    defaultDividendTaxPercent={portfolios[0].defaultDividendTaxPercent}
                 />
+            }
+
+            {portfolios && portfolios.length === 1 &&
+
+                <Modal show={showDividendTaxSettings} onHide={() => setShowDividendTaxSetings(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Dividend Tax Settings</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Table className='table-sm' bordered hover variant='light'>
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th className='centered'>Special Dividend Tax</th>
+                                    <th className='centered'>Dividend Tax Percent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {dividendTaxSettingsCopy.map((item, index) => (
+                                    <tr key={item.ticker}>
+                                        <td>{`${item.name} (${item.ticker})`}</td>
+                                        <td className='centered'>
+                                            <Form.Check type='checkbox'
+                                                checked={item.isSpecialDividendTax}
+                                                onChange={(e) => handleIsSpecialDividendTaxChanged(e, index)}>
+                                            </Form.Check>
+                                        </td>
+                                        <td className='centered'>
+                                            <Form.Control type='number' step='any' disabled={!item.isSpecialDividendTax}
+                                                value={item.dividendTaxPercent}
+                                                onChange={(e) => handleDividendTaxPercentChanged(e, index)}>
+                                            </Form.Control>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowDividendTaxSetings(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary"
+                            onClick={() => saveSpecialDividendTaxes()}>
+                            Ok
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             }
         </div>
     )
