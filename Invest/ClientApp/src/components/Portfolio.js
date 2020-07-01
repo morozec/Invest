@@ -18,6 +18,7 @@ export function Portfolio(props) {
     const [isLoading, setIsLoading] = useState(true);
 
     const [allPortfolios, setAllPortfolios] = useState([]);
+    const [allCurrencies, setAllCurrencies] = useState([]);
 
     const [portfolios, setPortfolios] = useState(null);
     const [commissions, setCommisions] = useState(null);
@@ -61,7 +62,7 @@ export function Portfolio(props) {
 
     const [showAddCash, setShowAddCash] = useState(false);
     const [addCashPortfolioId, setAddCashPortfolioId] = useState(null);
-    const [addCashCurrency, setAddCashCurrency] = useState('USD');
+    const [addCashCurrencyId, setAddCashCurrencyId] = useState(-1);
     const [addCashAmount, setAddCashAmount] = useState(0);
     const [addCashIsAdd, setAddCashIsAdd] = useState(true);
 
@@ -82,6 +83,14 @@ export function Portfolio(props) {
             rate: rate
         };
     }
+
+    const loadAllCurrencies = useCallback(async () => {
+        let response = await fetch(`api/account/currencies`, {
+            method: 'GET',
+        })
+        let currencies = await response.json();
+        return currencies;
+    }, [])
 
     const loadCurrencyRates = useCallback(async () => {
         const currencies = ['USD', 'EUR', 'RUB'];
@@ -244,8 +253,8 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let promises = [loadPortfolio(), loadCurrencyRates(), loadAllPortfolios()];
-            const [portfolio, rates, allPortfolios] = await Promise.all(promises);
+            let promises = [loadPortfolio(), loadCurrencyRates(), loadAllPortfolios(), loadAllCurrencies()];
+            const [portfolio, rates, allPortfolios, allCurrencies] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
             setSelectedCurrency(portfolio.portfolios[0].currency);
@@ -255,6 +264,7 @@ export function Portfolio(props) {
             initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
             setCurrencyRates(rates);
             setAllPortfolios(allPortfolios);
+            setAllCurrencies(allCurrencies);
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
             setAddCashPortfolioId(portfolio.portfolios[0].id);
             setIsLoading(false);
@@ -271,7 +281,7 @@ export function Portfolio(props) {
             setPortfolioHoldings(pricedHoldings);
 
         })()
-    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios])
+    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios, loadAllCurrencies])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -701,7 +711,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({
                 portfolioId: addCashPortfolioId,
-                currencyId: 1,
+                currencyId: addCashCurrencyId,
                 amount: addCashIsAdd ? addCashAmount : -addCashAmount,
             })
         });
@@ -712,7 +722,7 @@ export function Portfolio(props) {
     const clearAndCloseAddCash = () => {
         setShowAddCash(false);
         setAddCashPortfolioId(portfolios[0].id)
-        setAddCashCurrency('USD');
+        setAddCashCurrencyId(-1);
         setAddCashAmount(0);
         setAddCashIsAdd(true);
     }
@@ -1540,8 +1550,8 @@ export function Portfolio(props) {
 
                     <Form.Group>
                         <Form.Label>Currency</Form.Label>
-                        <Form.Control as='select' value={addCashCurrency} onChange={(e) => setAddCashCurrency(e.target.value)}>
-                            {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+                        <Form.Control as='select' value={addCashCurrencyId} onChange={(e) => setAddCashCurrencyId(e.target.value)}>
+                            {allCurrencies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </Form.Control>
                     </Form.Group>
 

@@ -199,6 +199,13 @@ namespace Invest.Controllers
             return portfolios;
         }
 
+        [HttpGet("currencies")]
+        public IEnumerable<Currency> GetCurrencies()
+        {
+            var currencies = _companyContext.Currencies.ToList();
+            return currencies;
+        }
+
 
         [Authorize]
         [HttpPost("addUpdatePortfolio")]
