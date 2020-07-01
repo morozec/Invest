@@ -209,16 +209,17 @@ namespace Invest.Controllers
 
         [Authorize]
         [HttpPost("addUpdatePortfolio")]
-        public async Task<IActionResult> AddPortfolio(AddUpdatePortfolioDto addUpdatePortfolioDto)
+        public async Task<IActionResult> AddUpdatePortfolio(AddUpdatePortfolioDto addUpdatePortfolioDto)
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
             Portfolio portfolio;
             if (addUpdatePortfolioDto.Id == null) //new Portfolio
             {
+                var currency = _companyContext.Currencies.Single(c => c.Id == addUpdatePortfolioDto.CurrencyId);
                 portfolio = new Portfolio()
                 {
                     Name = addUpdatePortfolioDto.Name,
-                    Currency = addUpdatePortfolioDto.Currency,
+                    Currency = currency,
                     User = user,
                     DefaultCommissionPercent = addUpdatePortfolioDto.DefaultCommissionPercent ?? 0,
                 };
@@ -228,7 +229,11 @@ namespace Invest.Controllers
             {
                 portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdatePortfolioDto.Id);
                 if (addUpdatePortfolioDto.Name != null) portfolio.Name = addUpdatePortfolioDto.Name;
-                if (addUpdatePortfolioDto.Currency != null) portfolio.Currency = addUpdatePortfolioDto.Currency;
+                if (addUpdatePortfolioDto.CurrencyId != null)
+                {
+                    var currency = _companyContext.Currencies.Single(c => c.Id == addUpdatePortfolioDto.CurrencyId);
+                    portfolio.Currency = currency;
+                }
                 if (addUpdatePortfolioDto.DefaultCommissionPercent != null)
                     portfolio.DefaultCommissionPercent = addUpdatePortfolioDto.DefaultCommissionPercent.Value;
             }
@@ -251,7 +256,7 @@ namespace Invest.Controllers
         {
             public int? Id { get; set; }
             public string Name { get; set; }
-            public string Currency { get; set; }
+            public int? CurrencyId { get; set; }
             public double? DefaultCommissionPercent { get; set; }
         }
 
@@ -365,6 +370,7 @@ namespace Invest.Controllers
         public PortfolioDto GetPortfolio([FromQuery]List<int> ids)
         {
             var portfolios = _companyContext.Portfolios
+                .Include(p => p.Currency)
                 .Where(p => ids.Contains(p.Id));
             var commissions = new Dictionary<string, double>();
 
@@ -554,7 +560,7 @@ namespace Invest.Controllers
         {
             public int Id { get; set; }
             public string Name { get; set; }
-            public string Currency { get; set; }
+            public Currency Currency { get; set; }
             public double DefaultCommissionPercent { get; set; }
             public double DefaultDividendTaxPercent { get; set; }
         }

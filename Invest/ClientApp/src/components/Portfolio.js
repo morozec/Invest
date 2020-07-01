@@ -9,7 +9,6 @@ import { MenuList } from './helpers/MenuList';
 import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
 import { Line } from 'react-chartjs-2';
-import { CurrencySymbols } from './../helpers';
 import _ from 'lodash'
 
 export function Portfolio(props) {
@@ -66,7 +65,7 @@ export function Portfolio(props) {
     const [addCashAmount, setAddCashAmount] = useState(0);
     const [addCashIsAdd, setAddCashIsAdd] = useState(true);
 
-    const [selectedCurrency, setSelectedCurrency] = useState('USD');
+    const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
 
     useEffect(() => {
         setResPortfolioIds(portfolioId.split(','))
@@ -92,15 +91,14 @@ export function Portfolio(props) {
         return currencies;
     }, [])
 
-    const loadCurrencyRates = useCallback(async () => {
-        const currencies = ['USD', 'EUR', 'RUB'];
+    const loadCurrencyRates = useCallback(async (currencies) => {
         let rates = {};
         let promises = [];
         for (let i = 0; i < currencies.length; ++i) {
-            let ci = currencies[i];
+            let ci = currencies[i].name;
             rates[ci] = {};
             for (let j = i; j < currencies.length; ++j) {
-                let cj = currencies[j];
+                let cj = currencies[j].name;
                 if (i === j) {
                     rates[ci][cj] = 1;
                 } else {
@@ -253,16 +251,16 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let promises = [loadPortfolio(), loadCurrencyRates(), loadAllPortfolios(), loadAllCurrencies()];
-            const [portfolio, rates, allPortfolios, allCurrencies] = await Promise.all(promises);
+            let promises = [loadPortfolio(), loadAllPortfolios(), loadAllCurrencies()];
+            const [portfolio, allPortfolios, allCurrencies] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
-            setSelectedCurrency(portfolio.portfolios[0].currency);
+            setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
             setPortfolioTransactions(portfolio.transactions);
 
             setPortfolioHoldings(portfolio.holdings);
             initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-            setCurrencyRates(rates);
+
             setAllPortfolios(allPortfolios);
             setAllCurrencies(allCurrencies);
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
@@ -271,7 +269,9 @@ export function Portfolio(props) {
 
             let pricedHoldings = [...portfolio.holdings];
             let t0 = performance.now();
-            let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+            let [rates, prices, dividends] = await Promise.all(
+                [loadCurrencyRates(allCurrencies), loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+            setCurrencyRates(rates);
             for (let ph of pricedHoldings) {
                 ph.price = prices[ph.ticker];
                 ph.dividends = dividends[ph.ticker]
@@ -302,7 +302,7 @@ export function Portfolio(props) {
                 setCommisions(portfolio.commissions);
                 setPortfolioHoldings(portfolio.holdings);
                 initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-                setSelectedCurrency(portfolio.portfolios[0].currency);
+                setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
                 setPortfolioTransactions(portfolio.transactions);
 
                 let pricedHoldings = [...portfolio.holdings];
@@ -323,7 +323,7 @@ export function Portfolio(props) {
             setCommisions(portfolio.commissions);
             setPortfolioHoldings(portfolio.holdings);
             initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-            setSelectedCurrency(portfolio.portfolios[0].currency);
+            setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
             setPortfolioTransactions(portfolio.transactions);
             setIsLoading(false);
 
@@ -413,7 +413,7 @@ export function Portfolio(props) {
         setCommisions(portfolio.commissions);
         setPortfolioHoldings(portfolio.holdings);
         initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-        setSelectedCurrency(portfolio.portfolios[0].currency);
+        setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
         setPortfolioTransactions(portfolio.transactions);
 
         let pricedHoldings = [...portfolio.holdings];
@@ -445,10 +445,15 @@ export function Portfolio(props) {
     const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + getSumDividends(item.dividends)) / item.totalAmount * 100).toFixed(2)}%`;
     // const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
+    const getCurrencyById = useCallback(
+        (id) => allCurrencies.filter(c => c.id === id)[0],
+        [allCurrencies]
+    )
 
     const getPortfolioCurrencyValue = useCallback((value, valueCurrency) => {
-        return portfolios ? value * currencyRates[valueCurrency][selectedCurrency] : null;
-    }, [currencyRates, portfolios, selectedCurrency])
+        const selectedCurrency = getCurrencyById(selectedCurrencyId);
+        return portfolios && currencyRates ? value * currencyRates[valueCurrency][selectedCurrency.name] : null;
+    }, [currencyRates, portfolios, getCurrencyById, selectedCurrencyId])
 
     const handleAddHoldingsCompanyChanged = (company) => {
         setAddHoldingsCompany(company);
@@ -593,8 +598,8 @@ export function Portfolio(props) {
         })()
     }
 
-    const handleCurrencyChanged = (currency) => {
-        setSelectedCurrency(currency);
+    const handleCurrencyChanged = (currencyId) => {
+        setSelectedCurrencyId(currencyId);
         if (portfolioIds.length === 1) {
             (async () => {
                 setIsLoading(true);
@@ -604,7 +609,7 @@ export function Portfolio(props) {
                         "Content-Type": "application/json;charset=utf-8",
                         'Authorization': 'Bearer ' + cookies.jwt
                     },
-                    body: JSON.stringify({ id: portfolioId, currency: currency })
+                    body: JSON.stringify({ id: portfolioId, currencyId: currencyId })
                 });
                 let portfolio = await loadPortfolio();
                 setPortfolios(portfolio.portfolios);
@@ -727,8 +732,6 @@ export function Portfolio(props) {
         setAddCashIsAdd(true);
     }
 
-    const currencies = ['USD', 'EUR', 'RUB'];
-
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
     let addCashButton = <Button variant='success' onClick={() => setShowAddCash(true)}>Add Cash</Button>
 
@@ -756,8 +759,8 @@ export function Portfolio(props) {
                     <div className='d-flex'>
                         <div>Currency</div>
                         <div className='ml-auto'>
-                            <select value={selectedCurrency} onChange={(e) => handleCurrencyChanged(e.target.value)}>
-                                {currencies.map(c => <option key={c}>{c}</option>)}
+                            <select value={selectedCurrencyId} onChange={(e) => handleCurrencyChanged(+e.target.value)}>
+                                {allCurrencies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
                     </div>
@@ -1142,7 +1145,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1197,7 +1200,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1255,7 +1258,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1310,7 +1313,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
