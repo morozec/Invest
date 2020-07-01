@@ -13,6 +13,9 @@ namespace DbRepository
         public Microsoft.EntityFrameworkCore.DbSet<Portfolio> Portfolios { get; set; }
         public Microsoft.EntityFrameworkCore.DbSet<TransactionType> TransactionTypes { get; set; }
         public Microsoft.EntityFrameworkCore.DbSet<Transaction> Transactions { get; set; }
+        public Microsoft.EntityFrameworkCore.DbSet<CashTransaction> CashTransactions { get; set; }
+
+        public DbSet<Currency> Currencies { get; set; }
 
         public CompanyContext(DbContextOptions<CompanyContext> options) : base(options)
         {

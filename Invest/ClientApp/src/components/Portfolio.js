@@ -59,6 +59,12 @@ export function Portfolio(props) {
     const [dividendTaxSettingsCopy, setDividendTaxSettingsCopy] = useState([]);
     const [portfolioDefaultDividendTaxPercentCopy, setPortfolioDefaultDividendTaxPercentCopy] = useState(0);
 
+    const [showAddCash, setShowAddCash] = useState(false);
+    const [addCashPortfolioId, setAddCashPortfolioId] = useState(null);
+    const [addCashCurrency, setAddCashCurrency] = useState('USD');
+    const [addCashAmount, setAddCashAmount] = useState(0);
+    const [addCashIsAdd, setAddCashIsAdd] = useState(true);
+
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
     useEffect(() => {
@@ -250,6 +256,7 @@ export function Portfolio(props) {
             setCurrencyRates(rates);
             setAllPortfolios(allPortfolios);
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
+            setAddCashPortfolioId(portfolio.portfolios[0].id);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -261,7 +268,7 @@ export function Portfolio(props) {
             }
             let t1 = performance.now();
             console.log('all prices time', t1 - t0);
-            setPortfolioHoldings(pricedHoldings);           
+            setPortfolioHoldings(pricedHoldings);
 
         })()
     }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios])
@@ -635,10 +642,10 @@ export function Portfolio(props) {
     }
 
     const handleDefaultDividendTaxChanged = (e) => {
-        let value = +e.target.value;        
+        let value = +e.target.value;
         const newSettings = [...dividendTaxSettingsCopy];
-        for (let ns of newSettings){
-            if (!ns.isSpecialDividendTax){
+        for (let ns of newSettings) {
+            if (!ns.isSpecialDividendTax) {
                 ns.dividendTaxPercent = value;
             }
         }
@@ -664,7 +671,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({
                 portfolioId: portfolios[0].id,
-                defaultDividendTaxPercent : portfolioDefaultDividendTaxPercentCopy,
+                defaultDividendTaxPercent: portfolioDefaultDividendTaxPercentCopy,
                 dividendTaxDtos: dividendTaxSettingsCopy.filter(ds => ds.isSpecialDividendTax).map(ds => ({
                     companyTicker: ds.ticker,
                     dividendTaxPercent: ds.dividendTaxPercent
@@ -684,11 +691,36 @@ export function Portfolio(props) {
         setIsLoading(false);
     }
 
+    const saveAddCash = async () => {
+        setIsLoading(true);
+        await fetch('api/account/addCashTransaction', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                'Authorization': 'Bearer ' + cookies.jwt
+            },
+            body: JSON.stringify({
+                portfolioId: addCashPortfolioId,
+                currencyId: 1,
+                amount: addCashIsAdd ? addCashAmount : -addCashAmount,
+            })
+        });
+        clearAndCloseAddCash();
+        setIsLoading(false);
+    }
+
+    const clearAndCloseAddCash = () => {
+        setShowAddCash(false);
+        setAddCashPortfolioId(portfolios[0].id)
+        setAddCashCurrency('USD');
+        setAddCashAmount(0);
+        setAddCashIsAdd(true);
+    }
+
     const currencies = ['USD', 'EUR', 'RUB'];
 
-    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>
-        Add Holdings
-    </Button>
+    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
+    let addCashButton = <Button variant='success' onClick={() => setShowAddCash(true)}>Add Cash</Button>
 
     let content = isLoading
         ? <p><em>Loading...</em></p>
@@ -827,7 +859,7 @@ export function Portfolio(props) {
 
             <Tabs defaultActiveKey="holdings">
                 <Tab eventKey="holdings" title="Holdings">
-                    <div className='mt-2'>{addHoldingsButton}</div>
+                    <div className='mt-2'>{addHoldingsButton}{addCashButton}</div>
                     <Table className='table-sm portfolioTable' bordered hover variant='light'>
                         <thead>
                             <tr>
@@ -1354,7 +1386,7 @@ export function Portfolio(props) {
                             <Form.Label>Date</Form.Label>
                             <Form.Control type='date'
                                 value={addHoldingsDate} onChange={(e) => setAddHoldingsDate(e.target.value)} />
-                        </Form.Group>                        
+                        </Form.Group>
                         <Form.Group>
                             <Form.Label>Comment</Form.Label>
                             <Form.Control type='text'
@@ -1447,10 +1479,10 @@ export function Portfolio(props) {
                             <Form.Label column sm="6">Default Dividend Tax (%)</Form.Label>
                             <Col sm="6">
                                 <Form.Control type='number' step='any'
-                                    value={portfolioDefaultDividendTaxPercentCopy} 
+                                    value={portfolioDefaultDividendTaxPercentCopy}
                                     onChange={handleDefaultDividendTaxChanged} />
                             </Col>
-                        </Form.Group>     
+                        </Form.Group>
 
                         <Table className='table-sm' bordered hover variant='light'>
                             <thead>
@@ -1492,6 +1524,56 @@ export function Portfolio(props) {
                     </Modal.Footer>
                 </Modal>
             }
+
+            <Modal show={showAddCash} onHide={clearAndCloseAddCash}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add Cash</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+
+                    <Form.Group>
+                        <Form.Label>Portfolio</Form.Label>
+                        <Form.Control as='select' value={addCashPortfolioId} onChange={(e) => setAddCashPortfolioId(e.target.value)}>
+                            {allPortfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group>
+                        <Form.Label>Currency</Form.Label>
+                        <Form.Control as='select' value={addCashCurrency} onChange={(e) => setAddCashCurrency(e.target.value)}>
+                            {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group>
+                        <Form.Label>Amount</Form.Label>
+                        <Form.Control type='number' step='any' min={0}
+                            value={addCashAmount} onChange={(e) => setAddCashAmount(e.target.value)}>
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group className='d-flex'>
+                        <Form.Label>Type</Form.Label>
+                        <div className='ml-auto'>
+                            <ToggleButtonGroup type='radio' name='isAdd'
+                                value={addCashIsAdd} onChange={(v) => setAddCashIsAdd(v)}>
+                                <ToggleButton value={true} variant='outline-success'>Deposit</ToggleButton>
+                                <ToggleButton value={false} variant='outline-danger'>Withdrawal</ToggleButton>
+                            </ToggleButtonGroup>
+                        </div>
+                    </Form.Group>
+
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={clearAndCloseAddCash}>
+                        Cancel
+                        </Button>
+                    <Button variant="primary"
+                        onClick={() => saveAddCash()}>
+                        Ok
+                        </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     )
 }

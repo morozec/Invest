@@ -975,5 +975,28 @@ namespace Invest.Controllers
             public double Value { get; set; }
         }
 
+        [Authorize]
+        [HttpPost("addCashTransaction")]
+        public IActionResult AddCashTransaction(CashTransactionDto cashTransactionDto)
+        {
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == cashTransactionDto.PortfolioId);
+            var currency = _companyContext.Currencies.Single(c => c.Id == cashTransactionDto.CurrencyId);
+            _companyContext.CashTransactions.Add(new CashTransaction()
+            {
+                Portfolio = portfolio,
+                Currency = currency,
+                Amount = cashTransactionDto.Amount,
+            });
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        public class CashTransactionDto
+        {
+            public int PortfolioId { get; set; }
+            public int CurrencyId { get; set; }
+            public double Amount { get; set; }
+        }
+
     }
 }
