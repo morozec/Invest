@@ -827,7 +827,7 @@ namespace Invest.Controllers
                         }
                         curSymbolDividends.Add(new DividendDto(){Date = divDate, Value = sumDivValue });
 
-                        datedDividends.Add(divDate, divAmount * sumDivValue);
+                        datedDividends.Add(divDate, sumDivValue);
                     }
                     dividends.Add(symbol, curSymbolDividends);
                 }
