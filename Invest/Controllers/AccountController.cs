@@ -1006,6 +1006,16 @@ namespace Invest.Controllers
         }
 
         [Authorize]
+        [HttpDelete("deleteCashTransaction")]
+        public IActionResult DeleteCashTransaction(DeleteTransactionDto deleteTransactionDto)
+        {
+            var transaction = _companyContext.CashTransactions.Single(t => t.Id == deleteTransactionDto.Id);
+            _companyContext.CashTransactions.Remove(transaction);
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        [Authorize]
         [HttpGet("cashTransactions")]
         public IList<CashTransaction> GetCashTransactions([FromQuery]List<int> ids)
         {
@@ -1015,6 +1025,8 @@ namespace Invest.Controllers
                 .Include(ct => ct.Currency)
                 .ToList();
         }
+
+
 
         public class CashTransactionDto
         {

@@ -444,8 +444,20 @@ export function Portfolio(props) {
         setPortfolioHoldings(pricedHoldings);
     }
 
-    const handleEditCashTransaction = () => {}
-    const handleDeleteCashTransaction = () => {}
+    const handleEditCashTransaction = (t) => {}
+
+    const handleDeleteCashTransaction = async (t) => {
+        await fetch(`api/account/deleteCashTransaction`, {
+            method: 'DELETE',
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                'Authorization': 'Bearer ' + cookies.jwt
+            },
+            body: JSON.stringify({ id: t.id })
+        });
+        let cashTransactions = await loadCashTransactions();
+        setCashTransactions(cashTransactions);
+    }
 
     const getSumDividends = (dividends) => dividends.reduce((sum, cur) => sum + cur.value, 0);
 
