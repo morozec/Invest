@@ -989,18 +989,32 @@ namespace Invest.Controllers
         }
 
         [Authorize]
-        [HttpPost("addCashTransaction")]
-        public IActionResult AddCashTransaction(CashTransactionDto cashTransactionDto)
+        [HttpPost("addUpdateCashTransaction")]
+        public IActionResult AddUpdateCashTransaction(AddUpdateCashTransactionDto addUpdateCashTransactionDto)
         {
-            var portfolio = _companyContext.Portfolios.Single(p => p.Id == cashTransactionDto.PortfolioId);
-            var currency = _companyContext.Currencies.Single(c => c.Id == cashTransactionDto.CurrencyId);
-            _companyContext.CashTransactions.Add(new CashTransaction()
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdateCashTransactionDto.PortfolioId);
+            var currency = _companyContext.Currencies.Single(c => c.Id == addUpdateCashTransactionDto.CurrencyId);
+
+            if (addUpdateCashTransactionDto.Id != null)
             {
-                Portfolio = portfolio,
-                Currency = currency,
-                Amount = cashTransactionDto.Amount,
-                Date = cashTransactionDto.Date
-            });
+                var t = _companyContext.CashTransactions
+                    .Single(ct => ct.Id == addUpdateCashTransactionDto.Id);
+                t.Portfolio = portfolio;
+                t.Currency = currency;
+                t.Amount = addUpdateCashTransactionDto.Amount;
+                t.Date = addUpdateCashTransactionDto.Date;
+            }
+            else
+            {
+                _companyContext.CashTransactions.Add(new CashTransaction()
+                {
+                    Portfolio = portfolio,
+                    Currency = currency,
+                    Amount = addUpdateCashTransactionDto.Amount,
+                    Date = addUpdateCashTransactionDto.Date
+                });
+            }
+           
             _companyContext.SaveChanges();
             return Ok();
         }
@@ -1022,14 +1036,16 @@ namespace Invest.Controllers
             return _companyContext.CashTransactions
                 .Where(ct => ids.Contains(ct.Portfolio.Id))
                 .OrderByDescending(ct => ct.Date)
+                .Include(ct => ct.Portfolio)
                 .Include(ct => ct.Currency)
                 .ToList();
         }
 
 
 
-        public class CashTransactionDto
+        public class AddUpdateCashTransactionDto
         {
+            public int? Id { get; set; }
             public int PortfolioId { get; set; }
             public int CurrencyId { get; set; }
             public double Amount { get; set; }

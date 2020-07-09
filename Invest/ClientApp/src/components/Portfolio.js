@@ -60,6 +60,7 @@ export function Portfolio(props) {
     const [dividendTaxSettingsCopy, setDividendTaxSettingsCopy] = useState([]);
     const [portfolioDefaultDividendTaxPercentCopy, setPortfolioDefaultDividendTaxPercentCopy] = useState(0);
 
+    const [curCashTransactionId, setCurCashTransactionId] = useState(null);
     const [showAddCash, setShowAddCash] = useState(false);
     const [addCashPortfolioId, setAddCashPortfolioId] = useState(null);
     const [addCashCurrencyId, setAddCashCurrencyId] = useState(-1);
@@ -444,7 +445,16 @@ export function Portfolio(props) {
         setPortfolioHoldings(pricedHoldings);
     }
 
-    const handleEditCashTransaction = (t) => {}
+    const handleEditCashTransaction = (t) => {
+        setCurCashTransactionId(t.id);
+        setAddCashPortfolioId(t.portfolio.id);
+        setAddCashAmount(Math.abs(t.amount));
+        setAddCashDate(t.date.substring(0, 10));
+        setAddCashCurrencyId(t.currency.id);
+        setAddCashIsAdd(t.amount >= 0 ? true : false);
+
+        setShowAddCash(true);
+    }
 
     const handleDeleteCashTransaction = async (t) => {
         await fetch(`api/account/deleteCashTransaction`, {
@@ -742,13 +752,14 @@ export function Portfolio(props) {
 
     const saveAddCash = async () => {
         setIsLoading(true);
-        await fetch('api/account/addCashTransaction', {
+        await fetch('api/account/addUpdateCashTransaction', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
                 'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({
+                id: curCashTransactionId,
                 portfolioId: addCashPortfolioId,
                 currencyId: addCashCurrencyId,
                 amount: addCashIsAdd ? addCashAmount : -addCashAmount,
@@ -766,6 +777,7 @@ export function Portfolio(props) {
         setAddCashPortfolioId(portfolios[0].id)
         setAddCashAmount(0);
         setAddCashIsAdd(true);
+        setCurCashTransactionId(null);
     }
 
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
