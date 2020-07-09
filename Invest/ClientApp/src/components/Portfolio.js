@@ -9,7 +9,6 @@ import { MenuList } from './helpers/MenuList';
 import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
 import { Line } from 'react-chartjs-2';
-import { CurrencySymbols } from './../helpers';
 import _ from 'lodash'
 
 export function Portfolio(props) {
@@ -18,6 +17,7 @@ export function Portfolio(props) {
     const [isLoading, setIsLoading] = useState(true);
 
     const [allPortfolios, setAllPortfolios] = useState([]);
+    const [allCurrencies, setAllCurrencies] = useState([]);
 
     const [portfolios, setPortfolios] = useState(null);
     const [commissions, setCommisions] = useState(null);
@@ -59,7 +59,13 @@ export function Portfolio(props) {
     const [dividendTaxSettingsCopy, setDividendTaxSettingsCopy] = useState([]);
     const [portfolioDefaultDividendTaxPercentCopy, setPortfolioDefaultDividendTaxPercentCopy] = useState(0);
 
-    const [selectedCurrency, setSelectedCurrency] = useState('USD');
+    const [showAddCash, setShowAddCash] = useState(false);
+    const [addCashPortfolioId, setAddCashPortfolioId] = useState(null);
+    const [addCashCurrencyId, setAddCashCurrencyId] = useState(-1);
+    const [addCashAmount, setAddCashAmount] = useState(0);
+    const [addCashIsAdd, setAddCashIsAdd] = useState(true);
+
+    const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
 
     useEffect(() => {
         setResPortfolioIds(portfolioId.split(','))
@@ -77,15 +83,22 @@ export function Portfolio(props) {
         };
     }
 
-    const loadCurrencyRates = useCallback(async () => {
-        const currencies = ['USD', 'EUR', 'RUB'];
+    const loadAllCurrencies = useCallback(async () => {
+        let response = await fetch(`api/account/currencies`, {
+            method: 'GET',
+        })
+        let currencies = await response.json();
+        return currencies;
+    }, [])
+
+    const loadCurrencyRates = useCallback(async (currencies) => {
         let rates = {};
         let promises = [];
         for (let i = 0; i < currencies.length; ++i) {
-            let ci = currencies[i];
+            let ci = currencies[i].name;
             rates[ci] = {};
             for (let j = i; j < currencies.length; ++j) {
-                let cj = currencies[j];
+                let cj = currencies[j].name;
                 if (i === j) {
                     rates[ci][cj] = 1;
                 } else {
@@ -238,33 +251,37 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let promises = [loadPortfolio(), loadCurrencyRates(), loadAllPortfolios()];
-            const [portfolio, rates, allPortfolios] = await Promise.all(promises);
+            let promises = [loadPortfolio(), loadAllPortfolios(), loadAllCurrencies()];
+            const [portfolio, allPortfolios, allCurrencies] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
-            setSelectedCurrency(portfolio.portfolios[0].currency);
+            setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
             setPortfolioTransactions(portfolio.transactions);
 
             setPortfolioHoldings(portfolio.holdings);
             initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-            setCurrencyRates(rates);
+
             setAllPortfolios(allPortfolios);
+            setAllCurrencies(allCurrencies);
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
+            setAddCashPortfolioId(portfolio.portfolios[0].id);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
             let t0 = performance.now();
-            let [prices, dividends] = await Promise.all([loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+            let [rates, prices, dividends] = await Promise.all(
+                [loadCurrencyRates(allCurrencies), loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
+            setCurrencyRates(rates);
             for (let ph of pricedHoldings) {
                 ph.price = prices[ph.ticker];
                 ph.dividends = dividends[ph.ticker]
             }
             let t1 = performance.now();
             console.log('all prices time', t1 - t0);
-            setPortfolioHoldings(pricedHoldings);           
+            setPortfolioHoldings(pricedHoldings);
 
         })()
-    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios])
+    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios, loadAllCurrencies])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -285,7 +302,7 @@ export function Portfolio(props) {
                 setCommisions(portfolio.commissions);
                 setPortfolioHoldings(portfolio.holdings);
                 initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-                setSelectedCurrency(portfolio.portfolios[0].currency);
+                setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
                 setPortfolioTransactions(portfolio.transactions);
 
                 let pricedHoldings = [...portfolio.holdings];
@@ -306,7 +323,7 @@ export function Portfolio(props) {
             setCommisions(portfolio.commissions);
             setPortfolioHoldings(portfolio.holdings);
             initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-            setSelectedCurrency(portfolio.portfolios[0].currency);
+            setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
             setPortfolioTransactions(portfolio.transactions);
             setIsLoading(false);
 
@@ -396,7 +413,7 @@ export function Portfolio(props) {
         setCommisions(portfolio.commissions);
         setPortfolioHoldings(portfolio.holdings);
         initDividendTaxSettings(portfolio.holdings, portfolio.portfolios[0].defaultDividendTaxPercent);
-        setSelectedCurrency(portfolio.portfolios[0].currency);
+        setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
         setPortfolioTransactions(portfolio.transactions);
 
         let pricedHoldings = [...portfolio.holdings];
@@ -428,10 +445,15 @@ export function Portfolio(props) {
     const getOverallPLPercent = (item) => `${((getUnrealizedPL(item) + item.closedAmount + getSumDividends(item.dividends)) / item.totalAmount * 100).toFixed(2)}%`;
     // const getOverallPLPlusPercent = (item) => `${getOverallPL(item).toFixed(2)} (${getOverallPLPercent(item)})`
 
+    const getCurrencyById = useCallback(
+        (id) => allCurrencies.filter(c => c.id === id)[0],
+        [allCurrencies]
+    )
 
     const getPortfolioCurrencyValue = useCallback((value, valueCurrency) => {
-        return portfolios ? value * currencyRates[valueCurrency][selectedCurrency] : null;
-    }, [currencyRates, portfolios, selectedCurrency])
+        const selectedCurrency = getCurrencyById(selectedCurrencyId);
+        return portfolios && currencyRates ? value * currencyRates[valueCurrency][selectedCurrency.name] : null;
+    }, [currencyRates, portfolios, getCurrencyById, selectedCurrencyId])
 
     const handleAddHoldingsCompanyChanged = (company) => {
         setAddHoldingsCompany(company);
@@ -576,8 +598,8 @@ export function Portfolio(props) {
         })()
     }
 
-    const handleCurrencyChanged = (currency) => {
-        setSelectedCurrency(currency);
+    const handleCurrencyChanged = (currencyId) => {
+        setSelectedCurrencyId(currencyId);
         if (portfolioIds.length === 1) {
             (async () => {
                 setIsLoading(true);
@@ -587,7 +609,7 @@ export function Portfolio(props) {
                         "Content-Type": "application/json;charset=utf-8",
                         'Authorization': 'Bearer ' + cookies.jwt
                     },
-                    body: JSON.stringify({ id: portfolioId, currency: currency })
+                    body: JSON.stringify({ id: portfolioId, currencyId: currencyId })
                 });
                 let portfolio = await loadPortfolio();
                 setPortfolios(portfolio.portfolios);
@@ -635,10 +657,10 @@ export function Portfolio(props) {
     }
 
     const handleDefaultDividendTaxChanged = (e) => {
-        let value = +e.target.value;        
+        let value = +e.target.value;
         const newSettings = [...dividendTaxSettingsCopy];
-        for (let ns of newSettings){
-            if (!ns.isSpecialDividendTax){
+        for (let ns of newSettings) {
+            if (!ns.isSpecialDividendTax) {
                 ns.dividendTaxPercent = value;
             }
         }
@@ -664,7 +686,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({
                 portfolioId: portfolios[0].id,
-                defaultDividendTaxPercent : portfolioDefaultDividendTaxPercentCopy,
+                defaultDividendTaxPercent: portfolioDefaultDividendTaxPercentCopy,
                 dividendTaxDtos: dividendTaxSettingsCopy.filter(ds => ds.isSpecialDividendTax).map(ds => ({
                     companyTicker: ds.ticker,
                     dividendTaxPercent: ds.dividendTaxPercent
@@ -684,11 +706,34 @@ export function Portfolio(props) {
         setIsLoading(false);
     }
 
-    const currencies = ['USD', 'EUR', 'RUB'];
+    const saveAddCash = async () => {
+        setIsLoading(true);
+        await fetch('api/account/addCashTransaction', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                'Authorization': 'Bearer ' + cookies.jwt
+            },
+            body: JSON.stringify({
+                portfolioId: addCashPortfolioId,
+                currencyId: addCashCurrencyId,
+                amount: addCashIsAdd ? addCashAmount : -addCashAmount,
+            })
+        });
+        clearAndCloseAddCash();
+        setIsLoading(false);
+    }
 
-    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>
-        Add Holdings
-    </Button>
+    const clearAndCloseAddCash = () => {
+        setShowAddCash(false);
+        setAddCashPortfolioId(portfolios[0].id)
+        setAddCashCurrencyId(-1);
+        setAddCashAmount(0);
+        setAddCashIsAdd(true);
+    }
+
+    let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
+    let addCashButton = <Button variant='success' onClick={() => setShowAddCash(true)}>Add Cash</Button>
 
     let content = isLoading
         ? <p><em>Loading...</em></p>
@@ -714,8 +759,8 @@ export function Portfolio(props) {
                     <div className='d-flex'>
                         <div>Currency</div>
                         <div className='ml-auto'>
-                            <select value={selectedCurrency} onChange={(e) => handleCurrencyChanged(e.target.value)}>
-                                {currencies.map(c => <option key={c}>{c}</option>)}
+                            <select value={selectedCurrencyId} onChange={(e) => handleCurrencyChanged(+e.target.value)}>
+                                {allCurrencies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
                     </div>
@@ -827,7 +872,7 @@ export function Portfolio(props) {
 
             <Tabs defaultActiveKey="holdings">
                 <Tab eventKey="holdings" title="Holdings">
-                    <div className='mt-2'>{addHoldingsButton}</div>
+                    <div className='mt-2'>{addHoldingsButton}{addCashButton}</div>
                     <Table className='table-sm portfolioTable' bordered hover variant='light'>
                         <thead>
                             <tr>
@@ -1100,7 +1145,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1155,7 +1200,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1213,7 +1258,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1268,7 +1313,7 @@ export function Portfolio(props) {
                                                 var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
                                                 var curValue = +dataset.data[tooltipItem.index];
                                                 var percent = +(curValue / total * 100).toFixed(2);
-                                                return `${curValue}${CurrencySymbols[selectedCurrency]} (${percent}%)`;
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
                                             },
                                             title: function (tooltipItem, data) {
                                                 return data.labels[tooltipItem[0].index];
@@ -1354,7 +1399,7 @@ export function Portfolio(props) {
                             <Form.Label>Date</Form.Label>
                             <Form.Control type='date'
                                 value={addHoldingsDate} onChange={(e) => setAddHoldingsDate(e.target.value)} />
-                        </Form.Group>                        
+                        </Form.Group>
                         <Form.Group>
                             <Form.Label>Comment</Form.Label>
                             <Form.Control type='text'
@@ -1447,10 +1492,10 @@ export function Portfolio(props) {
                             <Form.Label column sm="6">Default Dividend Tax (%)</Form.Label>
                             <Col sm="6">
                                 <Form.Control type='number' step='any'
-                                    value={portfolioDefaultDividendTaxPercentCopy} 
+                                    value={portfolioDefaultDividendTaxPercentCopy}
                                     onChange={handleDefaultDividendTaxChanged} />
                             </Col>
-                        </Form.Group>     
+                        </Form.Group>
 
                         <Table className='table-sm' bordered hover variant='light'>
                             <thead>
@@ -1492,6 +1537,56 @@ export function Portfolio(props) {
                     </Modal.Footer>
                 </Modal>
             }
+
+            <Modal show={showAddCash} onHide={clearAndCloseAddCash}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add Cash</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+
+                    <Form.Group>
+                        <Form.Label>Portfolio</Form.Label>
+                        <Form.Control as='select' value={addCashPortfolioId} onChange={(e) => setAddCashPortfolioId(e.target.value)}>
+                            {allPortfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group>
+                        <Form.Label>Currency</Form.Label>
+                        <Form.Control as='select' value={addCashCurrencyId} onChange={(e) => setAddCashCurrencyId(e.target.value)}>
+                            {allCurrencies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group>
+                        <Form.Label>Amount</Form.Label>
+                        <Form.Control type='number' step='any' min={0}
+                            value={addCashAmount} onChange={(e) => setAddCashAmount(e.target.value)}>
+                        </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group className='d-flex'>
+                        <Form.Label>Type</Form.Label>
+                        <div className='ml-auto'>
+                            <ToggleButtonGroup type='radio' name='isAdd'
+                                value={addCashIsAdd} onChange={(v) => setAddCashIsAdd(v)}>
+                                <ToggleButton value={true} variant='outline-success'>Deposit</ToggleButton>
+                                <ToggleButton value={false} variant='outline-danger'>Withdrawal</ToggleButton>
+                            </ToggleButtonGroup>
+                        </div>
+                    </Form.Group>
+
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={clearAndCloseAddCash}>
+                        Cancel
+                        </Button>
+                    <Button variant="primary"
+                        onClick={() => saveAddCash()}>
+                        Ok
+                        </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     )
 }

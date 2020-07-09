@@ -4,14 +4,16 @@ using DbRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DbRepository.Migrations
 {
     [DbContext(typeof(CompanyContext))]
-    partial class CompanyContextModelSnapshot : ModelSnapshot
+    [Migration("20200701080526_AddCashTransactionsTable")]
+    partial class AddCashTransactionsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -162,6 +164,9 @@ namespace DbRepository.Migrations
 
                     b.Property<int?>("CurrencyId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsAdd")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("PortfolioId")
                         .HasColumnType("int");
@@ -326,8 +331,8 @@ namespace DbRepository.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
+                    b.Property<string>("Currency")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("DefaultCommissionPercent")
                         .HasColumnType("float");
@@ -342,8 +347,6 @@ namespace DbRepository.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("UserId");
 
@@ -520,10 +523,6 @@ namespace DbRepository.Migrations
 
             modelBuilder.Entity("Model.Portfolio", b =>
                 {
-                    b.HasOne("Model.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
                     b.HasOne("Model.InvestUser", "User")
                         .WithMany("Portfolios")
                         .HasForeignKey("UserId");
