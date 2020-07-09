@@ -999,9 +999,21 @@ namespace Invest.Controllers
                 Portfolio = portfolio,
                 Currency = currency,
                 Amount = cashTransactionDto.Amount,
+                Date = cashTransactionDto.Date
             });
             _companyContext.SaveChanges();
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("cashTransactions")]
+        public IList<CashTransaction> GetCashTransactions([FromQuery]List<int> ids)
+        {
+            return _companyContext.CashTransactions
+                .Where(ct => ids.Contains(ct.Portfolio.Id))
+                .OrderByDescending(ct => ct.Date)
+                .Include(ct => ct.Currency)
+                .ToList();
         }
 
         public class CashTransactionDto
@@ -1009,6 +1021,7 @@ namespace Invest.Controllers
             public int PortfolioId { get; set; }
             public int CurrencyId { get; set; }
             public double Amount { get; set; }
+            public DateTime Date { get; set; }
         }
 
     }

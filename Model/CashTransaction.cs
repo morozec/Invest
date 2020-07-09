@@ -1,4 +1,6 @@
-﻿namespace Model
+﻿using System;
+
+namespace Model
 {
     public class CashTransaction
     {
@@ -6,5 +8,6 @@
         public Portfolio Portfolio { get; set; }
         public Currency Currency { get; set; }
         public double Amount { get; set; }
+        public DateTime Date { get; set; }
     }
 }

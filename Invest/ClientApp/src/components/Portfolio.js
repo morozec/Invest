@@ -25,6 +25,7 @@ export function Portfolio(props) {
     const [mktValues, setMktValues] = useState({});
     const [overallPL, setOverallPL] = useState({});
     const [portfolioTransactions, setPortfolioTransactions] = useState(null);
+    const [cashTransations, setCashTransactions] = useState(null);
 
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
@@ -63,6 +64,7 @@ export function Portfolio(props) {
     const [addCashPortfolioId, setAddCashPortfolioId] = useState(null);
     const [addCashCurrencyId, setAddCashCurrencyId] = useState(-1);
     const [addCashAmount, setAddCashAmount] = useState(0);
+    const [addCashDate, setAddCashDate] = useState(getYYYYMMDDDate(new Date()));
     const [addCashIsAdd, setAddCashIsAdd] = useState(true);
 
     const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
@@ -226,6 +228,21 @@ export function Portfolio(props) {
         return portfolio;
     }, [portfolioIds, cookies.jwt]);
 
+    const loadCashTransactions = useCallback(async () => {
+        if (!cookies.jwt) return;
+
+        const ids = portfolioIds.reduce((str, id) => `${str}ids=${id}&`, "");
+        let response = await fetch(`api/account/cashTransactions?${ids}`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Authorization': 'Bearer ' + cookies.jwt
+            },
+        });
+        let cashTransactions = await response.json();
+        return cashTransactions;
+    }, [portfolioIds, cookies.jwt])
+
     const addUpdateHoldings = async (id) => {
         await fetch('api/account/addUpdateTransaction', {
             method: 'POST',
@@ -251,8 +268,8 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let promises = [loadPortfolio(), loadAllPortfolios(), loadAllCurrencies()];
-            const [portfolio, allPortfolios, allCurrencies] = await Promise.all(promises);
+            let promises = [loadPortfolio(), loadAllPortfolios(), loadAllCurrencies(), loadCashTransactions()];
+            const [portfolio, allPortfolios, allCurrencies, cashTransactions] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
             setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
@@ -265,6 +282,8 @@ export function Portfolio(props) {
             setAllCurrencies(allCurrencies);
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
             setAddCashPortfolioId(portfolio.portfolios[0].id);
+            setCashTransactions(cashTransactions);
+            setAddCashCurrencyId(portfolio.portfolios[0].currency.id);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -281,7 +300,7 @@ export function Portfolio(props) {
             setPortfolioHoldings(pricedHoldings);
 
         })()
-    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios, loadAllCurrencies])
+    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios, loadAllCurrencies, loadCashTransactions])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -424,6 +443,9 @@ export function Portfolio(props) {
         }
         setPortfolioHoldings(pricedHoldings);
     }
+
+    const handleEditCashTransaction = () => {}
+    const handleDeleteCashTransaction = () => {}
 
     const getSumDividends = (dividends) => dividends.reduce((sum, cur) => sum + cur.value, 0);
 
@@ -718,16 +740,18 @@ export function Portfolio(props) {
                 portfolioId: addCashPortfolioId,
                 currencyId: addCashCurrencyId,
                 amount: addCashIsAdd ? addCashAmount : -addCashAmount,
+                date: addCashDate
             })
         });
         clearAndCloseAddCash();
+        let cashTransactions = await loadCashTransactions();
+        setCashTransactions(cashTransactions);
         setIsLoading(false);
     }
 
     const clearAndCloseAddCash = () => {
         setShowAddCash(false);
         setAddCashPortfolioId(portfolios[0].id)
-        setAddCashCurrencyId(-1);
         setAddCashAmount(0);
         setAddCashIsAdd(true);
     }
@@ -1062,6 +1086,35 @@ export function Portfolio(props) {
                                             onClick={() => handleEditTransaction(t)}>Edit</Button>
                                         <Button variant='outline-danger ml-1'
                                             onClick={() => handleDeleteTransaction(t)}>
+                                            Delete
+                                        </Button>
+                                    </td>
+                                </tr>)}
+                        </tbody>
+                    </Table>
+                </Tab>
+
+                <Tab eventKey="cashTransactionHistory" title="Cash Transaction History">
+                    <Table className='table-sm' bordered hover variant='light'>
+                        <thead>
+                            <tr>
+                                <th className='centered'>Date</th>
+                                <th className='centered'>Amount</th>
+                                <th className='centered'>Currency</th>
+                                <th className='centered'></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {cashTransations.map(t =>
+                                <tr key={t.id}>
+                                    <td className='centered'>{t.date.substring(0, 10)}</td>
+                                    <td className='centered'>{t.amount}</td>
+                                    <td className='centered'>{t.currency.symbol}</td>
+                                    <td className='centered'>
+                                        <Button variant='outline-warning mr-1'
+                                            onClick={() => handleEditCashTransaction(t)}>Edit</Button>
+                                        <Button variant='outline-danger ml-1'
+                                            onClick={() => handleDeleteCashTransaction(t)}>
                                             Delete
                                         </Button>
                                     </td>
@@ -1563,6 +1616,12 @@ export function Portfolio(props) {
                         <Form.Control type='number' step='any' min={0}
                             value={addCashAmount} onChange={(e) => setAddCashAmount(e.target.value)}>
                         </Form.Control>
+                    </Form.Group>
+
+                    <Form.Group>
+                        <Form.Label>Date</Form.Label>
+                        <Form.Control type='date'
+                            value={addCashDate} onChange={(e) => setAddCashDate(e.target.value)} />
                     </Form.Group>
 
                     <Form.Group className='d-flex'>
