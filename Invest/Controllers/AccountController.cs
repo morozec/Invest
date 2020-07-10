@@ -768,6 +768,10 @@ namespace Invest.Controllers
                 .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date).ToList();
 
+            var allOrderedCashTransactions = GetCashTransactions(ids);
+            var allCashTransactionsDict = allOrderedCashTransactions
+                .ToDictionary(t => t.Date, t => t);
+
             var yahooResults = new Dictionary<string, dynamic>();
             
 
@@ -789,6 +793,8 @@ namespace Invest.Controllers
             });
 
 
+
+            var today = DateTime.Now.Date;
             foreach (var symbol in symbols)
             {
                 
@@ -905,8 +911,8 @@ namespace Invest.Controllers
                     curOverallPrice += transPrice + trans.Commission;
                 }
 
-                var today = DateTime.Now.Date;
-                while (curDate < today)
+                
+                while (curDate <= today)
                 {
                     if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
                     {
@@ -958,6 +964,51 @@ namespace Invest.Controllers
                 }
             }
 
+            if (allOrderedCashTransactions.Any())
+            {
+                var cashTransaction0 = allOrderedCashTransactions.Last();//reverse order
+                var curCashDate = cashTransaction0.Date;
+                var cashAmountDict = new Dictionary<string, double>();
+               
+
+                while (curCashDate <= today)
+                {
+                    if (allCashTransactionsDict.ContainsKey(curCashDate))
+                    {
+                        var trans = allCashTransactionsDict[curCashDate];
+                        if (!cashAmountDict.ContainsKey(trans.Currency.Name)) cashAmountDict.Add(trans.Currency.Name, 0);
+                        cashAmountDict[trans.Currency.Name] += trans.Amount;
+                    }
+
+                    if (curCashDate.DayOfWeek == DayOfWeek.Saturday || curCashDate.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        curCashDate = curCashDate.AddDays(1);
+                        continue;
+                    }
+                    
+                    if (!mktValues.ContainsKey(curCashDate))
+                        mktValues.Add(curCashDate, new Dictionary<string, double>());
+                    foreach (var currency in cashAmountDict.Keys)
+                    {
+                        if (!mktValues[curCashDate].ContainsKey(currency))
+                            mktValues[curCashDate].Add(currency, 0d);
+                        mktValues[curCashDate][currency] += cashAmountDict[currency];
+                    }
+
+
+                    curCashDate = curCashDate.AddDays(1);
+                }
+            }
+
+            
+
+
+            //foreach (var ct in allOrderedCashTransactions)
+            //{
+            //    if (!mktValues.ContainsKey(ct.Date)) mktValues.Add(ct.Date, new Dictionary<string, double>());
+            //    if (!mktValues[ct.Date].ContainsKey(ct.Currency.Name)) mktValues[ct.Date][ct.Currency.Name] = 0;
+            //    mktValues[ct.Date][ct.Currency.Name] += ct.Amount;
+            //}
 
             return new PricesDividendsDto()
             {

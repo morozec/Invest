@@ -466,7 +466,7 @@ export function Portfolio(props) {
             },
             body: JSON.stringify({ id: t.id })
         });
-        let cashTransactions = await loadCashTransactions();
+        const [cashTransactions] = await Promise.all([loadCashTransactions(), loadDividends(portfolioHoldings)]);
         setCashTransactions(cashTransactions);
     }
 
@@ -565,8 +565,11 @@ export function Portfolio(props) {
         if (!portfolioHoldings || !currencyRates) return null;
         if (portfolioHoldings.some(ph => !ph.price)) return null;
         if (portfolioHoldings.some(ph => ph.currency !== ph.price.currency)) throw new Error("WRONG CURRENCY");
-        return portfolioHoldings.reduce((sum, ph) =>
-            sum + getPortfolioCurrencyValue(getMarketValue(ph), ph.currency), 0).toFixed(2);
+        const holdingsMarketValue = portfolioHoldings.reduce((sum, ph) =>
+            sum + getPortfolioCurrencyValue(getMarketValue(ph), ph.currency), 0);
+        const cashMarketValue = allCurrencies.reduce((sum, currency) => 
+            sum + getPortfolioCurrencyValue(getCashAmount(currency.id), currency.name), 0);
+        return (holdingsMarketValue + cashMarketValue).toFixed(2)
     };
 
     const getPortfolioDaysPl = () => {
@@ -768,7 +771,7 @@ export function Portfolio(props) {
             })
         });
         clearAndCloseAddCash();
-        let cashTransactions = await loadCashTransactions();
+        const [cashTransactions] = await Promise.all([loadCashTransactions(), loadDividends(portfolioHoldings)]);
         setCashTransactions(cashTransactions);
         setIsLoading(false);
     }
