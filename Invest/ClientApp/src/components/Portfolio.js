@@ -91,6 +91,7 @@ export function Portfolio(props) {
             method: 'GET',
         })
         let currencies = await response.json();
+        console.log('all curr', currencies);
         return currencies;
     }, [])
 
@@ -780,6 +781,12 @@ export function Portfolio(props) {
         setCurCashTransactionId(null);
     }
 
+    const getCashAmount = (currencyId) => {
+        let transactions = cashTransations.filter(t => t.currency.id === currencyId);
+        let sum = transactions.reduce((res, cur) => res + cur.amount, 0);
+        return sum;
+    }
+
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
     let addCashButton = <Button variant='success' onClick={() => setShowAddCash(true)}>Add Cash</Button>
 
@@ -836,6 +843,14 @@ export function Portfolio(props) {
                         <div>{"Dividends"}</div>
                         <div className='ml-auto'>{getPortfolioDividends() ?? <em>Loading...</em>}</div>
                     </div>
+
+                    <h5>Cash</h5>
+                    {allCurrencies.map(c => (
+                        <div className='d-flex' key={c.id}>
+                            <div>{`${c.name} (${c.symbol})`}</div>
+                            <div className='ml-auto'>{getCashAmount(c.id)}</div>
+                        </div>
+                    ))}
                 </div>
                 <div className='col-sm-4'>
                     <Line
