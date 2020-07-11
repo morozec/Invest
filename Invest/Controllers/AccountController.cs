@@ -215,7 +215,7 @@ namespace Invest.Controllers
             Portfolio portfolio;
             if (addUpdatePortfolioDto.Id == null) //new Portfolio
             {
-                var currency = _companyContext.Currencies.Single(c => c.Id == addUpdatePortfolioDto.CurrencyId);
+                var currency = _companyContext.Currencies.Single(c => c.Name == "USD");
                 portfolio = new Portfolio()
                 {
                     Name = addUpdatePortfolioDto.Name,
