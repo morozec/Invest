@@ -124,8 +124,8 @@ export function Portfolio(props) {
     const [portfolios, setPortfolios] = useState(null);
     const [commissions, setCommisions] = useState(null);
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
-    const [mktValues, setMktValues] = useState({});
-    const [overallPL, setOverallPL] = useState({});
+    const [mktValues, setMktValues] = useState([]);
+    const [overallPL, setOverallPL] = useState([]);
     const [portfolioTransactions, setPortfolioTransactions] = useState(null);
     const [cashTransations, setCashTransactions] = useState(null);
 
@@ -1062,7 +1062,7 @@ export function Portfolio(props) {
                 <div className='col-sm-4'>
                     <Line
                         data={{
-                            labels: Object.keys(mktValues),
+                            labels: mktValues.map(v => v.date),
                             datasets: [
                                 {
                                     label: 'Market Value',
@@ -1077,7 +1077,7 @@ export function Portfolio(props) {
                                     pointHoverRadius: 5,
                                     pointHoverBorderWidth: 2,
 
-                                    data: Object.keys(mktValues).map(date => getDateValue(mktValues[date])),
+                                    data: mktValues.map(v => getDateValue(v.values)),
                                 }
                             ],
 
@@ -1102,7 +1102,7 @@ export function Portfolio(props) {
                 <div className='col-sm-4'>
                     <Line
                         data={{
-                            labels: Object.keys(overallPL),
+                            labels: overallPL.map(v => v.date),
                             datasets: [
                                 {
                                     label: 'Overall P&L',
@@ -1117,7 +1117,7 @@ export function Portfolio(props) {
                                     pointHoverRadius: 5,
                                     pointHoverBorderWidth: 2,
 
-                                    data: Object.keys(overallPL).map(date => getDateValue(overallPL[date])),
+                                    data: overallPL.map(v => getDateValue(v.values)),
                                 }
                             ],
 

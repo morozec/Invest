@@ -1034,21 +1034,42 @@ namespace Invest.Controllers
             //    mktValues[ct.Date][ct.Currency.Name] += ct.Amount;
             //}
 
+            var mktValuesList = mktValues
+                .Select(item => new TimeValueDto() {Date = item.Key, Values = item.Value})
+                .OrderBy(item => item.Date)
+                .ToList();
+
+            var unrealizedPLList = unrealizedPL
+                .Select(item => new TimeValueDto() { Date = item.Key, Values = item.Value })
+                .OrderBy(item => item.Date)
+                .ToList();
+
+            var overallPLList = overallPL
+                .Select(item => new TimeValueDto() { Date = item.Key, Values = item.Value })
+                .OrderBy(item => item.Date)
+                .ToList();
+
             return new PricesDividendsDto()
             {
-                MktValues = mktValues,
-                UnrealizedPL = unrealizedPL,
-                OverallPL = overallPL,
+                MktValues = mktValuesList,
+                UnrealizedPL = unrealizedPLList,
+                OverallPL = overallPLList,
                 Dividends = dividends
             };
         }
 
         public class PricesDividendsDto
         {
-            public IDictionary<DateTime, Dictionary<string, double>> MktValues { get; set; }
-            public IDictionary<DateTime, Dictionary<string, double>> UnrealizedPL { get; set; }
-            public IDictionary<DateTime, Dictionary<string, double>> OverallPL { get; set; }
+            public IList<TimeValueDto> MktValues { get; set; }
+            public IList<TimeValueDto> UnrealizedPL { get; set; }
+            public IList<TimeValueDto> OverallPL { get; set; }
             public Dictionary<string, IList<DividendDto>> Dividends { get; set; }
+        }
+
+        public class TimeValueDto
+        {
+            public DateTime Date { get; set; }
+            public IDictionary<string, double> Values { get; set; }
         }
 
         public class MarketValueDto
