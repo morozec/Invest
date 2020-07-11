@@ -140,6 +140,7 @@ export function Portfolio(props) {
     const [addHoldingsCommission, setAddHoldingsCommission] = useState(0);
     const [addHoldingsDate, setAddHoldingsDate] = useState(getYYYYMMDDDate(new Date()));
     const [addHoldingsComment, setAddHoldingsComment] = useState('');
+    const [addHoldingsUseCash, setAddHoldingsUseCash] = useState(true);
 
     const [transactionsItem, setTransactionsItem] = useState(null);
     const [transactions, setTransactions] = useState(null);
@@ -408,6 +409,7 @@ export function Portfolio(props) {
                 date: addHoldingsDate,
                 type: addHoldingsType,
                 comment: addHoldingsComment,
+                useCash: addHoldingsUseCash
             })
         });
     }
@@ -562,6 +564,7 @@ export function Portfolio(props) {
         setAddHoldingsCommission(t.commission);
         setAddHoldingsComment(t.comment);
         setAddHoldingsDate(t.date.substring(0, 10));
+        setAddHoldingsUseCash(t.useCash);
 
         setShowNewDialog(true);
     }
@@ -958,11 +961,32 @@ export function Portfolio(props) {
     }
 
     const getCashAmount = (currencyId) => {
-        let transactions = cashTransations.filter(t => t.currency.id === currencyId);
-        let sum = transactions.reduce((res, cur) => res + cur.amount, 0);
-        let fromTransactions = cashTransations.filter(t => t.currencyFrom && t.currencyFrom.id === currencyId);
-        let fromSum = fromTransactions.reduce((res, cur) => res + cur.amountFrom, 0);
-        return sum - fromSum;
+        let currencyName = allCurrencies.filter(c => c.id === currencyId)[0].name;
+
+        let cashTransactions = cashTransations.filter(t => t.currency.id === currencyId);
+        let sum = cashTransactions.reduce((res, cur) => res + cur.amount, 0);
+        let fromCashTransactions = cashTransations.filter(t => t.currencyFrom && t.currencyFrom.id === currencyId);
+        let fromSum = fromCashTransactions.reduce((res, cur) => res + cur.amountFrom, 0);
+
+        let transactionsSum = 0;
+        let transactions = portfolioTransactions.filter(t => t.useCash && t.company.currency === currencyName);
+        for (let t of transactions){
+            if (t.transactionType === 'Buy'){
+                transactionsSum -= (t.price * t.quantity + t.commission); 
+            }else{
+                transactionsSum += (t.price * t.quantity - t.commission); 
+            }
+        }
+        return sum - fromSum - transactionsSum;
+    }
+
+    const getCashAvailable = () => {
+        if (!addHoldingsCompany) return '';
+        console.log('c', addHoldingsCompany)
+        let currencyName = addHoldingsCompany.currency;
+        let currency = allCurrencies.filter(c => c.name === currencyName)[0];
+        let cashAmount = getCashAmount(currency.id);
+        return `${cashAmount.toFixed(2)}${currency.symbol}`;
     }
 
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
@@ -1026,7 +1050,7 @@ export function Portfolio(props) {
                     {allCurrencies.map(c => (
                         <div className='d-flex' key={c.id}>
                             <div>{`${c.name} (${c.symbol})`}</div>
-                            <div className='ml-auto'>{getCashAmount(c.id)}</div>
+                            <div className='ml-auto'>{getCashAmount(c.id).toFixed(2)}</div>
                         </div>
                     ))}
                 </div>
@@ -1674,6 +1698,16 @@ export function Portfolio(props) {
                             <Form.Label>Comment</Form.Label>
                             <Form.Control type='text'
                                 value={addHoldingsComment} onChange={(e) => setAddHoldingsComment(e.target.value)} />
+                        </Form.Group>
+
+                        <Form.Group className='twoCols'>
+                            <div class='d-flex'>
+                                <Form.Label>Use Cash</Form.Label>
+                                <Form.Check type='checkbox' 
+                                    checked={addHoldingsUseCash} onChange={(e) => setAddHoldingsUseCash(e.target.checked)} />
+                            </div>
+                            <Form.Label>{`Cash available: ${getCashAvailable()}`}</Form.Label>
+
                         </Form.Group>
                     </Form>
                 </Modal.Body>

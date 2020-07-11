@@ -328,6 +328,7 @@ namespace Invest.Controllers
             transaction.Date = addUpdateTransactionDto.Date;
             transaction.TransactionType = type;
             transaction.Comment = addUpdateTransactionDto.Comment;
+            transaction.UseCash = addUpdateTransactionDto.UseCash;
 
             if (addUpdateTransactionDto.Id != null) _companyContext.Update(transaction);
             else _companyContext.Transactions.Add(transaction);
@@ -363,6 +364,7 @@ namespace Invest.Controllers
             public string Type { get; set; }
             public string Comment { get; set; }
 
+            public bool UseCash { get; set; }
         }
 
         [Authorize]
@@ -858,6 +860,8 @@ namespace Invest.Controllers
                 var curPrice = curCount * orderedTransactions[0].Price;
                 var curOverallPrice = curPrice + orderedTransactions[0].Commission;
                 var curDate = orderedTransactions[0].Date;
+                var cashUsed = 0d;
+                if (orderedTransactions[0].UseCash) cashUsed += curOverallPrice;
 
                 double? lastValue = null;
                 for (var i = 1; i < orderedTransactions.Count; ++i)
@@ -891,7 +895,7 @@ namespace Invest.Controllers
                             mktValues.Add(curDate, new Dictionary<string, double>());
                         if (!mktValues[curDate].ContainsKey(currency))
                             mktValues[curDate].Add(currency, 0d);
-                        mktValues[curDate][currency] += mktValue;
+                        mktValues[curDate][currency] += mktValue - cashUsed;
 
                         if (!unrealizedPL.ContainsKey(curDate))
                             unrealizedPL.Add(curDate, new Dictionary<string, double>());
@@ -919,6 +923,7 @@ namespace Invest.Controllers
                         : -trans.Quantity * trans.Price;
                     curPrice += transPrice;
                     curOverallPrice += transPrice + trans.Commission;
+                    if (trans.UseCash) cashUsed += transPrice + trans.Commission;
                 }
 
                 
@@ -951,7 +956,7 @@ namespace Invest.Controllers
                         mktValues.Add(curDate, new Dictionary<string, double>());
                     if (!mktValues[curDate].ContainsKey(currency))
                         mktValues[curDate].Add(currency, 0d);
-                    mktValues[curDate][currency] += mktValue;
+                    mktValues[curDate][currency] += mktValue - cashUsed;
 
                     if (!unrealizedPL.ContainsKey(curDate))
                         unrealizedPL.Add(curDate, new Dictionary<string, double>());
