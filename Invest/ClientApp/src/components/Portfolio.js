@@ -977,10 +977,10 @@ export function Portfolio(props) {
         let transactionsSum = 0;
         let transactions = portfolioTransactions.filter(t => t.useCash && t.company.currency === currencyName);
         for (let t of transactions){
-            if (t.transactionType === 'Buy'){
-                transactionsSum -= (t.price * t.quantity + t.commission); 
+            if (t.transactionType.type === 'Buy'){
+                transactionsSum += (t.price * t.quantity + t.commission); 
             }else{
-                transactionsSum += (t.price * t.quantity - t.commission); 
+                transactionsSum -= (t.price * t.quantity - t.commission); 
             }
         }
         return sum - fromSum - transactionsSum;
@@ -988,7 +988,6 @@ export function Portfolio(props) {
 
     const getCashAvailable = () => {
         if (!addHoldingsCompany) return '';
-        console.log('c', addHoldingsCompany)
         let currencyName = addHoldingsCompany.currency;
         let currency = allCurrencies.filter(c => c.name === currencyName)[0];
         let cashAmount = getCashAmount(currency.id);
