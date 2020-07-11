@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useReducer } from 'react'
 import { Button, ToggleButtonGroup, ToggleButton, Modal, Form, Table, Tabs, Tab, Col, Row } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
@@ -10,6 +10,108 @@ import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
 import { Line } from 'react-chartjs-2';
 import _ from 'lodash'
+
+const initialAddCashState = {
+    addCashCurrencyId: -1,
+    addCashCurrencyFromId: -1,
+    addCashAmount: 0,
+    addCashExchangeRate: 0,
+    addCashAmountFrom: 0,
+    availableCashFromCurrencies: []
+}
+
+const addCashReducer = (state, action) => {
+    const {allCurrencies, currencyRates} = action;
+    let currency, rate, availableCurrencies;
+    switch (action.type){
+        case 'init':
+            availableCurrencies = allCurrencies.filter(c => c.id != action.currency.id);
+
+            return {
+                addCashCurrencyId: action.currency.id,
+                addCashCurrencyFromId: action.currencyFrom ? action.currencyFrom.id : state.addCashCurrencyFromId,
+                addCashAmount: Math.abs(action.amount),
+                addCashExchangeRate: action.amountFrom !== null ? action.amountFrom / action.amount : state.addCashExchangeRate,
+                addCashAmountFrom: action.amountFrom !== null ? action.amountFrom : state.addCashAmountFrom,
+                availableCashFromCurrencies: availableCurrencies
+            }
+        case 'currencyIdChanged':
+            let id = action.value;
+            currency = allCurrencies.filter(c => c.id == id)[0];
+
+            availableCurrencies = allCurrencies.filter(c => c.id != id);
+            if (availableCurrencies.length > 0){
+                let currencyFrom = availableCurrencies[0];
+                let rate = currencyRates[currency.name][currencyFrom.name];
+
+                return {
+                    addCashCurrencyId: id,
+                    addCashCurrencyFromId: currencyFrom.id,
+                    addCashAmount: state.addCashAmount,
+                    addCashExchangeRate: rate,
+                    addCashAmountFrom: state.addCashAmount * rate,
+                    availableCashFromCurrencies: availableCurrencies
+                }; 
+            }else{
+                return {
+                    addCashCurrencyId: id,
+                    addCashCurrencyFromId: state.addCashCurrencyFromId,
+                    addCashAmount: state.addCashAmount,
+                    addCashExchangeRate: state.addCashExchangeRate,
+                    addCashAmountFrom: state.addCashAmountFrom,
+                    availableCashFromCurrencies: availableCurrencies
+                }; 
+            }
+
+        case 'currencyFromIdChanged':
+            let fromId = action.value;
+            currency = allCurrencies.filter(c => c.id == state.addCashCurrencyId)[0];
+            let currencyFrom = allCurrencies.filter(c => c.id == fromId)[0];
+            rate = currencyRates[currency.name][currencyFrom.name];
+
+            return {
+                addCashCurrencyId: state.addCashCurrencyId,
+                addCashCurrencyFromId: fromId,
+                addCashAmount: state.addCashAmount,
+                addCashExchangeRate: rate,
+                addCashAmountFrom: state.addCashAmount * rate,
+                availableCashFromCurrencies: state.availableCashFromCurrencies
+            }; 
+
+        case 'amountChanged':
+            let amount = action.value;
+            return {
+                addCashCurrencyId: state.addCashCurrencyId,
+                addCashCurrencyFromId: state.addCashCurrencyFromId,
+                addCashAmount: amount,
+                addCashExchangeRate: state.addCashExchangeRate,
+                addCashAmountFrom: amount * state.addCashExchangeRate,
+                availableCashFromCurrencies: state.availableCashFromCurrencies
+            }; 
+        case 'exchgeRateChanged':
+            rate = action.value;
+            return {
+                addCashCurrencyId: state.addCashCurrencyId,
+                addCashCurrencyFromId: state.addCashCurrencyFromId,
+                addCashAmount: state.addCashAmount,
+                addCashExchangeRate: rate,
+                addCashAmountFrom: state.addCashAmount * rate,
+                availableCashFromCurrencies: state.availableCashFromCurrencies
+            }; 
+        case 'amountFromChanged':
+            let amountFrom = action.value;
+            return {
+                addCashCurrencyId: state.addCashCurrencyId,
+                addCashCurrencyFromId: state.addCashCurrencyFromId,
+                addCashAmount: +(amountFrom / state.addCashExchangeRate).toFixed(2),
+                addCashExchangeRate: state.addCashExchangeRate,
+                addCashAmountFrom: amountFrom,
+                availableCashFromCurrencies: state.availableCashFromCurrencies
+            }; 
+        default:
+            throw new Error('unknown add cash action');
+    }
+}
 
 export function Portfolio(props) {
     const { companies } = props;
@@ -63,16 +165,60 @@ export function Portfolio(props) {
     const [curCashTransactionId, setCurCashTransactionId] = useState(null);
     const [showAddCash, setShowAddCash] = useState(false);
     const [addCashPortfolioId, setAddCashPortfolioId] = useState(null);
-    const [addCashCurrencyId, setAddCashCurrencyId] = useState(-1);
-    const [addCashAmount, setAddCashAmount] = useState(0);
     const [addCashDate, setAddCashDate] = useState(getYYYYMMDDDate(new Date()));
-    const [addCashIsAdd, setAddCashIsAdd] = useState(true);
+    const [addCashIsAdd, setAddCashIsAdd] = useState(1);//+1 - add, -1 - remove, 0 - exchange
+
+    const [addCashState, addCashDispatch] = useReducer(addCashReducer, initialAddCashState);
 
     const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
 
     useEffect(() => {
         setResPortfolioIds(portfolioId.split(','))
     }, [portfolioId])
+    
+
+    const handleAddCashCurrencyIdChanged = (e) => {
+        addCashDispatch({
+            type: 'currencyIdChanged', 
+            value: +e.target.value, 
+            allCurrencies: allCurrencies,
+            currencyRates: currencyRates
+        });
+    }
+
+    const handleAddCashCurrencyFromIdChanged = (e) => {
+        addCashDispatch({
+            type: 'currencyFromIdChanged', 
+            value: +e.target.value, 
+            allCurrencies: allCurrencies,
+            currencyRates: currencyRates
+        });
+    }
+
+    const handleAddCashAmountChanged = (e) => {
+        addCashDispatch({type: 'amountChanged', value: +e.target.value});
+    }
+
+    const handleAddCashExchangeRateChanged = (e) => {
+        addCashDispatch({type: 'exchgeRateChanged', value: +e.target.value});
+    }
+
+    const handleAddCashAmountFromChanged = (e) => {
+        addCashDispatch({type: 'amountFromChanged', value: +e.target.value});
+    }
+
+    const handleAddCashIsAddChanged = (v) => {
+        setAddCashIsAdd(v);
+        if (v === 0){
+            addCashDispatch({
+                type: 'currencyIdChanged', 
+                value: addCashState.addCashCurrencyId, 
+                allCurrencies: allCurrencies,
+                currencyRates: currencyRates
+            });
+        }
+    }
+
 
     const loadCurrencyRate = async (from, to) => {
         let response = await fetch(`api/currency/${from}/${to}`, {
@@ -285,7 +431,6 @@ export function Portfolio(props) {
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
             setAddCashPortfolioId(portfolio.portfolios[0].id);
             setCashTransactions(cashTransactions);
-            setAddCashCurrencyId(portfolio.portfolios[0].currency.id);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -293,6 +438,13 @@ export function Portfolio(props) {
             let [rates, prices, dividends] = await Promise.all(
                 [loadCurrencyRates(allCurrencies), loadAllPrices(pricedHoldings), loadDividends(pricedHoldings)]);
             setCurrencyRates(rates);
+            addCashDispatch({
+                type:'currencyIdChanged', 
+                value:portfolio.portfolios[0].currency.id,
+                allCurrencies:allCurrencies,
+                currencyRates:rates 
+            });
+
             for (let ph of pricedHoldings) {
                 ph.price = prices[ph.ticker];
                 ph.dividends = dividends[ph.ticker]
@@ -449,10 +601,24 @@ export function Portfolio(props) {
     const handleEditCashTransaction = (t) => {
         setCurCashTransactionId(t.id);
         setAddCashPortfolioId(t.portfolio.id);
-        setAddCashAmount(Math.abs(t.amount));
         setAddCashDate(t.date.substring(0, 10));
-        setAddCashCurrencyId(t.currency.id);
-        setAddCashIsAdd(t.amount >= 0 ? true : false);
+
+        addCashDispatch({
+            type:'init',
+            amount:t.amount,
+            currency:t.currency,
+            currencyFrom:t.currencyFrom,
+            amountFrom:t.amountFrom,
+            allCurrencies:allCurrencies
+        })
+
+        console.log('t', t);
+
+        if (t.currencyFrom){
+            setAddCashIsAdd(0);
+        }else{
+            setAddCashIsAdd(t.amount >= 0 ? 1 : -1);
+        }
 
         setShowAddCash(true);
     }
@@ -765,9 +931,12 @@ export function Portfolio(props) {
             body: JSON.stringify({
                 id: curCashTransactionId,
                 portfolioId: addCashPortfolioId,
-                currencyId: addCashCurrencyId,
-                amount: addCashIsAdd ? addCashAmount : -addCashAmount,
-                date: addCashDate
+                date: addCashDate,
+                
+                currencyId: addCashState.addCashCurrencyId,
+                amount: addCashIsAdd !== -1 ? addCashState.addCashAmount : -addCashState.addCashAmount,
+                currencyFromId: addCashIsAdd === 0 ? addCashState.addCashCurrencyFromId : null,
+                amountFrom: addCashIsAdd === 0 ? addCashState.addCashAmountFrom : null
             })
         });
         clearAndCloseAddCash();
@@ -778,16 +947,22 @@ export function Portfolio(props) {
 
     const clearAndCloseAddCash = () => {
         setShowAddCash(false);
-        setAddCashPortfolioId(portfolios[0].id)
-        setAddCashAmount(0);
-        setAddCashIsAdd(true);
+        setAddCashPortfolioId(portfolios[0].id);
+        addCashDispatch({
+            type:'amountChanged',
+            value: 0
+        })
+        setAddCashIsAdd(1);
         setCurCashTransactionId(null);
+        
     }
 
     const getCashAmount = (currencyId) => {
         let transactions = cashTransations.filter(t => t.currency.id === currencyId);
         let sum = transactions.reduce((res, cur) => res + cur.amount, 0);
-        return sum;
+        let fromTransactions = cashTransations.filter(t => t.currencyFrom && t.currencyFrom.id === currencyId);
+        let fromSum = fromTransactions.reduce((res, cur) => res + cur.amountFrom, 0);
+        return sum - fromSum;
     }
 
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
@@ -1648,7 +1823,7 @@ export function Portfolio(props) {
 
                     <Form.Group>
                         <Form.Label>Currency</Form.Label>
-                        <Form.Control as='select' value={addCashCurrencyId} onChange={(e) => setAddCashCurrencyId(e.target.value)}>
+                        <Form.Control as='select' value={addCashState.addCashCurrencyId} onChange={handleAddCashCurrencyIdChanged}>
                             {allCurrencies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </Form.Control>
                     </Form.Group>
@@ -1656,7 +1831,7 @@ export function Portfolio(props) {
                     <Form.Group>
                         <Form.Label>Amount</Form.Label>
                         <Form.Control type='number' step='any' min={0}
-                            value={addCashAmount} onChange={(e) => setAddCashAmount(e.target.value)}>
+                            value={addCashState.addCashAmount} onChange={handleAddCashAmountChanged}>
                         </Form.Control>
                     </Form.Group>
 
@@ -1670,12 +1845,42 @@ export function Portfolio(props) {
                         <Form.Label>Type</Form.Label>
                         <div className='ml-auto'>
                             <ToggleButtonGroup type='radio' name='isAdd'
-                                value={addCashIsAdd} onChange={(v) => setAddCashIsAdd(v)}>
-                                <ToggleButton value={true} variant='outline-success'>Deposit</ToggleButton>
-                                <ToggleButton value={false} variant='outline-danger'>Withdrawal</ToggleButton>
+                                value={addCashIsAdd} onChange={v => handleAddCashIsAddChanged(v)}>
+                                <ToggleButton value={1} variant='outline-success'>Deposit</ToggleButton>
+                                <ToggleButton value={-1} variant='outline-danger'>Withdrawal</ToggleButton>
+                                <ToggleButton value={0} variant='outline-secondary'
+                                    disabled={allCurrencies.length <= 1}
+                                    >Exchange</ToggleButton>
                             </ToggleButtonGroup>
                         </div>
                     </Form.Group>
+
+                    {addCashIsAdd === 0 && 
+                        <Form.Group>
+                            <Form.Label>Source</Form.Label>
+                            <Form.Control as='select' value={addCashState.addCashCurrencyFromId} onChange={handleAddCashCurrencyFromIdChanged}>
+                                {addCashState.availableCashFromCurrencies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </Form.Control>
+                        </Form.Group>
+                    }
+
+                    {addCashIsAdd === 0 && 
+                        <Form.Group>
+                            <Form.Label>Exchange Rate</Form.Label>
+                            <Form.Control type='number' step='any' min={0}
+                                value={addCashState.addCashExchangeRate} onChange={handleAddCashExchangeRateChanged}>
+                            </Form.Control>
+                        </Form.Group>
+                    }
+
+                    {addCashIsAdd === 0 && 
+                        <Form.Group>
+                            <Form.Label>Source Amount</Form.Label>
+                            <Form.Control type='number' step='any' min={0}
+                                value={addCashState.addCashAmountFrom} onChange={handleAddCashAmountFromChanged}>
+                            </Form.Control>
+                        </Form.Group>
+                    }
 
                 </Modal.Body>
                 <Modal.Footer>

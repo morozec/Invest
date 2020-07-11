@@ -769,8 +769,18 @@ namespace Invest.Controllers
                 .OrderBy(t => t.Date).ToList();
 
             var allOrderedCashTransactions = GetCashTransactions(ids);
-            var allCashTransactionsDict = allOrderedCashTransactions
-                .ToDictionary(t => t.Date, t => t);
+            var allCashTransactionsDict = new Dictionary<DateTime, List<CashTransaction>>();
+            foreach (var ct in allOrderedCashTransactions)
+            {
+                if (!allCashTransactionsDict.ContainsKey(ct.Date))
+                {
+                    allCashTransactionsDict.Add(ct.Date, new List<CashTransaction>{ct});
+                }
+                else
+                {
+                    allCashTransactionsDict[ct.Date].Add(ct);
+                }
+            }
 
             var yahooResults = new Dictionary<string, dynamic>();
             
@@ -975,9 +985,18 @@ namespace Invest.Controllers
                 {
                     if (allCashTransactionsDict.ContainsKey(curCashDate))
                     {
-                        var trans = allCashTransactionsDict[curCashDate];
-                        if (!cashAmountDict.ContainsKey(trans.Currency.Name)) cashAmountDict.Add(trans.Currency.Name, 0);
-                        cashAmountDict[trans.Currency.Name] += trans.Amount;
+                        foreach (var trans in allCashTransactionsDict[curCashDate])
+                        {
+                            if (!cashAmountDict.ContainsKey(trans.Currency.Name)) 
+                                cashAmountDict.Add(trans.Currency.Name, 0);
+                            cashAmountDict[trans.Currency.Name] += trans.Amount;
+                            if (trans.CurrencyFrom != null)
+                            {
+                                if (!cashAmountDict.ContainsKey(trans.CurrencyFrom.Name))
+                                    cashAmountDict.Add(trans.CurrencyFrom.Name, 0);
+                                cashAmountDict[trans.CurrencyFrom.Name] -= trans.AmountFrom.Value;
+                            }
+                        }
                     }
 
                     if (curCashDate.DayOfWeek == DayOfWeek.Saturday || curCashDate.DayOfWeek == DayOfWeek.Sunday)
@@ -1045,15 +1064,21 @@ namespace Invest.Controllers
         {
             var portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdateCashTransactionDto.PortfolioId);
             var currency = _companyContext.Currencies.Single(c => c.Id == addUpdateCashTransactionDto.CurrencyId);
+            var currencyFrom = addUpdateCashTransactionDto.CurrencyFromId == null ? null :
+                _companyContext.Currencies.Single(c => c.Id == addUpdateCashTransactionDto.CurrencyFromId.Value);
 
             if (addUpdateCashTransactionDto.Id != null)
             {
                 var t = _companyContext.CashTransactions
+                    .Include(ct => ct.CurrencyFrom)
                     .Single(ct => ct.Id == addUpdateCashTransactionDto.Id);
                 t.Portfolio = portfolio;
                 t.Currency = currency;
                 t.Amount = addUpdateCashTransactionDto.Amount;
                 t.Date = addUpdateCashTransactionDto.Date;
+
+                t.CurrencyFrom = currencyFrom;
+                t.AmountFrom = addUpdateCashTransactionDto.AmountFrom;
             }
             else
             {
@@ -1062,7 +1087,10 @@ namespace Invest.Controllers
                     Portfolio = portfolio,
                     Currency = currency,
                     Amount = addUpdateCashTransactionDto.Amount,
-                    Date = addUpdateCashTransactionDto.Date
+                    Date = addUpdateCashTransactionDto.Date,
+
+                    CurrencyFrom = currencyFrom,
+                    AmountFrom = addUpdateCashTransactionDto.AmountFrom
                 });
             }
            
@@ -1089,6 +1117,7 @@ namespace Invest.Controllers
                 .OrderByDescending(ct => ct.Date)
                 .Include(ct => ct.Portfolio)
                 .Include(ct => ct.Currency)
+                .Include(ct => ct.CurrencyFrom)
                 .ToList();
         }
 
@@ -1101,6 +1130,9 @@ namespace Invest.Controllers
             public int CurrencyId { get; set; }
             public double Amount { get; set; }
             public DateTime Date { get; set; }
+
+            public int? CurrencyFromId { get; set; }
+            public double? AmountFrom { get; set; }
         }
 
     }

@@ -9,5 +9,8 @@ namespace Model
         public Currency Currency { get; set; }
         public double Amount { get; set; }
         public DateTime Date { get; set; }
+
+        public Currency CurrencyFrom { get; set; }
+        public double? AmountFrom { get; set; }
     }
 }
