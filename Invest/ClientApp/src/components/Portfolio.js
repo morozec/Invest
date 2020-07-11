@@ -675,15 +675,21 @@ export function Portfolio(props) {
         loadPrice(pricedCompany).then(() => setAddHoldingsPrice(pricedCompany.price.regularMarketPrice.raw));
     }
 
-    const handleAddHoldingsPriceChanged = (price) => {
-        setAddHoldingsPrice(price);
+    const updateAddHoldingsCommission = (price, quantity) => {
+        if (!portfolios || portfolios.length > 1) return;
+        let com = +(price * quantity * portfolios[0].defaultCommissionPercent / 100.0).toFixed(2);
+        setAddHoldingsCommission(com);
     }
 
-    useEffect(() => {
-        if (!portfolios || portfolios.length > 1) return;
-        let com = +(addHoldingsPrice * addHoldingsQuantity * portfolios[0].defaultCommissionPercent / 100.0).toFixed(2);
-        setAddHoldingsCommission(com);
-    }, [addHoldingsPrice, addHoldingsQuantity, portfolios])
+    const handleAddHoldingsPriceChanged = (price) => {
+        setAddHoldingsPrice(price);
+        updateAddHoldingsCommission(price, addHoldingsQuantity);
+    }
+
+    const handleAddHoldingsQuantityChanged = (quantity) => {
+        setAddHoldingsQuantity(quantity);
+        updateAddHoldingsCommission(addHoldingsPrice, quantity);
+    }    
 
     useEffect(() => {
         if (!portfolioHoldings || !currencyRates || portfolioHoldings.some(ph => !ph.price)) {
@@ -1682,7 +1688,7 @@ export function Portfolio(props) {
                         <Form.Group>
                             <Form.Label>Quantity</Form.Label>
                             <Form.Control type='number' min={1}
-                                value={addHoldingsQuantity} onChange={(e) => setAddHoldingsQuantity(e.target.value)} />
+                                value={addHoldingsQuantity} onChange={(e) => handleAddHoldingsQuantityChanged(+e.target.value)} />
                         </Form.Group>
                         <Form.Group>
                             <Form.Label>Commission</Form.Label>
