@@ -328,6 +328,7 @@ namespace Invest.Controllers
             transaction.Date = addUpdateTransactionDto.Date;
             transaction.TransactionType = type;
             transaction.Comment = addUpdateTransactionDto.Comment;
+            transaction.UseCash = addUpdateTransactionDto.UseCash;
 
             if (addUpdateTransactionDto.Id != null) _companyContext.Update(transaction);
             else _companyContext.Transactions.Add(transaction);
@@ -363,6 +364,7 @@ namespace Invest.Controllers
             public string Type { get; set; }
             public string Comment { get; set; }
 
+            public bool UseCash { get; set; }
         }
 
         [Authorize]
@@ -768,6 +770,20 @@ namespace Invest.Controllers
                 .Where(t => ids.Contains(t.Portfolio.Id))
                 .OrderBy(t => t.Date).ToList();
 
+            var allOrderedCashTransactions = GetCashTransactions(ids);
+            var allCashTransactionsDict = new Dictionary<DateTime, List<CashTransaction>>();
+            foreach (var ct in allOrderedCashTransactions)
+            {
+                if (!allCashTransactionsDict.ContainsKey(ct.Date))
+                {
+                    allCashTransactionsDict.Add(ct.Date, new List<CashTransaction>{ct});
+                }
+                else
+                {
+                    allCashTransactionsDict[ct.Date].Add(ct);
+                }
+            }
+
             var yahooResults = new Dictionary<string, dynamic>();
             
 
@@ -789,6 +805,8 @@ namespace Invest.Controllers
             });
 
 
+
+            var today = DateTime.Now.Date;
             foreach (var symbol in symbols)
             {
                 
@@ -842,6 +860,8 @@ namespace Invest.Controllers
                 var curPrice = curCount * orderedTransactions[0].Price;
                 var curOverallPrice = curPrice + orderedTransactions[0].Commission;
                 var curDate = orderedTransactions[0].Date;
+                var cashUsed = 0d;
+                if (orderedTransactions[0].UseCash) cashUsed += curOverallPrice;
 
                 double? lastValue = null;
                 for (var i = 1; i < orderedTransactions.Count; ++i)
@@ -875,7 +895,7 @@ namespace Invest.Controllers
                             mktValues.Add(curDate, new Dictionary<string, double>());
                         if (!mktValues[curDate].ContainsKey(currency))
                             mktValues[curDate].Add(currency, 0d);
-                        mktValues[curDate][currency] += mktValue;
+                        mktValues[curDate][currency] += mktValue - cashUsed;
 
                         if (!unrealizedPL.ContainsKey(curDate))
                             unrealizedPL.Add(curDate, new Dictionary<string, double>());
@@ -903,10 +923,11 @@ namespace Invest.Controllers
                         : -trans.Quantity * trans.Price;
                     curPrice += transPrice;
                     curOverallPrice += transPrice + trans.Commission;
+                    if (trans.UseCash) cashUsed += transPrice + trans.Commission;
                 }
 
-                var today = DateTime.Now.Date;
-                while (curDate < today)
+                
+                while (curDate <= today)
                 {
                     if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
                     {
@@ -935,7 +956,7 @@ namespace Invest.Controllers
                         mktValues.Add(curDate, new Dictionary<string, double>());
                     if (!mktValues[curDate].ContainsKey(currency))
                         mktValues[curDate].Add(currency, 0d);
-                    mktValues[curDate][currency] += mktValue;
+                    mktValues[curDate][currency] += mktValue - cashUsed;
 
                     if (!unrealizedPL.ContainsKey(curDate))
                         unrealizedPL.Add(curDate, new Dictionary<string, double>());
@@ -958,6 +979,60 @@ namespace Invest.Controllers
                 }
             }
 
+            if (allOrderedCashTransactions.Any())
+            {
+                var cashTransaction0 = allOrderedCashTransactions.Last();//reverse order
+                var curCashDate = cashTransaction0.Date;
+                var cashAmountDict = new Dictionary<string, double>();
+               
+
+                while (curCashDate <= today)
+                {
+                    if (allCashTransactionsDict.ContainsKey(curCashDate))
+                    {
+                        foreach (var trans in allCashTransactionsDict[curCashDate])
+                        {
+                            if (!cashAmountDict.ContainsKey(trans.Currency.Name)) 
+                                cashAmountDict.Add(trans.Currency.Name, 0);
+                            cashAmountDict[trans.Currency.Name] += trans.Amount;
+                            if (trans.CurrencyFrom != null)
+                            {
+                                if (!cashAmountDict.ContainsKey(trans.CurrencyFrom.Name))
+                                    cashAmountDict.Add(trans.CurrencyFrom.Name, 0);
+                                cashAmountDict[trans.CurrencyFrom.Name] -= trans.AmountFrom.Value;
+                            }
+                        }
+                    }
+
+                    if (curCashDate.DayOfWeek == DayOfWeek.Saturday || curCashDate.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        curCashDate = curCashDate.AddDays(1);
+                        continue;
+                    }
+                    
+                    if (!mktValues.ContainsKey(curCashDate))
+                        mktValues.Add(curCashDate, new Dictionary<string, double>());
+                    foreach (var currency in cashAmountDict.Keys)
+                    {
+                        if (!mktValues[curCashDate].ContainsKey(currency))
+                            mktValues[curCashDate].Add(currency, 0d);
+                        mktValues[curCashDate][currency] += cashAmountDict[currency];
+                    }
+
+
+                    curCashDate = curCashDate.AddDays(1);
+                }
+            }
+
+            
+
+
+            //foreach (var ct in allOrderedCashTransactions)
+            //{
+            //    if (!mktValues.ContainsKey(ct.Date)) mktValues.Add(ct.Date, new Dictionary<string, double>());
+            //    if (!mktValues[ct.Date].ContainsKey(ct.Currency.Name)) mktValues[ct.Date][ct.Currency.Name] = 0;
+            //    mktValues[ct.Date][ct.Currency.Name] += ct.Amount;
+            //}
 
             return new PricesDividendsDto()
             {
@@ -989,26 +1064,80 @@ namespace Invest.Controllers
         }
 
         [Authorize]
-        [HttpPost("addCashTransaction")]
-        public IActionResult AddCashTransaction(CashTransactionDto cashTransactionDto)
+        [HttpPost("addUpdateCashTransaction")]
+        public IActionResult AddUpdateCashTransaction(AddUpdateCashTransactionDto addUpdateCashTransactionDto)
         {
-            var portfolio = _companyContext.Portfolios.Single(p => p.Id == cashTransactionDto.PortfolioId);
-            var currency = _companyContext.Currencies.Single(c => c.Id == cashTransactionDto.CurrencyId);
-            _companyContext.CashTransactions.Add(new CashTransaction()
+            var portfolio = _companyContext.Portfolios.Single(p => p.Id == addUpdateCashTransactionDto.PortfolioId);
+            var currency = _companyContext.Currencies.Single(c => c.Id == addUpdateCashTransactionDto.CurrencyId);
+            var currencyFrom = addUpdateCashTransactionDto.CurrencyFromId == null ? null :
+                _companyContext.Currencies.Single(c => c.Id == addUpdateCashTransactionDto.CurrencyFromId.Value);
+
+            if (addUpdateCashTransactionDto.Id != null)
             {
-                Portfolio = portfolio,
-                Currency = currency,
-                Amount = cashTransactionDto.Amount,
-            });
+                var t = _companyContext.CashTransactions
+                    .Include(ct => ct.CurrencyFrom)
+                    .Single(ct => ct.Id == addUpdateCashTransactionDto.Id);
+                t.Portfolio = portfolio;
+                t.Currency = currency;
+                t.Amount = addUpdateCashTransactionDto.Amount;
+                t.Date = addUpdateCashTransactionDto.Date;
+
+                t.CurrencyFrom = currencyFrom;
+                t.AmountFrom = addUpdateCashTransactionDto.AmountFrom;
+            }
+            else
+            {
+                _companyContext.CashTransactions.Add(new CashTransaction()
+                {
+                    Portfolio = portfolio,
+                    Currency = currency,
+                    Amount = addUpdateCashTransactionDto.Amount,
+                    Date = addUpdateCashTransactionDto.Date,
+
+                    CurrencyFrom = currencyFrom,
+                    AmountFrom = addUpdateCashTransactionDto.AmountFrom
+                });
+            }
+           
             _companyContext.SaveChanges();
             return Ok();
         }
 
-        public class CashTransactionDto
+        [Authorize]
+        [HttpDelete("deleteCashTransaction")]
+        public IActionResult DeleteCashTransaction(DeleteTransactionDto deleteTransactionDto)
         {
+            var transaction = _companyContext.CashTransactions.Single(t => t.Id == deleteTransactionDto.Id);
+            _companyContext.CashTransactions.Remove(transaction);
+            _companyContext.SaveChanges();
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("cashTransactions")]
+        public IList<CashTransaction> GetCashTransactions([FromQuery]List<int> ids)
+        {
+            return _companyContext.CashTransactions
+                .Where(ct => ids.Contains(ct.Portfolio.Id))
+                .OrderByDescending(ct => ct.Date)
+                .Include(ct => ct.Portfolio)
+                .Include(ct => ct.Currency)
+                .Include(ct => ct.CurrencyFrom)
+                .ToList();
+        }
+
+
+
+        public class AddUpdateCashTransactionDto
+        {
+            public int? Id { get; set; }
             public int PortfolioId { get; set; }
             public int CurrencyId { get; set; }
             public double Amount { get; set; }
+            public DateTime Date { get; set; }
+
+            public int? CurrencyFromId { get; set; }
+            public double? AmountFrom { get; set; }
         }
 
     }

@@ -4,14 +4,16 @@ using DbRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DbRepository.Migrations
 {
     [DbContext(typeof(CompanyContext))]
-    partial class CompanyContextModelSnapshot : ModelSnapshot
+    [Migration("20200709110627_AddCashTransactionDate")]
+    partial class AddCashTransactionDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,12 +162,6 @@ namespace DbRepository.Migrations
                     b.Property<double>("Amount")
                         .HasColumnType("float");
 
-                    b.Property<double?>("AmountFrom")
-                        .HasColumnType("float");
-
-                    b.Property<int?>("CurrencyFromId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("CurrencyId")
                         .HasColumnType("int");
 
@@ -176,8 +172,6 @@ namespace DbRepository.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyFromId");
 
                     b.HasIndex("CurrencyId");
 
@@ -392,9 +386,6 @@ namespace DbRepository.Migrations
                     b.Property<int?>("TransactionTypeId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("UseCash")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyTicker");
@@ -493,10 +484,6 @@ namespace DbRepository.Migrations
 
             modelBuilder.Entity("Model.CashTransaction", b =>
                 {
-                    b.HasOne("Model.Currency", "CurrencyFrom")
-                        .WithMany()
-                        .HasForeignKey("CurrencyFromId");
-
                     b.HasOne("Model.Currency", "Currency")
                         .WithMany()
                         .HasForeignKey("CurrencyId");

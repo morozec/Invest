@@ -13,5 +13,7 @@ namespace Model
         public double Commission { get; set; }
         public DateTime Date { get; set; }
         public string Comment { get; set; }
+
+        public bool UseCash { get; set; }
     }
 }

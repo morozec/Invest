@@ -4,14 +4,16 @@ using DbRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DbRepository.Migrations
 {
     [DbContext(typeof(CompanyContext))]
-    partial class CompanyContextModelSnapshot : ModelSnapshot
+    [Migration("20200711065857_AddCashFromCurrency")]
+    partial class AddCashFromCurrency
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -391,9 +393,6 @@ namespace DbRepository.Migrations
 
                     b.Property<int?>("TransactionTypeId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("UseCash")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
