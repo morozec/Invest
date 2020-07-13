@@ -669,26 +669,35 @@ export function Portfolio(props) {
         return portfolios && currencyRates ? value * currencyRates[valueCurrency][selectedCurrency.name] : null;
     }, [currencyRates, portfolios, getCurrencyById, selectedCurrencyId])
 
+
+    const updateAddHoldingsCommission = (portfolioId, price, quantity) => {
+        const portfolio = allPortfolios.filter(p => p.id === portfolioId)[0];
+        let com = +(price * quantity * portfolio.defaultCommissionPercent / 100.0).toFixed(2);
+        setAddHoldingsCommission(com);
+    }
+
+    const handleAddHoldingsPortfolioIdChanged = (e) => {
+        let id = +e.target.value;
+        setAddHoldingsPortfolioId(id);
+        updateAddHoldingsCommission(id, addHoldingsPrice, addHoldingsQuantity);
+    }
+
     const handleAddHoldingsCompanyChanged = (company) => {
         setAddHoldingsCompany(company);
         let pricedCompany = { ticker: company.ticker };
-        loadPrice(pricedCompany).then(() => setAddHoldingsPrice(pricedCompany.price.regularMarketPrice.raw));
-    }
-
-    const updateAddHoldingsCommission = (price, quantity) => {
-        if (!portfolios || portfolios.length > 1) return;
-        let com = +(price * quantity * portfolios[0].defaultCommissionPercent / 100.0).toFixed(2);
-        setAddHoldingsCommission(com);
+        loadPrice(pricedCompany).then(() => {
+            handleAddHoldingsPriceChanged(pricedCompany.price.regularMarketPrice.raw);
+        });
     }
 
     const handleAddHoldingsPriceChanged = (price) => {
         setAddHoldingsPrice(price);
-        updateAddHoldingsCommission(price, addHoldingsQuantity);
+        updateAddHoldingsCommission(addHoldingsPortfolioId, price, addHoldingsQuantity);
     }
 
     const handleAddHoldingsQuantityChanged = (quantity) => {
         setAddHoldingsQuantity(quantity);
-        updateAddHoldingsCommission(addHoldingsPrice, quantity);
+        updateAddHoldingsCommission(addHoldingsPortfolioId, addHoldingsPrice, quantity);
     }    
 
     useEffect(() => {
@@ -1657,7 +1666,7 @@ export function Portfolio(props) {
 
                         <Form.Group>
                             <Form.Label>Portfolio</Form.Label>
-                            <Form.Control as='select' value={addHoldingsPortfolioId} onChange={(e) => setAddHoldingsPortfolioId(e.target.value)}>
+                            <Form.Control as='select' value={addHoldingsPortfolioId} onChange={handleAddHoldingsPortfolioIdChanged}>
                                 {allPortfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </Form.Control>
                         </Form.Group>
@@ -1706,7 +1715,7 @@ export function Portfolio(props) {
                         </Form.Group>
 
                         <Form.Group className='twoCols'>
-                            <div class='d-flex'>
+                            <div className='d-flex'>
                                 <Form.Label>Use Cash</Form.Label>
                                 <Form.Check type='checkbox' 
                                     checked={addHoldingsUseCash} onChange={(e) => setAddHoldingsUseCash(e.target.checked)} />
