@@ -1147,6 +1147,43 @@ namespace Invest.Controllers
                 .ToList();
         }
 
+        [Authorize]
+        [HttpGet("cash")]
+        public IDictionary<string, double> GetCash([FromQuery] List<int> ids)
+        {
+            var currencies = _companyContext.Currencies.ToList();
+            var cash = currencies.ToDictionary(c => c.Name, c => 0d);
+
+            var cashTransactions = GetCashTransactions(ids);
+            foreach (var ct in cashTransactions)
+            {
+                cash[ct.Currency.Name] += ct.Amount;
+                if (ct.AmountFrom != null) cash[ct.CurrencyFrom.Name] -= ct.AmountFrom.Value;
+            }
+
+            var transactions = _companyContext.Transactions
+                .Where(t => ids.Contains(t.Portfolio.Id) && t.UseCash)
+                .Include(t => t.TransactionType)
+                .Include(t => t.Company)
+                .ToList();
+            foreach (var t in transactions)
+            {
+                var currency = t.Company.Currency;
+                if (t.TransactionType.Type == "Buy")
+                {
+                    cash[currency] -= t.Price * t.Quantity;
+                }
+                else
+                {
+                    cash[currency] += t.Price * t.Quantity;
+                }
+
+                cash[currency] -= t.Commission;
+            }
+
+            return cash;
+        }
+
 
 
         public class AddUpdateCashTransactionDto
