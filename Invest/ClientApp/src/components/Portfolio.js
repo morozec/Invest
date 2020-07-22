@@ -127,9 +127,9 @@ export function Portfolio(props) {
     const [mktValues, setMktValues] = useState([]);
     const [overallPL, setOverallPL] = useState([]);
     const [unrealizedPL, setUnrealizedPL] = useState([]);
+    const [cashValues, setCashValues] = useState([]);
     const [portfolioTransactions, setPortfolioTransactions] = useState(null);
     const [cashTransations, setCashTransactions] = useState(null);
-    const [cashAmount, setCashAmount] = useState({});
 
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [showHoldingsDialog, setShowHoldingsDialog] = useState(false);
@@ -143,7 +143,7 @@ export function Portfolio(props) {
     const [addHoldingsDate, setAddHoldingsDate] = useState(getYYYYMMDDDate(new Date()));
     const [addHoldingsComment, setAddHoldingsComment] = useState('');
     const [addHoldingsUseCash, setAddHoldingsUseCash] = useState(true);
-    const [addHoldingsCashAvailable, setAddHoldingsCashAvailable] = useState('');
+    // const [addHoldingsCashAvailable, setAddHoldingsCashAvailable] = useState('');
 
     const [transactionsItem, setTransactionsItem] = useState(null);
     const [transactions, setTransactions] = useState(null);
@@ -346,6 +346,7 @@ export function Portfolio(props) {
         setMktValues(result.mktValues);
         setOverallPL(result.overallPL);
         setUnrealizedPL(result.unrealizedPL);
+        setCashValues(result.cash);
         return result.dividends;
     }, [portfolioIds, cookies.jwt])
 
@@ -395,22 +396,7 @@ export function Portfolio(props) {
         let cashTransactions = await response.json();
         return cashTransactions;
     }, [portfolioIds, cookies.jwt])
-
-    const loadCashAmount = useCallback( async (concretePortfolioIds) => {
-        if (!cookies.jwt) return;
-        const ids = concretePortfolioIds 
-            ? concretePortfolioIds.reduce((str, id) => `${str}ids=${id}&`, "")
-            : portfolioIds.reduce((str, id) => `${str}ids=${id}&`, "");
-        let response = await fetch(`api/account/cash?${ids}`, {
-            method: 'GET',
-            headers: {
-                "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
-            },
-        });
-        let cash = await response.json();
-        return cash;
-    }, [portfolioIds, cookies.jwt])
+    
 
     const addUpdateHoldings = async (id) => {
         await fetch('api/account/addUpdateTransaction', {
@@ -438,8 +424,8 @@ export function Portfolio(props) {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            let promises = [loadPortfolio(), loadAllPortfolios(), loadAllCurrencies(), loadCashTransactions(), loadCashAmount()];
-            const [portfolio, allPortfolios, allCurrencies, cashTransactions, cashAmount] = await Promise.all(promises);
+            let promises = [loadPortfolio(), loadAllPortfolios(), loadAllCurrencies(), loadCashTransactions()];
+            const [portfolio, allPortfolios, allCurrencies, cashTransactions] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
             setSelectedCurrencyId(portfolio.portfolios[0].currency.id);
@@ -453,7 +439,6 @@ export function Portfolio(props) {
             setAddHoldingsPortfolioId(portfolio.portfolios[0].id);
             setAddCashPortfolioId(portfolio.portfolios[0].id);
             setCashTransactions(cashTransactions);
-            setCashAmount(cashAmount);
             setIsLoading(false);
 
             let pricedHoldings = [...portfolio.holdings];
@@ -477,7 +462,7 @@ export function Portfolio(props) {
             setPortfolioHoldings(pricedHoldings);
 
         })()
-    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios, loadAllCurrencies, loadCashTransactions, loadCashAmount])
+    }, [loadPortfolio, loadCurrencyRates, loadDividends, loadAllPortfolios, loadAllCurrencies, loadCashTransactions])
 
     const handleAddUpdateHoldings = () => {
         (async () => {
@@ -697,18 +682,18 @@ export function Portfolio(props) {
         setAddHoldingsCommission(com);
     }
 
-    const updateCashAvailable = (portfolioId, company) => {
-        if (!company) return;
-        let currencyName = company.currency;
-        let currency = allCurrencies.filter(c => c.name === currencyName)[0];
-        loadCashAmount([portfolioId]).then(cash => setAddHoldingsCashAvailable(`${cash[currencyName].toFixed(2)}${currency.symbol}`));
-    }
+    // const updateCashAvailable = (portfolioId, company) => {
+    //     if (!company) return;
+    //     let currencyName = company.currency;
+    //     let currency = allCurrencies.filter(c => c.name === currencyName)[0];
+    //     loadCashAmount([portfolioId]).then(cash => setAddHoldingsCashAvailable(`${cash[currencyName].toFixed(2)}${currency.symbol}`));
+    // }
 
     const handleAddHoldingsPortfolioIdChanged = (e) => {
         let id = +e.target.value;
         setAddHoldingsPortfolioId(id);
         updateAddHoldingsCommission(id, addHoldingsPrice, addHoldingsQuantity);
-        updateCashAvailable(id, addHoldingsCompany);
+        // updateCashAvailable(id, addHoldingsCompany);
     }
 
     const handleAddHoldingsCompanyChanged = (company) => {
@@ -717,7 +702,7 @@ export function Portfolio(props) {
         loadPrice(pricedCompany).then(() => {
             handleAddHoldingsPriceChanged(pricedCompany.price.regularMarketPrice.raw);
         });
-        updateCashAvailable(addHoldingsPortfolioId, company);
+        // updateCashAvailable(addHoldingsPortfolioId, company);
     }
 
     const handleAddHoldingsPriceChanged = (price) => {
@@ -800,6 +785,13 @@ export function Portfolio(props) {
         return getDateValue(lastOverallPL.values).toFixed(2);      
     }
 
+    const getPortfolioCash = (currency) => {
+        if (cashValues.length === 0) return 0;
+        let lastCashValue = cashValues[cashValues.length - 1];
+        if (!lastCashValue.values[currency]) return 0;
+        return lastCashValue.values[currency].toFixed(2);
+    }
+
     const getSumPortfolioCommissions = () => {
         if (!commissions || !currencyRates) return null;
         let sumCommission = 0;
@@ -833,7 +825,7 @@ export function Portfolio(props) {
         return history;
     }
 
-    const savePortfolioEdit = (name, defaultCommissionPercent) => {
+    const savePortfolioEdit = (name, defaultCommissionPercent, addDividendsToCash) => {
         (async () => {
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
@@ -842,7 +834,7 @@ export function Portfolio(props) {
                     "Content-Type": "application/json;charset=utf-8",
                     'Authorization': 'Bearer ' + cookies.jwt
                 },
-                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent })
+                body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent, addDividendsToCash })
             });
             let portfolio = await loadPortfolio();
             setPortfolios(portfolio.portfolios);
@@ -1060,7 +1052,7 @@ export function Portfolio(props) {
                     {allCurrencies.map(c => (
                         <div className='d-flex' key={c.id}>
                             <div>{`${c.name} (${c.symbol})`}</div>
-                            <div className='ml-auto'>{cashAmount[c.name].toFixed(2)}</div>
+                            <div className='ml-auto'>{getPortfolioCash(c.name)}</div>
                         </div>
                     ))}
                 </div>
@@ -1716,7 +1708,7 @@ export function Portfolio(props) {
                                 <Form.Check type='checkbox' 
                                     checked={addHoldingsUseCash} onChange={(e) => setAddHoldingsUseCash(e.target.checked)} />
                             </div>
-                            <Form.Label>{`Cash available: ${addHoldingsCashAvailable}`}</Form.Label>
+                            {/* <Form.Label>{`Cash available: ${addHoldingsCashAvailable}`}</Form.Label> */}
 
                         </Form.Group>
                     </Form>
@@ -1792,6 +1784,7 @@ export function Portfolio(props) {
                     name={portfolios[0].name}
                     defaultCommissionPercent={portfolios[0].defaultCommissionPercent}
                     defaultDividendTaxPercent={portfolios[0].defaultDividendTaxPercent}
+                    addDividendsToCash={portfolios[0].addDividendsToCash}
                 />
             }
 

@@ -3,10 +3,12 @@ import { Modal, Form, Button } from 'react-bootstrap';
 
 export function PortfolioEditor(props) {
 
-    const { show, handleClose, handleSave, name, defaultCommissionPercent } = props;
+    const { show, handleClose, handleSave, name, defaultCommissionPercent, addDividendsToCash } = props;
     const [portfolioName, setPortfolioName] = useState(name ? name : 'New Portfilio');    
     const [portfolioDefaultCommissionPercent, setPortfolioDefaultCommissionPercent] = useState(
         defaultCommissionPercent ? defaultCommissionPercent : 0);
+    const [portfolioAddDividendsToCash, setPortfolioAddDividendsToCash] = useState(
+        addDividendsToCash ? addDividendsToCash : false);
 
     useEffect(() => {
         setPortfolioName(name ? name : 'New Portfilio');
@@ -30,7 +32,11 @@ export function PortfolioEditor(props) {
                         <Form.Label>Default Commission (%)</Form.Label>
                         <Form.Control type='number' step='any'
                             value={portfolioDefaultCommissionPercent} onChange={(e) => setPortfolioDefaultCommissionPercent(+e.target.value)} />
-                    </Form.Group>                                      
+                    </Form.Group>  
+                    <Form.Group>
+                        <Form.Check type="checkbox" label="Accrue dividends to cash" 
+                            checked={portfolioAddDividendsToCash} onChange={e => setPortfolioAddDividendsToCash(e.target.checked)}/>
+                    </Form.Group>                                    
                 </Form>
             </Modal.Body>
             <Modal.Footer>
@@ -38,7 +44,7 @@ export function PortfolioEditor(props) {
                     Cancel
                 </Button>
                 <Button variant="primary"
-                    onClick={() => handleSave(portfolioName, portfolioDefaultCommissionPercent)}
+                    onClick={() => handleSave(portfolioName, portfolioDefaultCommissionPercent, portfolioAddDividendsToCash)}
                     disabled={portfolioName === ''}>
                     Ok
                 </Button>

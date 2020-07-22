@@ -29,14 +29,14 @@ export function PortfoliosList(props) {
 
     }, [cookies.jwt]);
 
-    const addPortfolio = async (name, defaultCommissionPercent) => {
+    const addPortfolio = async (name, defaultCommissionPercent, addDividendsToCash) => {
         await fetch('api/account/addUpdatePortfolio', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
                 'Authorization': 'Bearer ' + cookies.jwt
             },
-            body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent })
+            body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent, addDividendsToCash })
         });
     }
 
@@ -56,10 +56,10 @@ export function PortfoliosList(props) {
         loadPortfolios().then(() => setIsLoading(false));
     }, [loadPortfolios])
 
-    const handleAddPortfolio = (name, defaultCommissionPercent) => {
+    const handleAddPortfolio = (name, defaultCommissionPercent, addDividendsToCash) => {
         (async () => {
             setIsLoading(true);
-            await addPortfolio(name, defaultCommissionPercent);
+            await addPortfolio(name, defaultCommissionPercent, addDividendsToCash);
             await loadPortfolios();
             setIsLoading(false);
             handleClose();

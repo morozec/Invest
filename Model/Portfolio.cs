@@ -13,6 +13,7 @@ namespace Model
 
         public double DefaultCommissionPercent { get; set; }
         public double DefaultDividendTaxPercent { get; set; }
+        public bool AddDividendsToCash { get; set; }
 
         public Portfolio()
         {
