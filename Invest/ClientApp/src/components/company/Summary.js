@@ -1,15 +1,18 @@
 import React, { Fragment, useState, useEffect } from 'react';
-import { Table, Button } from 'react-bootstrap';
+import { Table, Button, ListGroup } from 'react-bootstrap';
 import { getDateStringFromUnixTime } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Bar, Line } from 'react-chartjs-2';
 import { useCookies } from 'react-cookie';
+import { Link } from 'react-router-dom';
 
 export function Summary(props) {
     const [cookies] = useCookies(['jwt']);
     const [logo, setLogo] = useState(null);
     const [isInWatchList, setIsInWatchList] = useState(false);
     const [isInWatchListChecking, setIsInWatchListChecking] = useState(true);
+    const [holdings, setHoldings] = useState([]);
+    const [price, setPrice] = useState(null);
 
     const { ticker, profile, recommendations,
         comparingCompanies, addComparingCompany, removeComparingCompany } = props;
@@ -31,6 +34,41 @@ export function Summary(props) {
     }, [profile])
 
    
+    useEffect(() => {
+        if (!cookies.jwt) return;
+
+        const getHoldings = async () => {
+            let response = await fetch(`api/account/holdings/${profile.quoteType.symbol}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + cookies.jwt
+                },
+            });
+            let result = await response.json();
+            return result;
+        }
+
+        getHoldings().then(holdings => {
+            console.log('holdings', holdings);
+            setHoldings(holdings);
+        })
+    }, [profile, cookies.jwt])
+
+    useEffect(() => {
+
+        const loadPrice = async () => {
+            let response = await fetch(`api/yahoofinance/price/${profile.quoteType.symbol}`, {
+                method: 'GET',
+                headers: {
+                    "Accept": "application/json",
+                }
+            });
+            let price = await response.json();
+            return price;
+        }
+        loadPrice().then(price => setPrice(price));
+    }, [profile])
+
     useEffect(() => {
         if (!cookies.jwt) return;
 
@@ -95,6 +133,14 @@ export function Summary(props) {
             setIsInWatchListChecking(false);
         });
     }
+
+    const getAvgPrice = (item) => (item.amount / item.quantity).toFixed(2);
+
+    const getMarketValue = (item) => (price.regularMarketPrice.raw * item.quantity);    
+
+    const getUnrealizedPL = (item) => price.regularMarketPrice.raw * item.quantity - item.amount;
+    const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
+    const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
     let content = (
         <Fragment>
@@ -211,6 +257,54 @@ export function Summary(props) {
                         locale="en"
                         autosize
                     />
+                </div>
+
+                <div className='holdingsContainer'>
+                    <ListGroup>
+                        {holdings.map(h => 
+                            <ListGroup.Item key={h.key.id}>
+                                <Link to={{ pathname: `/portfolio/p=${h.key.id}` }}> {h.key.name} </Link>
+                                <Table className='table-sm portfolioTable' bordered hover variant='light'>
+                                <thead>
+                                    <tr>
+                                        <th className='centered'>Mkt Value</th>
+                                        <th className='centered'>Avg Price</th>
+                                        <th className='centered'>Quantity</th>
+                                        <th className='centered'>Amount</th>
+                                        <th className='centered'>{"Unrealized P&L"}</th>
+                                        {/* <th className='centered'>{"Closed P&L"}</th> */}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>                                       
+                                        <td className='centered'>{price ? getMarketValue(h.value).toFixed(2) : <em>Loading...</em>}</td>
+                                        <td className='centered'>{getAvgPrice(h.value)}</td>
+                                        <td className='centered'>{h.value.quantity}</td>
+                                        <td className='centered'>{h.value.amount.toFixed(2)}</td>   
+
+                                        <td className={`centered ${price && getUnrealizedPL(h.value) > 0
+                                            ? 'up'
+                                            : price && getUnrealizedPL(h.value) < 0
+                                                ? 'down'
+                                                : ''}`}>
+                                            {price ? getUnrealizedPLPlusPercent(h.value) : <em>Loading...</em>}
+                                        </td>                                      
+
+                                        {/* <td className={`centered ${h.value.closedAmount > 0
+                                            ? 'up'
+                                            : h.value.closedAmount < 0
+                                                ? 'down'
+                                                : ''}`}>
+                                            {(h.value.closedAmount).toFixed(2)}
+                                        </td> */}
+                                       
+                                    </tr>
+                                </tbody>
+                            </Table>
+
+
+                            </ListGroup.Item>)}
+                    </ListGroup>
                 </div>
 
                 {profile.upgradeDowngradeHistory &&

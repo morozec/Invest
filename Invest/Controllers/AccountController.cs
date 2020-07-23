@@ -22,6 +22,7 @@ using Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
+using Portfolio = Model.Portfolio;
 
 namespace Invest.Controllers
 {
@@ -370,26 +371,10 @@ namespace Invest.Controllers
             public bool UseCash { get; set; }
         }
 
-        [Authorize]
-        [HttpGet("portfolio")]
-        public PortfolioDto GetPortfolio([FromQuery]List<int> ids)
+        private static IList<PortfolioHoldingsDto> GetHoldings(
+            IList<Transaction> transactions, IList<int> portfolioIds, out Dictionary<string, double> outCommissions)
         {
-            var portfolios = _companyContext.Portfolios
-                .Include(p => p.Currency)
-                .Where(p => ids.Contains(p.Id));
             var commissions = new Dictionary<string, double>();
-
-            var transactions = _companyContext
-                .Transactions
-                .Include(t => t.Company)
-                .ThenInclude(c => c.CompanyPortfolios)
-                .Include(t => t.TransactionType)
-                .Include(t => t.Portfolio)
-                .Where(t => ids.Contains(t.Portfolio.Id))
-                .OrderBy(t => t.Date)
-                .ToList();
-
-
             var holdings = transactions
                 .GroupBy(t => t.Company)
                 .Select(g =>
@@ -435,6 +420,7 @@ namespace Invest.Controllers
                                         buyQuantity = 0;
                                     }
                                 }
+
                                 sellHoldings.RemoveRange(0, removeCount);
                             }
                         }
@@ -461,6 +447,7 @@ namespace Invest.Controllers
                                         sellQuantity = 0;
                                     }
                                 }
+
                                 buyHoldings.RemoveRange(0, removingCount);
                             }
                             else
@@ -472,7 +459,7 @@ namespace Invest.Controllers
                                 });
                             }
                         }
-                        
+
                     }
 
                     closedAmount -= g.Sum(t => t.Commission);
@@ -480,7 +467,7 @@ namespace Invest.Controllers
                     int openQuantity = 0;
                     double openAmount = 0d;
                     double totalAmount = 0d;
-                   
+
                     if (buyHoldings.Count > 0)
                     {
                         openQuantity = buyHoldings.Sum(h => h.Quantity);
@@ -495,10 +482,10 @@ namespace Invest.Controllers
                     }
 
                     double? dividendTaxPercent = null;
-                    if (ids.Count == 1)
+                    if (portfolioIds.Count == 1)
                     {
                         var cp = g.Key.CompanyPortfolios
-                            .SingleOrDefault(x => x.PortfolioId == ids[0]);
+                            .SingleOrDefault(x => x.PortfolioId == portfolioIds[0]);
                         if (cp != null)
                         {
                             dividendTaxPercent = cp.DividendTaxPercent;
@@ -520,15 +507,55 @@ namespace Invest.Controllers
                     };
 
                 }).ToList();
-            //        return new PortfolioHoldingsDto()
-            //        {
-            //            Ticker = g.Key,
-            //            AvgPrice = g.Average(t => t.Price),
-            //            //Quantity = g.Sum(t => t.TransactionType.Type == "Buy" ? t.Quantity : -t.Quantity),
-            //            //Amount = g.Sum(t => t.Price * t.Quantity + t.Commission)
-            //        };
-            //    })
-            //    .ToList();
+
+            outCommissions = commissions;
+            return holdings;
+        }
+
+        [Authorize]
+        [HttpGet("holdings/{ticker}")]
+        public IList<KeyValuePair<Portfolio, PortfolioHoldingsDto>> GetHoldings(string ticker)
+        {
+            var transactions = _companyContext
+                .Transactions
+                .Include(t => t.Company)
+                .ThenInclude(c => c.CompanyPortfolios)
+                .Include(t => t.TransactionType)
+                .Include(t => t.Portfolio)
+                .Where(t => t.Company.Ticker == ticker)
+                .OrderBy(t => t.Date).ToList();
+            var holdings = transactions
+                .GroupBy(t => t.Portfolio)
+                .ToDictionary(group => group.Key,
+                    group =>
+                        GetHoldings(
+                            group.ToList(),
+                            new List<int>() {group.Key.Id},
+                            out var commissions)[0]) //только одна компания
+                .ToList();
+
+            return holdings;
+        }
+
+        [Authorize]
+        [HttpGet("portfolio")]
+        public PortfolioDto GetPortfolio([FromQuery]List<int> ids)
+        {
+            var portfolios = _companyContext.Portfolios
+                .Include(p => p.Currency)
+                .Where(p => ids.Contains(p.Id));
+
+            var transactions = _companyContext
+                .Transactions
+                .Include(t => t.Company)
+                .ThenInclude(c => c.CompanyPortfolios)
+                .Include(t => t.TransactionType)
+                .Include(t => t.Portfolio)
+                .Where(t => ids.Contains(t.Portfolio.Id))
+                .OrderBy(t => t.Date)
+                .ToList();
+
+            var holdings = GetHoldings(transactions, ids, out var commissions); 
 
             transactions.Reverse();//от последне к первой
             return new PortfolioDto()
@@ -562,10 +589,14 @@ namespace Invest.Controllers
             public IList<Transaction> Transactions { get; set; }
         }
 
-        public class SinglePortfolioDto
+        public class SimpleSinglePortfolioDto
         {
             public int Id { get; set; }
             public string Name { get; set; }
+        }
+
+        public class SinglePortfolioDto : SimpleSinglePortfolioDto
+        {
             public Currency Currency { get; set; }
             public double DefaultCommissionPercent { get; set; }
             public double DefaultDividendTaxPercent { get; set; }

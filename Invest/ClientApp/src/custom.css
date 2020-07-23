@@ -156,6 +156,8 @@ tr.down{
 }
 
 
+
+
 .mainRatiosContainer{
   grid-row: 1/2;
   grid-column: 1/2;
@@ -169,19 +171,24 @@ tr.down{
   grid-column: 2/-1;
 }
 
+.holdingsContainer{
+  grid-row: 2/3;
+  grid-column: 1/-1;
+}
+
 .upgradeDowngradeContainer{
-  grid-row:2/3;
+  grid-row:3/4;
   grid-column: 1/2;
  
 }
 
 .recommendationsContainer{
-  grid-row:2/3;
+  grid-row:3/4;
   grid-column: 2/3;
 }
 
 .priceTragetsContainer{
-  grid-row:2/3;
+  grid-row:3/4;
   grid-column: 3/-1;
 }
 
