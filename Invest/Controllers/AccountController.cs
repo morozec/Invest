@@ -607,7 +607,6 @@ namespace Invest.Controllers
         {
             public string Ticker { get; set; }
             public string CompanyName { get; set; }
-            public double AvgPrice { get; set; }
             public int Quantity { get; set; }
             public double Amount { get; set; }
             public double ClosedAmount { get; set; }
