@@ -7,7 +7,7 @@ export function YahooFinance(props) {
   useEffect(() => {
     (async () => {
      
-      const response = await fetch('api/yahoofinance/prices?symbols=a,b,c', {method:'GET'});
+      const response = await fetch('api/search/123');
       if (response.ok) {
         console.log('test ok');
       } else {

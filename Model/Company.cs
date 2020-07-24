@@ -16,11 +16,12 @@ namespace Model
         public string Sector { get; set; }
 
         public string Currency { get; set; }
+        public string Type { get; set; }
 
         public List<CompanyWatchList> CompanyWatchLists { get; set; }
         public List<CompanyPortfolio> CompanyPortfolios { get; set; }
 
-        public Company(string ticker, string shortName, string longName, string exchange)
+        public Company(string ticker, string shortName, string longName, string exchange, string type)
         {
             Ticker = ticker;
             ShortName = shortName;
@@ -28,6 +29,7 @@ namespace Model
             Exchange = exchange;
             CompanyWatchLists = new List<CompanyWatchList>();
             CompanyPortfolios = new List<CompanyPortfolio>();
+            Type = type;
         }
         
 
