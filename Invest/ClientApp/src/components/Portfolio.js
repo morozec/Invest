@@ -836,7 +836,12 @@ export function Portfolio(props) {
                 },
                 body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent, addDividendsToCash })
             });
-            let portfolio = await loadPortfolio();
+
+            const promises = [
+                loadPortfolio(), 
+                loadDividends(portfolioHoldings)//update cash and mkt value
+            ];
+            const [portfolio] = await Promise.all(promises);
             setPortfolios(portfolio.portfolios);
             setCommisions(portfolio.commissions);
 
