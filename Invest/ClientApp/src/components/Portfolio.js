@@ -827,6 +827,8 @@ export function Portfolio(props) {
 
     const savePortfolioEdit = (name, defaultCommissionPercent, addDividendsToCash) => {
         (async () => {
+            setShowPortfilioEditor(false);
+
             setIsLoading(true);
             await fetch('api/account/addUpdatePortfolio', {
                 method: 'POST',
@@ -846,7 +848,7 @@ export function Portfolio(props) {
             setCommisions(portfolio.commissions);
 
             setIsLoading(false);
-            setShowPortfilioEditor(false);
+            
         })()
     }
 
