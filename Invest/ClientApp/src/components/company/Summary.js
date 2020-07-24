@@ -261,7 +261,7 @@ export function Summary(props) {
 
                 <div className='holdingsContainer'>
                     <ListGroup>
-                        {holdings.map(h => 
+                        {holdings.filter(h => h.value.quantity !== 0).map(h => 
                             <ListGroup.Item key={h.key.id}>
                                 <Link to={{ pathname: `/portfolio/p=${h.key.id}` }}> {h.key.name} </Link>
                                 <Table className='table-sm portfolioTable' bordered hover variant='light'>
