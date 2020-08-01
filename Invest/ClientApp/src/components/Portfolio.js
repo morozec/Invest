@@ -307,6 +307,7 @@ export function Portfolio(props) {
     }
 
     const loadAllPrices = async (companies) => {
+        console.log('load prices')
         let url = 'api/yahoofinance/prices?';
         for (let company of companies) {
             url += `symbols=${company.ticker}&`;
@@ -716,6 +717,13 @@ export function Portfolio(props) {
         updateAddHoldingsCommission(addHoldingsPortfolioId, addHoldingsPrice, quantity);
     }    
 
+    const getPortfolioCash = useCallback((currency) => {
+        if (cashValues.length === 0) return 0;
+        let lastCashValue = cashValues[cashValues.length - 1];
+        if (!lastCashValue.values[currency]) return 0;
+        return lastCashValue.values[currency];
+    }, [cashValues])
+
     useEffect(() => {
         if (!portfolioHoldings || !allCurrencies || !currencyRates || portfolioHoldings.some(ph => !ph.price)) {
             setCurrencyGroups({});
@@ -777,7 +785,7 @@ export function Portfolio(props) {
 
         tg.Cash = cashSum;
 
-    }, [portfolioHoldings, allCurrencies, currencyRates, getPortfolioCurrencyValue])//TODO: currency changed
+    }, [portfolioHoldings, allCurrencies, currencyRates, getPortfolioCurrencyValue, getPortfolioCash])
 
 
     const getPortfolioMarketValue = () => {
@@ -805,12 +813,7 @@ export function Portfolio(props) {
         return getDateValue(lastOverallPL.values).toFixed(2);      
     }
 
-    const getPortfolioCash = (currency) => {
-        if (cashValues.length === 0) return 0;
-        let lastCashValue = cashValues[cashValues.length - 1];
-        if (!lastCashValue.values[currency]) return 0;
-        return lastCashValue.values[currency];
-    }
+  
 
     const getSumPortfolioCommissions = () => {
         if (!commissions || !currencyRates) return null;
