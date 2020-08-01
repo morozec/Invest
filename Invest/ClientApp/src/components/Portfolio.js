@@ -160,6 +160,7 @@ export function Portfolio(props) {
     const [currencyGroups, setCurrencyGroups] = useState({});
     const [industryGroups, setIndustryGroups] = useState({});
     const [sectorsGroups, setSectorsGroups] = useState({});
+    const [typeGroups, setTypeGroups] = useState({});
 
     const [portfolioDefaultDividendTaxPercent, setPortfolioDefaultDividendTaxPercent] = useState(0);
     const [dividendTaxSettings, setDividendTaxSettings] = useState([]);
@@ -716,16 +717,18 @@ export function Portfolio(props) {
     }    
 
     useEffect(() => {
-        if (!portfolioHoldings || !currencyRates || portfolioHoldings.some(ph => !ph.price)) {
+        if (!portfolioHoldings || !allCurrencies || !currencyRates || portfolioHoldings.some(ph => !ph.price)) {
             setCurrencyGroups({});
             setIndustryGroups({});
             setSectorsGroups({});
+            setTypeGroups({});
             return;
         }
 
         let cg = {};
         let ig = {};
         let sg = {};
+        let tg = {};
 
         for (let ph of portfolioHoldings) {
             if (ph.quantity <= 0) continue;
@@ -751,13 +754,30 @@ export function Portfolio(props) {
                     sg[ph.sector] += value;
                 }
             }
+
+            if (ph.type){
+                if (!tg.hasOwnProperty(ph.type)) {
+                    tg[ph.type] = value;
+                } else {
+                    tg[ph.type] += value;
+                }
+            }
         }
         setCurrencyGroups(cg);
         setIndustryGroups(ig);
         setSectorsGroups(sg);
+        setTypeGroups(tg);
 
+        let cashSum = 0;
+        for (let c of allCurrencies){
+            let cash = getPortfolioCash(c.name);
+            let selectedCurrencyCash = getPortfolioCurrencyValue(cash, c.name);
+            cashSum += selectedCurrencyCash;
+        }
 
-    }, [portfolioHoldings, currencyRates, getPortfolioCurrencyValue])//TODO: currency changed
+        tg.Cash = cashSum;
+
+    }, [portfolioHoldings, allCurrencies, currencyRates, getPortfolioCurrencyValue])//TODO: currency changed
 
 
     const getPortfolioMarketValue = () => {
@@ -789,7 +809,7 @@ export function Portfolio(props) {
         if (cashValues.length === 0) return 0;
         let lastCashValue = cashValues[cashValues.length - 1];
         if (!lastCashValue.values[currency]) return 0;
-        return lastCashValue.values[currency].toFixed(2);
+        return lastCashValue.values[currency];
     }
 
     const getSumPortfolioCommissions = () => {
@@ -1059,7 +1079,7 @@ export function Portfolio(props) {
                     {allCurrencies.map(c => (
                         <div className='d-flex' key={c.id}>
                             <div>{`${c.name} (${c.symbol})`}</div>
-                            <div className='ml-auto'>{getPortfolioCash(c.name)}</div>
+                            <div className='ml-auto'>{getPortfolioCash(c.name).toFixed(2)}</div>
                         </div>
                     ))}
                 </div>
@@ -1462,9 +1482,9 @@ export function Portfolio(props) {
                         <div className='col-sm-6'>
 
                             <Doughnut data={{
-                                labels: Object.keys(currencyGroups),
+                                labels: Object.keys(typeGroups),
                                 datasets: [{
-                                    data: Object.keys(currencyGroups).map(currency => currencyGroups[currency].toFixed(2))
+                                    data: Object.keys(typeGroups).map(type => typeGroups[type].toFixed(2))
                                 }]
                             }}
 
@@ -1629,7 +1649,64 @@ export function Portfolio(props) {
 
                         </div>
                     </div>
+                    
+                    <div className='row'>
+                        <div className='col-sm-6'>
 
+                            <Doughnut data={{
+                                labels: Object.keys(currencyGroups),
+                                datasets: [{
+                                    data: Object.keys(currencyGroups).map(currency => currencyGroups[currency].toFixed(2))
+                                }]
+                            }}
+
+                                options={{
+                                    layout: {
+                                        padding: {
+                                            top: 25,
+                                            bottom: 25,
+                                        }
+                                    },
+                                    legend: {
+                                        display: false
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            color: 'black',
+                                            anchor: 'end',
+                                            align: 'end',
+                                            display: 'auto',
+                                            formatter: (value, ctx) => {
+                                                let dataArr = ctx.chart.data.datasets[0].data;
+                                                let sum = dataArr.reduce((sum, cur) => sum + +cur, 0);
+                                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                                let percentage = (+value * 100 / sum);
+                                                return `${label}: ${percentage.toFixed(2)}%`;
+                                            },
+                                        }
+                                    },
+
+                                    tooltips: {
+                                        callbacks: {
+                                            label: function (tooltipItem, data) {
+                                                //get the concerned dataset
+                                                var dataset = data.datasets[tooltipItem.datasetIndex];
+                                                //calculate the total of this data set
+                                                var total = dataset.data.reduce((sum, cur) => sum + +cur, 0);
+                                                var curValue = +dataset.data[tooltipItem.index];
+                                                var percent = +(curValue / total * 100).toFixed(2);
+                                                return `${curValue}${getCurrencyById(selectedCurrencyId).symbol} (${percent}%)`;
+                                            },
+                                            title: function (tooltipItem, data) {
+                                                return data.labels[tooltipItem[0].index];
+                                            }
+                                        }
+                                    },
+
+                                }}
+                            />
+                        </div>
+                    </div>
                 </Tab>
             </Tabs>
 

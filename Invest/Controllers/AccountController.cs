@@ -503,7 +503,8 @@ namespace Invest.Controllers
                         Sector = g.Key.Sector,
                         Industry = g.Key.Industry,
                         Currency = g.Key.Currency,
-                        DividendTaxPercent = dividendTaxPercent
+                        DividendTaxPercent = dividendTaxPercent,
+                        Type = g.Key.Type
                     };
 
                 }).ToList();
@@ -617,6 +618,7 @@ namespace Invest.Controllers
             public string Sector { get; set; }
             public string Industry { get; set; }
             public string Currency { get; set; }
+            public string Type { get; set; }
         }
 
         [Authorize]
