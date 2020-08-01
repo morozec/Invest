@@ -178,8 +178,9 @@ export function Portfolio(props) {
     const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
 
     useEffect(() => {
-        setResPortfolioIds(portfolioId.split(','))
-    }, [portfolioId])
+        if (portfolioIds.join(',') === portfolioId) return;
+        setResPortfolioIds(portfolioId.split(','));
+    }, [portfolioId, portfolioIds])
     
 
     const handleAddCashCurrencyIdChanged = (e) => {
@@ -307,7 +308,6 @@ export function Portfolio(props) {
     }
 
     const loadAllPrices = async (companies) => {
-        console.log('load prices')
         let url = 'api/yahoofinance/prices?';
         for (let company of companies) {
             url += `symbols=${company.ticker}&`;
