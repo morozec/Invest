@@ -1167,6 +1167,7 @@ export function Portfolio(props) {
             <Tabs defaultActiveKey="holdings">
                 <Tab eventKey="holdings" title="Holdings">
                     <div className='mt-2'>{addHoldingsButton}{addCashButton}</div>
+                    <h3 className='mt-2'>Stocks</h3>
                     <Table className='table-sm portfolioTable' bordered hover variant='light'>
                         <thead>
                             <tr>
@@ -1190,7 +1191,7 @@ export function Portfolio(props) {
                             </tr>
                         </thead>
                         <tbody>
-                            {portfolioHoldings.filter(ph => ph.quantity !== 0).map(item =>
+                            {portfolioHoldings.filter(ph => ph.quantity !== 0 && ph.type === 'Stock').map(item =>
                                 <tr key={item.ticker}>
                                     <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
                                     <td>{item.companyName}</td>
@@ -1253,7 +1254,89 @@ export function Portfolio(props) {
                         </tbody>
                     </Table>
 
+                    <h3 className='mt-2'>Funds</h3>
+                    <Table className='table-sm portfolioTable' bordered hover variant='light'>
+                        <thead>
+                            <tr>
+                                <th className='centered'>Symbol</th>
+                                <th>Name</th>
+                                <th className='centered'>Currency</th>
+                                <th className='centered'>Price</th>
+                                <th className='centered'>Day's Price Change</th>
+                                <th className='centered'>Mkt Value</th>
+                                <th className='centered'>Avg Price</th>
+                                <th className='centered'>Quantity</th>
+                                <th className='centered'>Amount</th>
+                                <th className='centered'>{"Day's P&L"}</th>
+                                <th className='centered'>{"Unrealized P&L"}</th>
+                                <th className='centered'>Dividends</th>
+                                <th className='centered'>{"Closed P&L"}</th>
+                                <th className='centered'>{"Overall P&L"}</th>
+                                <th className='centered'></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {portfolioHoldings.filter(ph => ph.quantity !== 0 && ph.type === 'Fund').map(item =>
+                                <tr key={item.ticker}>
+                                    <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
+                                    <td>{item.companyName}</td>
+                                    <td className='centered'>{item.currency}</td>
+                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        ? 'up'
+                                        : item.price && item.price.regularMarketChange.raw < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
+                                    </td>
+                                    <td className='centered'>{item.price ? getMarketValue(item).toFixed(2) : <em>Loading...</em>}</td>
+                                    <td className='centered'>{getAvgPrice(item)}</td>
+                                    <td className='centered'>{item.quantity}</td>
+                                    <td className='centered'>{item.amount.toFixed(2)}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        ? 'up'
+                                        : item.price && item.price.regularMarketChange.raw < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}
+                                    </td>
+                                    <td className={`centered ${item.price && getUnrealizedPL(item) > 0
+                                        ? 'up'
+                                        : item.price && getUnrealizedPL(item) < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getUnrealizedPLPlusPercent(item) : <em>Loading...</em>}
+                                    </td>
 
+                                    <td className='centered'>
+                                        {item.dividends !== undefined ? (getSumDividends(item.dividends)).toFixed(2) : <em>Loading...</em>}
+                                    </td>
+
+                                    <td className={`centered ${item.closedAmount > 0
+                                        ? 'up'
+                                        : item.closedAmount < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {(item.closedAmount).toFixed(2)}
+                                    </td>
+
+                                    <td className={`centered ${item.price && getOverallPL(item) > 0
+                                        ? 'up'
+                                        : item.price && getOverallPL(item) < 0
+                                            ? 'down'
+                                            : ''}`}>
+                                        {item.price ? getOverallPL(item).toFixed(2) : <em>Loading...</em>}
+                                    </td>
+
+                                    <td className='centered'>
+                                        <Button variant='outline-warning' onClick={() => handleShowTransactions(item)}>
+                                            Holdings
+                                        </Button>
+                                    </td>
+                                </tr>)}
+                        </tbody>
+                    </Table>
+                 
                 </Tab>
                 <Tab eventKey="closed" title="Closed">
                     <Table className='table-sm portfolioTable' bordered hover variant='light'>
