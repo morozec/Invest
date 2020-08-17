@@ -9,12 +9,16 @@ import { useCookies } from 'react-cookie';
 
 
 function NavMenu(props) {
-  const [cookies] = useCookies(['jwt', 'name']);
+  const [cookies,, removeCookie] = useCookies(['jwt', 'name']);
   const { companies, comparingCompanies} = props;
-
   
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch('api/account/logout', {
+      method:'POST'
+    });
+    removeCookie('jwt');
+    removeCookie('name');
     props.history.push('/');
   }
 

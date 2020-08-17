@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DbRepository;
 using Invest.Helpers;
+using Invest.Services;
 using Invest.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -32,34 +33,53 @@ namespace Invest.Controllers
     {
         private readonly SignInManager<InvestUser> _signInManager;
         private readonly UserManager<InvestUser> _userManager;
-        private readonly IConfiguration _configuration;
+       
         private readonly CompanyContext _companyContext;
+        private readonly ITokenService _tokenService;
 
         public AccountController(
             UserManager<InvestUser> userManager,
             SignInManager<InvestUser> signInManager,
-            IConfiguration configuration,
-            CompanyContext companyContext
+            CompanyContext companyContext,
+            ITokenService tokenService
         )
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _configuration = configuration;
             _companyContext = companyContext;
+            _tokenService = tokenService;
         }
 
         [HttpPost("login")]
-        public async Task<object> Login([FromBody] LoginDto model)
+        public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
+            if (!result.Succeeded) throw new ApplicationException("INVALID_LOGIN_ATTEMPT");
 
-            if (result.Succeeded)
+            var user = _userManager.Users.SingleOrDefault(r => r.Email == model.Email);
+            if (user == null) throw new ApplicationException("INVALID_LOGIN_ATTEMPT");
+            var userClaims = new[]
             {
-                var appUser = _userManager.Users.SingleOrDefault(r => r.Email == model.Email);
-                return await GenerateJwtToken(model.Email, appUser);
-            }
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+            };
 
-            throw new ApplicationException("INVALID_LOGIN_ATTEMPT");
+            var jwtToken = _tokenService.GenerateAccessToken(userClaims);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            await _userManager.UpdateAsync(user);
+            return new ObjectResult(new
+            {
+                token = jwtToken,
+                refreshToken = refreshToken
+            });
+        }
+
+        [HttpPost("logout")]
+        public async Task Logout()
+        {
+            await _signInManager.SignOutAsync();
         }
 
         [HttpPost("register")]
@@ -95,20 +115,30 @@ namespace Invest.Controllers
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
+            var accessToken = _tokenService.GenerateAccessToken(claims);
+            return accessToken;
+        }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.Now.AddDays(Convert.ToDouble(_configuration["JwtExpireDays"]));
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody]RefreshDto refreshDto)
+        {
+            var principal = _tokenService.GetPrincipalFromExpiredToken(refreshDto.Token);
+            var userName = principal.Identity.Name;
 
-            var token = new JwtSecurityToken(
-                _configuration["JwtIssuer"],
-                _configuration["JwtIssuer"],
-                claims,
-                expires: expires,
-                signingCredentials: creds
-            );
+            var user = _userManager.Users.SingleOrDefault(u => u.UserName == userName);
+            if (user == null || user.RefreshToken != refreshDto.RefreshToken) return BadRequest();
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var newJwtToken = _tokenService.GenerateAccessToken(principal.Claims);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            await _userManager.UpdateAsync(user);
+
+            return new ObjectResult(new
+            {
+                token = newJwtToken,
+                refreshToken = newRefreshToken
+            });
         }
 
         public class LoginDto
@@ -118,7 +148,14 @@ namespace Invest.Controllers
 
             [Required]
             public string Password { get; set; }
+        }
 
+        public class RefreshDto
+        {
+            [Required]
+            public string Token { get; set; }
+            [Required]
+            public string RefreshToken { get; set; }
         }
 
         public class RegisterDto

@@ -10,7 +10,7 @@ function Login(props) {
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [, setCookie] = useCookies(['jwt', 'name']);
+    const [, setCookie] = useCookies(['tokensContainer', 'name']);
 
     let type;
     if (props.location.state) {
@@ -40,8 +40,8 @@ function Login(props) {
                     })
                 })
                 if (response.ok) {
-                    let token = await response.text();
-                    setCookie('jwt', token);
+                    let tokensContainer = await response.json();
+                    setCookie('tokensContainer', tokensContainer);
                     setCookie('name', email);
                 } 
 

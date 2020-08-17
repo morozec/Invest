@@ -3,10 +3,11 @@ import { Button, Table, Form } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
+import {fetchWithCredentials} from './../JwtHelper';
 
 export function PortfoliosList(props) {
-    const [cookies] = useCookies(['jwt']);
-    const [isLoading, setIsLoading] = useState(true);
+    const [cookies, setCookie] = useCookies(['tokensContainer', 'name']);
+    const [isLoading, setIsLoading] = useState(false);
     const [portfolios, setPortfolios] = useState([]);
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [selected, setSelected] = useState([])
@@ -14,30 +15,56 @@ export function PortfoliosList(props) {
     const handleClose = () => { setShowNewDialog(false); }
     const handleShow = () => setShowNewDialog(true);
 
+
     const loadPortfolios = useCallback(async () => {
-        if (!cookies.jwt) return;
+        if (!cookies.tokensContainer) return;
 
-        let response = await fetch('api/account/portfolios', {
-            method: 'GET',
-            headers: {
-                "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
-            }
-        });
-        let portfolios = await response.json();
-        setPortfolios(portfolios);
+        let {response, newTokensContainer} = await fetchWithCredentials(
+            'api/account/portfolios',
+            {
+                method: 'GET',
+                headers: {"Accept": "application/json"}
+            },
+            cookies.tokensContainer,
+            setCookie
+        );
+        console.log('response', response);
 
-    }, [cookies.jwt]);
+        if (newTokensContainer){
+            setCookie('tokensContainer', newTokensContainer);
+        }
+        
+        if (response.ok){
+            let portfolios = await response.json();
+            console.log('portfolios', portfolios);
+            setPortfolios(portfolios);
+        }
+
+    }, [setCookie]);
 
     const addPortfolio = async (name, defaultCommissionPercent, addDividendsToCash) => {
-        await fetch('api/account/addUpdatePortfolio', {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
+        // await fetch('api/account/addUpdatePortfolio', {
+        //     method: 'POST',
+        //     headers: {
+        //         "Content-Type": "application/json;charset=utf-8",
+        //         'Authorization': 'Bearer ' + cookies.jwt
+        //     },
+        //     body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent, addDividendsToCash })
+        // });
+
+        await fetchWithCredentials(
+            'api/account/addUpdatePortfolio',
+            {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json;charset=utf-8",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent, addDividendsToCash })
             },
-            body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent, addDividendsToCash })
-        });
+            cookies.tokensContainer,
+            setCookie
+        );      
     }
 
     const deletePortfolio = async (id) => {
@@ -60,7 +87,8 @@ export function PortfoliosList(props) {
         (async () => {
             setIsLoading(true);
             await addPortfolio(name, defaultCommissionPercent, addDividendsToCash);
-            await loadPortfolios();
+            console.log('tc', cookies.tokensContainer)
+            // await loadPortfolios();
             setIsLoading(false);
             handleClose();
         })();
