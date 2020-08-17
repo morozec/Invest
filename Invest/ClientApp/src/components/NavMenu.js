@@ -6,10 +6,11 @@ import LinkButton from '../LinkButton';
 import Select, { createFilter } from 'react-select';
 import {MenuList} from './helpers/MenuList'
 import { useCookies } from 'react-cookie';
+import { removeJwtToken, removeRefreshToken } from '../JwtHelper';
 
 
 function NavMenu(props) {
-  const [cookies,, removeCookie] = useCookies(['jwt', 'name']);
+  const [cookies,, removeCookie] = useCookies(['name']);
   const { companies, comparingCompanies} = props;
   
 
@@ -17,7 +18,8 @@ function NavMenu(props) {
     await fetch('api/account/logout', {
       method:'POST'
     });
-    removeCookie('jwt');
+    removeJwtToken();
+    removeRefreshToken();
     removeCookie('name');
     props.history.push('/');
   }

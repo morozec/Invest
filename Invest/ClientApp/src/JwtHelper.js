@@ -16,6 +16,8 @@ const getJwtToken = () => localStorage.getItem('token');
 const getRefreshToken = () => localStorage.getItem('refreshToken');
 export const saveJwtToken = (token) => localStorage.setItem('token', token);
 export const saveRefreshToken = (refreshToken) => localStorage.setItem('refreshToken', refreshToken);
+export const removeJwtToken = () => localStorage.removeItem('token');
+export const removeRefreshToken = () => localStorage.removeItem('refreshToken');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
