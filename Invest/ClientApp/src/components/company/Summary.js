@@ -3,11 +3,10 @@ import { Table, Button, ListGroup } from 'react-bootstrap';
 import { getDateStringFromUnixTime } from '../../helpers';
 import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Bar, Line } from 'react-chartjs-2';
-import { useCookies } from 'react-cookie';
 import { Link } from 'react-router-dom';
+import { fetchWithCredentials } from '../../JwtHelper';
 
 export function Summary(props) {
-    const [cookies] = useCookies(['jwt']);
     const [logo, setLogo] = useState(null);
     const [isInWatchList, setIsInWatchList] = useState(false);
     const [isInWatchListChecking, setIsInWatchListChecking] = useState(true);
@@ -35,14 +34,11 @@ export function Summary(props) {
 
    
     useEffect(() => {
-        if (!cookies.jwt) return;
 
         const getHoldings = async () => {
-            let response = await fetch(`api/account/holdings/${profile.quoteType.symbol}`, {
+            let response = await fetchWithCredentials(`api/account/holdings/${profile.quoteType.symbol}`, {
                 method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + cookies.jwt
-                },
+                headers: {},
             });
             let result = await response.json();
             return result;
@@ -52,7 +48,7 @@ export function Summary(props) {
             console.log('holdings', holdings);
             setHoldings(holdings);
         })
-    }, [profile, cookies.jwt])
+    }, [profile])
 
     useEffect(() => {
 
@@ -70,16 +66,12 @@ export function Summary(props) {
     }, [profile])
 
     useEffect(() => {
-        if (!cookies.jwt) return;
-
         setIsInWatchListChecking(true);
         const checkIsInWatchList = async () => {
             setIsInWatchListChecking(true);
-            let response = await fetch(`api/account/isInWatchList/${profile.quoteType.symbol}`, {
+            let response = await fetchWithCredentials(`api/account/isInWatchList/${profile.quoteType.symbol}`, {
                 method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + cookies.jwt
-                },
+                headers: {},
             });
             let result = await response.json();
             return result;
@@ -89,7 +81,7 @@ export function Summary(props) {
             setIsInWatchList(result);
             setIsInWatchListChecking(false);
         })
-    }, [profile, cookies.jwt])
+    }, [profile])
 
     const handleCompareClick = () => {
         addComparingCompany({
@@ -104,11 +96,10 @@ export function Summary(props) {
 
     const handleAddToWatchListClick = () => {
         setIsInWatchListChecking(true);
-        fetch('api/account/addToWatchList', {
+        fetchWithCredentials('api/account/addToWatchList', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ ticker: profile.quoteType.symbol })
         }).then(response => {
@@ -120,11 +111,10 @@ export function Summary(props) {
 
     const handleDeleteFromWatchListClick = () => {
         setIsInWatchListChecking(true);
-        fetch('api/account/deleteFromWatchList', {
+        fetchWithCredentials('api/account/deleteFromWatchList', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ ticker: profile.quoteType.symbol })
         }).then(response => {
@@ -150,11 +140,11 @@ export function Summary(props) {
                         {comparingCompanies.some(c => c.profile.quoteType.symbol === profile.quoteType.symbol)
                             ? <Button variant='outline-danger' onClick={handleRemoveFromComparingClick}>Delete from comparison</Button>
                             : <Button variant='outline-success' onClick={handleCompareClick}>Compare</Button>}
-                        {cookies.jwt && !isInWatchList &&
+                        {!isInWatchList &&
                             <Button variant='outline-success' onClick={handleAddToWatchListClick} disabled={isInWatchListChecking}>
                                 Add to watch list
                             </Button>}
-                        {cookies.jwt && isInWatchList &&
+                        {isInWatchList &&
                             <Button variant='outline-danger' onClick={handleDeleteFromWatchListClick} disabled={isInWatchListChecking}>
                                 Delete from watch list
                             </Button>}
