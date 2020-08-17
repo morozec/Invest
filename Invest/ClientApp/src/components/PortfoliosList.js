@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button, Table, Form } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
-import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
+import {fetchWithCredentials} from './../JwtHelper';
 
 export function PortfoliosList(props) {
-    const [cookies] = useCookies(['jwt']);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [portfolios, setPortfolios] = useState([]);
     const [showNewDialog, setShowNewDialog] = useState(false);
     const [selected, setSelected] = useState([])
@@ -14,38 +13,43 @@ export function PortfoliosList(props) {
     const handleClose = () => { setShowNewDialog(false); }
     const handleShow = () => setShowNewDialog(true);
 
+
     const loadPortfolios = useCallback(async () => {
-        if (!cookies.jwt) return;
-
-        let response = await fetch('api/account/portfolios', {
-            method: 'GET',
-            headers: {
-                "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
-            }
-        });
-        let portfolios = await response.json();
-        setPortfolios(portfolios);
-
-    }, [cookies.jwt]);
-
-    const addPortfolio = async (name, defaultCommissionPercent, addDividendsToCash) => {
-        await fetch('api/account/addUpdatePortfolio', {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
+        let response = await fetchWithCredentials(
+            'api/account/portfolios',
+            {
+                method: 'GET',
+                headers: {"Accept": "application/json"}
             },
-            body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent, addDividendsToCash })
-        });
+        );
+        
+        if (response.ok){
+            let portfolios = await response.json();
+            console.log('portfolios', portfolios);
+            setPortfolios(portfolios);
+        }
+
+    }, []);
+
+    const addPortfolio = async (name, defaultCommissionPercent, addDividendsToCash) => {    
+        await fetchWithCredentials(
+            'api/account/addUpdatePortfolio',
+            {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json;charset=utf-8",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ name, currency:'USD', defaultCommissionPercent, addDividendsToCash })
+            },
+        );      
     }
 
     const deletePortfolio = async (id) => {
-        await fetch('api/account/deletePortfolio', {
+        await fetchWithCredentials('api/account/deletePortfolio', {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ id })
         });

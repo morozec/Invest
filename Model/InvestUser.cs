@@ -10,6 +10,8 @@ namespace Model
 
         public List<Portfolio> Portfolios { get; set; }
 
+        public string RefreshToken { get; set; }
+
         public InvestUser()
         {
             Portfolios = new List<Portfolio>();

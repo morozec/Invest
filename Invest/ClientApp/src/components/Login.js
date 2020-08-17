@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
+import {saveJwtToken, saveRefreshToken} from './../JwtHelper';
 
 function Login(props) {
     const [email, setEmail] = useState("");
@@ -10,7 +11,7 @@ function Login(props) {
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [, setCookie] = useCookies(['jwt', 'name']);
+    const [, setCookie] = useCookies(['name']);
 
     let type;
     if (props.location.state) {
@@ -40,8 +41,9 @@ function Login(props) {
                     })
                 })
                 if (response.ok) {
-                    let token = await response.text();
-                    setCookie('jwt', token);
+                    let tokensContainer = await response.json();
+                    saveJwtToken(tokensContainer.token);
+                    saveRefreshToken(tokensContainer.refreshToken);
                     setCookie('name', email);
                 } 
 

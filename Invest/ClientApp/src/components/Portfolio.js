@@ -6,10 +6,10 @@ import 'chartjs-plugin-colorschemes';
 import 'chartjs-plugin-datalabels';
 import Select, { createFilter } from 'react-select';
 import { MenuList } from './helpers/MenuList';
-import { useCookies } from 'react-cookie';
 import { PortfolioEditor } from './PortfolioEditor';
 import { Line } from 'react-chartjs-2';
 import _ from 'lodash'
+import { fetchWithCredentials } from '../JwtHelper';
 
 const initialAddCashState = {
     addCashCurrencyId: -1,
@@ -115,7 +115,6 @@ const addCashReducer = (state, action) => {
 
 export function Portfolio(props) {
     const { companies } = props;
-    const [cookies] = useCookies(['jwt']);
     const [isLoading, setIsLoading] = useState(true);
 
     const [allPortfolios, setAllPortfolios] = useState([]);
@@ -335,11 +334,10 @@ export function Portfolio(props) {
         }
 
 
-        let response = await fetch(url, {
+        let response = await fetchWithCredentials(url, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
             }
         });
 
@@ -350,62 +348,52 @@ export function Portfolio(props) {
         setUnrealizedPL(result.unrealizedPL);
         setCashValues(result.cash);
         return result.dividends;
-    }, [portfolioIds, cookies.jwt])
+    }, [portfolioIds])
 
 
     const loadAllPortfolios = useCallback(async () => {
-        if (!cookies.jwt) return;
-
-        let response = await fetch('api/account/portfolios', {
+        let response = await fetchWithCredentials('api/account/portfolios', {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
             }
         });
         let allPortfolios = await response.json();
         return allPortfolios;
 
-    }, [cookies.jwt]);
+    }, []);
 
     const loadPortfolio = useCallback(async () => {
-        if (!cookies.jwt) return;
-
         const ids = portfolioIds.reduce((str, id) => `${str}ids=${id}&`, "");
-        let response = await fetch(`api/account/portfolio?${ids}`, {
+        let response = await fetchWithCredentials(`api/account/portfolio?${ids}`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
         });
         let portfolio = await response.json();
         console.log('portfolio', portfolio);
         return portfolio;
-    }, [portfolioIds, cookies.jwt]);
+    }, [portfolioIds]);
 
     const loadCashTransactions = useCallback(async () => {
-        if (!cookies.jwt) return;
-
         const ids = portfolioIds.reduce((str, id) => `${str}ids=${id}&`, "");
-        let response = await fetch(`api/account/cashTransactions?${ids}`, {
+        let response = await fetchWithCredentials(`api/account/cashTransactions?${ids}`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
         });
         let cashTransactions = await response.json();
         return cashTransactions;
-    }, [portfolioIds, cookies.jwt])
+    }, [portfolioIds])
     
 
     const addUpdateHoldings = async (id) => {
-        await fetch('api/account/addUpdateTransaction', {
+        await fetchWithCredentials('api/account/addUpdateTransaction', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({
                 id: id,
@@ -527,11 +515,10 @@ export function Portfolio(props) {
         }
         console.log(url);
 
-        let response = await fetch(url, {
+        let response = await fetchWithCredentials(url, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
         });
         let transactions = await response.json();
@@ -579,11 +566,10 @@ export function Portfolio(props) {
 
     const handleDeleteTransaction = async (t) => {
         setIsTransactionsLoading(true);
-        await fetch(`api/account/deleteTransaction`, {
+        await fetchWithCredentials(`api/account/deleteTransaction`, {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ id: t.id })
         });
@@ -635,11 +621,10 @@ export function Portfolio(props) {
     }
 
     const handleDeleteCashTransaction = async (t) => {
-        await fetch(`api/account/deleteCashTransaction`, {
+        await fetchWithCredentials(`api/account/deleteCashTransaction`, {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({ id: t.id })
         });
@@ -853,11 +838,10 @@ export function Portfolio(props) {
             setShowPortfilioEditor(false);
 
             setIsLoading(true);
-            await fetch('api/account/addUpdatePortfolio', {
+            await fetchWithCredentials('api/account/addUpdatePortfolio', {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json;charset=utf-8",
-                    'Authorization': 'Bearer ' + cookies.jwt
                 },
                 body: JSON.stringify({ id: portfolioId, name, defaultCommissionPercent, addDividendsToCash })
             });
@@ -880,11 +864,10 @@ export function Portfolio(props) {
         if (portfolioIds.length === 1) {
             (async () => {
                 setIsLoading(true);
-                await fetch('api/account/addUpdatePortfolio', {
+                await fetchWithCredentials('api/account/addUpdatePortfolio', {
                     method: 'POST',
                     headers: {
                         "Content-Type": "application/json;charset=utf-8",
-                        'Authorization': 'Bearer ' + cookies.jwt
                     },
                     body: JSON.stringify({ id: portfolioId, currencyId: currencyId })
                 });
@@ -955,11 +938,10 @@ export function Portfolio(props) {
     const saveSpecialDividendTaxes = async () => {
         setShowDividendTaxSetings(false);
         setIsLoading(true);
-        await fetch('api/account/updateDividendTaxes', {
+        await fetchWithCredentials('api/account/updateDividendTaxes', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({
                 portfolioId: portfolios[0].id,
@@ -985,11 +967,10 @@ export function Portfolio(props) {
 
     const saveAddCash = async () => {
         setIsLoading(true);
-        await fetch('api/account/addUpdateCashTransaction', {
+        await fetchWithCredentials('api/account/addUpdateCashTransaction', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json;charset=utf-8",
-                'Authorization': 'Bearer ' + cookies.jwt
             },
             body: JSON.stringify({
                 id: curCashTransactionId,
