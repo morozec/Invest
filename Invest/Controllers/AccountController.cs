@@ -62,6 +62,8 @@ namespace Invest.Controllers
             {
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
             var jwtToken = _tokenService.GenerateAccessToken(userClaims);
@@ -83,7 +85,7 @@ namespace Invest.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<object> Register([FromBody] RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
             var user = new InvestUser()
             {
@@ -97,26 +99,29 @@ namespace Invest.Controllers
 
             if (result.Succeeded)
             {
-                
-                //_companyContext.WatchLists.Add(new WatchList() { Person = user });
-                //_companyContext.SaveChanges();
+                var userClaims = new[]
+                {
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                };
+
+                var jwtToken = _tokenService.GenerateAccessToken(userClaims);
+                var refreshToken = _tokenService.GenerateRefreshToken();
+
+                user.RefreshToken = refreshToken;
+                await _userManager.UpdateAsync(user);
+
                 await _signInManager.SignInAsync(user, false);
-                return await GenerateJwtToken(model.Email, user);
+                return new ObjectResult(new
+                {
+                    token = jwtToken,
+                    refreshToken = refreshToken
+                });
             }
 
-            throw new ApplicationException("UNKNOWN_ERROR");
-        }
-
-        private async Task<object> GenerateJwtToken(string email, IdentityUser user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
-            };
-            var accessToken = _tokenService.GenerateAccessToken(claims);
-            return accessToken;
+            throw new ApplicationException("INVALID_REGISTER_ATTEMPT");
         }
 
         [HttpPost("refresh")]
