@@ -126,30 +126,23 @@ namespace Invest.Controllers
         public IDictionary<string, dynamic> GetPrices([FromQuery(Name = "symbols")] List<string> symbols)
         {
             var prices = new Dictionary<string, dynamic>();
-            Parallel.ForEach(symbols, (symbol) =>
+            var url =
+                $"https://query1.finance.yahoo.com/v7/finance/quote?symbols=";
+            foreach (var symbol in symbols)
             {
-                var url =
-                    $"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{symbol}?modules=price";
-                var client = new RestClient(url);
-                var request = new RestRequest(Method.GET);
-                var response = client.Execute(request);
+                url += $"{symbol},";
+            }
 
-                dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
-                //if (obj == null)
-                //{
-                //    prices.Add(symbol, null);
-                //    return;
-                //}
-                var result = obj.quoteSummary.result;
-                prices.Add(symbol, result == null ? null : result[0].price);
-            });
-            //for (var i = 0; i < symbols.Count; ++i)
-            //{
-            //    var symbol = symbols[i];
-               
-            //    if (result == null) prices.Add(null);
-            //    else prices.Add(result[0].price);
-            //}
+            var client = new RestClient(url);
+            var request = new RestRequest(Method.GET);
+            var response = client.Execute(request);
+
+            dynamic obj = JsonConvert.DeserializeObject<dynamic>(response.Content);
+            var result = obj.quoteResponse.result;
+            for (var i = 0; i < symbols.Count; ++i)
+            {
+                prices.Add(symbols[i], result[i]);
+            }
 
             return prices;
         }

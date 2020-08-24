@@ -540,7 +540,7 @@ export function Portfolio(props) {
             if (ahCompanies.length === 1) {
                 setAddHoldingsCompany(ahCompanies[0]);
             }
-            setAddHoldingsPrice(transactionsItem.price.regularMarketPrice.raw);
+            setAddHoldingsPrice(transactionsItem.price.regularMarketPrice);
         }
         setShowNewDialog(true);
     }
@@ -633,14 +633,14 @@ export function Portfolio(props) {
 
     const getAvgPrice = (item) => (item.amount / item.quantity).toFixed(2);
 
-    const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.fmt} (${item.price.regularMarketChangePercent.fmt})`
+    const getDaysChangePlusPercent = (item) => `${item.price.regularMarketChange.toFixed(2)} (${item.price.regularMarketChangePercent.toFixed(2)})`
 
-    const getMarketValue = (item) => (item.price.regularMarketPrice.raw * item.quantity);
+    const getMarketValue = (item) => (item.price.regularMarketPrice * item.quantity);
 
-    const getDaysPL = (item) => item.price.regularMarketChange.raw * item.quantity;
-    const getDaysPLPlusPerncet = (item) => `${getDaysPL(item).toFixed(2)} (${item.price.regularMarketChangePercent.fmt})`;
+    const getDaysPL = (item) => item.price.regularMarketChange * item.quantity;
+    const getDaysPLPlusPerncet = (item) => `${getDaysPL(item).toFixed(2)} (${item.price.regularMarketChangePercent.toFixed(2)})`;
 
-    const getUnrealizedPL = (item) => item.price.regularMarketPrice.raw * item.quantity - item.amount;
+    const getUnrealizedPL = (item) => item.price.regularMarketPrice * item.quantity - item.amount;
     const getUnrealizedPLPercent = (item) => `${(getUnrealizedPL(item) / item.amount * 100).toFixed(2)}%`;
     const getUnrealizedPLPlusPercent = (item) => `${getUnrealizedPL(item).toFixed(2)} (${getUnrealizedPLPercent(item)})`
 
@@ -684,7 +684,7 @@ export function Portfolio(props) {
         setAddHoldingsCompany(company);
         let pricedCompany = { ticker: company.ticker };
         loadPrice(pricedCompany).then(() => {
-            handleAddHoldingsPriceChanged(pricedCompany.price.regularMarketPrice.raw);
+            handleAddHoldingsPriceChanged(pricedCompany.price.regularMarketPrice);
         });
         // updateCashAvailable(addHoldingsPortfolioId, company);
     }
@@ -722,7 +722,7 @@ export function Portfolio(props) {
 
         for (let ph of portfolioHoldings) {
             if (ph.quantity <= 0) continue;
-            let value = getPortfolioCurrencyValue(ph.price.regularMarketPrice.raw * ph.quantity, ph.currency);
+            let value = getPortfolioCurrencyValue(ph.price.regularMarketPrice * ph.quantity, ph.currency);
             if (!cg.hasOwnProperty(ph.currency)) {
                 cg[ph.currency] = value;
             } else {
@@ -1183,10 +1183,10 @@ export function Portfolio(props) {
                                     <td className='centered'>{item.sector}</td>
                                     <td className='centered'>{item.industry}</td>
                                     <td className='centered'>{item.currency}</td>
-                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
-                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.toFixed(2) : <em>Loading...</em>}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange > 0
                                         ? 'up'
-                                        : item.price && item.price.regularMarketChange.raw < 0
+                                        : item.price && item.price.regularMarketChange < 0
                                             ? 'down'
                                             : ''}`}>
                                         {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
@@ -1195,9 +1195,9 @@ export function Portfolio(props) {
                                     <td className='centered'>{getAvgPrice(item)}</td>
                                     <td className='centered'>{item.quantity}</td>
                                     <td className='centered'>{item.amount.toFixed(2)}</td>
-                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                    <td className={`centered ${item.price && item.price.regularMarketChange > 0
                                         ? 'up'
-                                        : item.price && item.price.regularMarketChange.raw < 0
+                                        : item.price && item.price.regularMarketChange < 0
                                             ? 'down'
                                             : ''}`}>
                                         {item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}
@@ -1270,10 +1270,10 @@ export function Portfolio(props) {
                                         <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
                                         <td>{item.companyName}</td>
                                         <td className='centered'>{item.currency}</td>
-                                        <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
-                                        <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        <td className='centered'>{item.price ? item.price.regularMarketPrice.toFixed(2) : <em>Loading...</em>}</td>
+                                        <td className={`centered ${item.price && item.price.regularMarketChange > 0
                                             ? 'up'
-                                            : item.price && item.price.regularMarketChange.raw < 0
+                                            : item.price && item.price.regularMarketChange < 0
                                                 ? 'down'
                                                 : ''}`}>
                                             {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
@@ -1282,9 +1282,9 @@ export function Portfolio(props) {
                                         <td className='centered'>{getAvgPrice(item)}</td>
                                         <td className='centered'>{item.quantity}</td>
                                         <td className='centered'>{item.amount.toFixed(2)}</td>
-                                        <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                        <td className={`centered ${item.price && item.price.regularMarketChange > 0
                                             ? 'up'
-                                            : item.price && item.price.regularMarketChange.raw < 0
+                                            : item.price && item.price.regularMarketChange < 0
                                                 ? 'down'
                                                 : ''}`}>
                                             {item.price ? getDaysPLPlusPerncet(item) : <em>Loading...</em>}
@@ -1358,10 +1358,10 @@ export function Portfolio(props) {
                                     <td className='centered'>{item.sector}</td>
                                     <td className='centered'>{item.industry}</td>
                                     <td className='centered'>{item.currency}</td>
-                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
-                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.toFixed(2) : <em>Loading...</em>}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange > 0
                                         ? 'up'
-                                        : item.price && item.price.regularMarketChange.raw < 0
+                                        : item.price && item.price.regularMarketChange < 0
                                             ? 'down'
                                             : ''}`}>
                                         {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
@@ -1421,10 +1421,10 @@ export function Portfolio(props) {
                                     <td className='centered'><Link to={`/stock?t=${item.ticker}`}>{item.ticker}</Link></td>
                                     <td>{item.price ? item.price.shortName : <em>Loading...</em>}</td>
                                     <td className='centered'>{item.currency}</td>
-                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.fmt : <em>Loading...</em>}</td>
-                                    <td className={`centered ${item.price && item.price.regularMarketChange.raw > 0
+                                    <td className='centered'>{item.price ? item.price.regularMarketPrice.toFixed(2) : <em>Loading...</em>}</td>
+                                    <td className={`centered ${item.price && item.price.regularMarketChange > 0
                                         ? 'up'
-                                        : item.price && item.price.regularMarketChange.raw < 0
+                                        : item.price && item.price.regularMarketChange < 0
                                             ? 'down'
                                             : ''}`}>
                                         {item.price ? getDaysChangePlusPercent(item) : <em>Loading...</em>}
@@ -1569,7 +1569,7 @@ export function Portfolio(props) {
                                 labels: portfolioHoldings.filter(ph => ph.quantity > 0).map(p => p.ticker),
                                 datasets: [{
                                     data: portfolioHoldings.filter(ph => ph.quantity > 0).map(p => p.price
-                                        ? getPortfolioCurrencyValue(p.price.regularMarketPrice.raw * p.quantity, p.currency).toFixed(2)
+                                        ? getPortfolioCurrencyValue(p.price.regularMarketPrice * p.quantity, p.currency).toFixed(2)
                                         : 0)
                                 }]
                             }}
