@@ -9,6 +9,7 @@ namespace Model
         public Currency Currency { get; set; }
         public InvestUser User { get; set; }
         public List<Transaction> Transactions { get; set; }
+        public List<CashTransaction> CashTransactions { get; set; }
         public List<CompanyPortfolio> CompanyPortfolios { get; set; }
 
         public double DefaultCommissionPercent { get; set; }

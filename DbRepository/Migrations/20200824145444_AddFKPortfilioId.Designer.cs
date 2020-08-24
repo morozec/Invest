@@ -4,14 +4,16 @@ using DbRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DbRepository.Migrations
 {
     [DbContext(typeof(CompanyContext))]
-    partial class CompanyContextModelSnapshot : ModelSnapshot
+    [Migration("20200824145444_AddFKPortfilioId")]
+    partial class AddFKPortfilioId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,7 +174,7 @@ namespace DbRepository.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PortfolioId")
+                    b.Property<int?>("PortfolioId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -511,10 +513,8 @@ namespace DbRepository.Migrations
                         .HasForeignKey("CurrencyId");
 
                     b.HasOne("Model.Portfolio", "Portfolio")
-                        .WithMany("CashTransactions")
-                        .HasForeignKey("PortfolioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("PortfolioId");
                 });
 
             modelBuilder.Entity("Model.CompanyPortfolio", b =>

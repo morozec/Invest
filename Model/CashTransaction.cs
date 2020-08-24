@@ -6,6 +6,7 @@ namespace Model
     {
         public int Id { get; set; }
         public Portfolio Portfolio { get; set; }
+        public int PortfolioId { get; set; }
         public Currency Currency { get; set; }
         public double Amount { get; set; }
         public DateTime Date { get; set; }

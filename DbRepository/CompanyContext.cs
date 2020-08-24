@@ -52,6 +52,15 @@ namespace DbRepository
                 .WithMany(wl => wl.CompanyPortfolios)
                 .HasForeignKey(cwl => cwl.PortfolioId);
 
+            builder.Entity<Portfolio>().HasMany(p => p.Transactions)
+                .WithOne(t => t.Portfolio)
+                .HasForeignKey(t => t.PortfolioId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Portfolio>().HasMany(p => p.CashTransactions)
+                .WithOne(t => t.Portfolio)
+                .HasForeignKey(t => t.PortfolioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
 
     }
