@@ -288,6 +288,52 @@ namespace Invest.Controllers
         }
 
         [Authorize]
+        [HttpPost("copyPortfolio")]
+        public async Task<IActionResult> CopyPortfolio(PortfolioIdDto portfolioIdDto)
+        {
+            var portfolio = _companyContext.Portfolios
+                .Include(p => p.Transactions)
+                .ThenInclude(t => t.Company)
+                .Include(p => p.Transactions)
+                .ThenInclude(t => t.TransactionType)
+                .Include(p => p.User)
+                .Include(p => p.Currency)
+                .Single(p => p.Id == portfolioIdDto.Id);
+            var newPortfolio = new Portfolio()
+            {
+                Name = portfolio.Name + " Copy",
+                Currency = portfolio.Currency,
+                User = portfolio.User,
+                DefaultCommissionPercent = portfolio.DefaultCommissionPercent,
+            };
+            await _companyContext.Portfolios.AddAsync(newPortfolio);
+
+
+            var transactions = portfolio.Transactions;
+            foreach (var t in transactions)
+            {
+                var tCopy = new Transaction
+                {
+                    Portfolio = newPortfolio,
+                    Quantity = t.Quantity,
+                    Comment = t.Comment,
+                    Commission = t.Commission,
+                    Company = t.Company,
+                    Date = t.Date,
+                    Price = t.Price,
+                    TransactionType = t.TransactionType,
+                    UseCash = t.UseCash,
+                };
+
+                _companyContext.Transactions.Add(tCopy);
+            }
+            
+
+            await _companyContext.SaveChangesAsync();
+            return Ok();
+        }
+
+        [Authorize]
         [HttpDelete("deletePortfolio")]
         public IActionResult DeletePortfolio(PortfolioIdDto portfolioIdDto)
         {
@@ -837,7 +883,6 @@ namespace Invest.Controllers
             [FromQuery(Name = "ids")] List<int> ids, [FromQuery(Name = "symbols")] List<string> symbols)
         {
             var mktValues = new Dictionary<DateTime,Dictionary<string, double>>();
-            var unrealizedPL = new Dictionary<DateTime,Dictionary<string, double>>();
             var overallPL = new Dictionary<DateTime,Dictionary<string, double>>();
             var dividends = new Dictionary<string, IList<DividendDto>>();
             var cash = new Dictionary<DateTime, Dictionary<string, double>>();
@@ -899,6 +944,7 @@ namespace Invest.Controllers
                 var currency = yahooResult.meta.currency.ToString();
                 List<double> times = JsonConvert.DeserializeObject<List<double>>(yahooResult.timestamp.ToString());
                 var close = yahooResult.indicators.quote[0].close;
+                var regularMarketPrice = (double) yahooResult.meta.regularMarketPrice;
 
                 var datedDividends = new Dictionary<DateTime, Tuple<double, double>>(); //common div, add cash div
                 if (yahooResult.events != null)
@@ -939,12 +985,11 @@ namespace Invest.Controllers
                 var curCount = orderedTransactions[0].TransactionType.Type == "Buy"
                     ? orderedTransactions[0].Quantity
                     : -orderedTransactions[0].Quantity;
-                var curPrice = curCount * orderedTransactions[0].Price;
-                var curOverallPrice = curPrice + orderedTransactions[0].Commission;
+                var curOverallPrice = curCount * orderedTransactions[0].Price + orderedTransactions[0].Commission;
                 var curDate = orderedTransactions[0].Date;
 
                 var cashUsed = 0d;
-                if (orderedTransactions[0].UseCash) cashUsed += curPrice + orderedTransactions[0].Commission;
+                if (orderedTransactions[0].UseCash) cashUsed += curCount * orderedTransactions[0].Price + orderedTransactions[0].Commission;
                 var addCashDividends = 0d;
 
                 double? lastValue = null;
@@ -988,13 +1033,6 @@ namespace Invest.Controllers
 
                         mktValues[curDate][currency] += mktValue - cashUsed + addCashDividends;
 
-                        if (!unrealizedPL.ContainsKey(curDate))
-                            unrealizedPL.Add(curDate, new Dictionary<string, double>());
-                        if (!unrealizedPL[curDate].ContainsKey(currency))
-                            unrealizedPL[curDate].Add(currency, 0d);
-                        unrealizedPL[curDate][currency] += mktValue - curPrice;
-                        
-
                         if (!overallPL.ContainsKey(curDate))
                             overallPL.Add(curDate, new Dictionary<string, double>());
                         if (!overallPL[curDate].ContainsKey(currency))
@@ -1014,7 +1052,6 @@ namespace Invest.Controllers
                     var transPrice = trans.TransactionType.Type == "Buy"
                         ? trans.Quantity * trans.Price
                         : -trans.Quantity * trans.Price;
-                    curPrice += transPrice;
                     curOverallPrice += transPrice + trans.Commission;
                     if (trans.UseCash) cashUsed += transPrice + trans.Commission;
                 }
@@ -1022,27 +1059,37 @@ namespace Invest.Controllers
                 
                 while (curDate <= today)
                 {
-                    if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
-                    {
-                        curDate = curDate.AddDays(1);
-                        continue;
-                    }
-
                     double mktValue;
-                    var index = times.FindIndex(t => UnixDateToDate(t) == curDate);
-                    if (index == -1 || close[index] == null)
+                    if (curDate == today ||
+                        today.DayOfWeek == DayOfWeek.Saturday && curDate.AddDays(1) == today ||
+                        today.DayOfWeek == DayOfWeek.Sunday && curDate.AddDays(2) == today)
                     {
-                        if (lastValue != null) mktValue = curCount * lastValue.Value;
-                        else
+                        mktValue = curCount * regularMarketPrice;
+                        lastValue = regularMarketPrice;
+                    }
+                    else
+                    {
+                        if (curDate.DayOfWeek == DayOfWeek.Saturday || curDate.DayOfWeek == DayOfWeek.Sunday)
                         {
                             curDate = curDate.AddDays(1);
                             continue;
                         }
-                    }
-                    else
-                    {
-                        lastValue = (double)close[index];
-                        mktValue = curCount * lastValue.Value;
+
+                        var index = times.FindIndex(t => UnixDateToDate(t) == curDate);
+                        if (index == -1 || close[index] == null)
+                        {
+                            if (lastValue != null) mktValue = curCount * lastValue.Value;
+                            else
+                            {
+                                curDate = curDate.AddDays(1);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            lastValue = (double) close[index];
+                            mktValue = curCount * lastValue.Value;
+                        }
                     }
 
                     if (!mktValues.ContainsKey(curDate)) 
@@ -1058,14 +1105,6 @@ namespace Invest.Controllers
 
                     mktValues[curDate][currency] += mktValue - cashUsed + addCashDividends;
 
-
-                    if (!unrealizedPL.ContainsKey(curDate))
-                        unrealizedPL.Add(curDate, new Dictionary<string, double>());
-                    if (!unrealizedPL[curDate].ContainsKey(currency))
-                        unrealizedPL[curDate].Add(currency, 0d);
-                    unrealizedPL[curDate][currency] += mktValue - curPrice;
-
-                    
                     if (!overallPL.ContainsKey(curDate))
                         overallPL.Add(curDate, new Dictionary<string, double>());
                     if (!overallPL[curDate].ContainsKey(currency))
@@ -1148,11 +1187,6 @@ namespace Invest.Controllers
                 .OrderBy(item => item.Date)
                 .ToList();
 
-            var unrealizedPLList = unrealizedPL
-                .Select(item => new TimeValueDto() { Date = item.Key, Values = item.Value })
-                .OrderBy(item => item.Date)
-                .ToList();
-
             var overallPLList = overallPL
                 .Select(item => new TimeValueDto() { Date = item.Key, Values = item.Value })
                 .OrderBy(item => item.Date)
@@ -1166,7 +1200,6 @@ namespace Invest.Controllers
             return new PricesDividendsDto()
             {
                 MktValues = mktValuesList,
-                UnrealizedPL = unrealizedPLList,
                 OverallPL = overallPLList,
                 Dividends = dividends,
                 Cash = cashList
@@ -1176,7 +1209,6 @@ namespace Invest.Controllers
         public class PricesDividendsDto
         {
             public IList<TimeValueDto> MktValues { get; set; }
-            public IList<TimeValueDto> UnrealizedPL { get; set; }
             public IList<TimeValueDto> OverallPL { get; set; }
             public Dictionary<string, IList<DividendDto>> Dividends { get; set; }
             public IList<TimeValueDto> Cash { get; set; }

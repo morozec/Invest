@@ -125,7 +125,6 @@ export function Portfolio(props) {
     const [portfolioHoldings, setPortfolioHoldings] = useState(null);
     const [mktValues, setMktValues] = useState([]);
     const [overallPL, setOverallPL] = useState([]);
-    const [unrealizedPL, setUnrealizedPL] = useState([]);
     const [cashValues, setCashValues] = useState([]);
     const [portfolioTransactions, setPortfolioTransactions] = useState(null);
     const [cashTransations, setCashTransactions] = useState(null);
@@ -318,9 +317,8 @@ export function Portfolio(props) {
                 "Accept": "application/json",
             }
         });
-        let prices = await response.json();
+        let prices = await response.json();        
         return prices;
-        // companies.map(c => c.price = prices[c.ticker]);
     }
 
     const loadDividends = useCallback(async (companies) => {
@@ -345,7 +343,6 @@ export function Portfolio(props) {
         console.log('divs container', result);
         setMktValues(result.mktValues);
         setOverallPL(result.overallPL);
-        setUnrealizedPL(result.unrealizedPL);
         setCashValues(result.cash);
         return result.dividends;
     }, [portfolioIds])
@@ -787,9 +784,10 @@ export function Portfolio(props) {
     };
 
     const getPortfolioUnrealizedPl = () => {
-        if (unrealizedPL.length === 0) return 0;
-        let lastUnrealizedPL = unrealizedPL[unrealizedPL.length - 1];
-        return getDateValue(lastUnrealizedPL.values).toFixed(2);
+        if (!portfolioHoldings || !currencyRates) return null;
+        if (portfolioHoldings.some(ph => !ph.price)) return null;
+        return portfolioHoldings.reduce((sum, ph) =>
+            sum + getPortfolioCurrencyValue(getUnrealizedPL(ph), ph.currency), 0).toFixed(2);
     }
 
     const getPortfolioOverallPl = () => {
@@ -999,7 +997,7 @@ export function Portfolio(props) {
         setAddCashIsAdd(1);
         setCurCashTransactionId(null);
         
-    }
+    }    
    
 
     let addHoldingsButton = <Button variant='success' onClick={handleAddHoldings}>Add Holdings</Button>
@@ -1329,6 +1327,7 @@ export function Portfolio(props) {
                         </Table>
                         </div>
                     }
+
                 </Tab>
                 <Tab eventKey="closed" title="Closed">
 
@@ -1398,7 +1397,7 @@ export function Portfolio(props) {
                     </Table>
                         </div>
                     }
-                    
+
                     {portfolioHoldings.filter(ph => ph.quantity === 0 && ph.type === 'Fund').length > 0 && 
                         <div>
                             <h3 className='mt-2'>Funds</h3>           
